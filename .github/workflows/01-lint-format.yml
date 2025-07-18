@@ -1,0 +1,14 @@
+name: Lint & Format
+on: [push, pull_request]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - run: |
+          pip install ruff black
+          ruff gitshelves tests
+          black --check gitshelves tests
