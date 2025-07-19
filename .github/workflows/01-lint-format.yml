@@ -10,5 +10,5 @@ jobs:
           python-version: '3.x'
       - run: |
           pip install ruff black
-          ruff gitshelves tests
+          ruff check gitshelves tests
           black --check gitshelves tests
