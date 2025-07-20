@@ -10,7 +10,7 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     fetched_args = {}
 
     def fake_fetch(username, token=None, start_year=None, end_year=None):
-        fetched_args['params'] = (username, token, start_year, end_year)
+        fetched_args["params"] = (username, token, start_year, end_year)
         return [
             {"created_at": "2021-02-01T12:00:00Z"},
             {"created_at": "2021-02-15T12:00:00Z"},
@@ -35,7 +35,7 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     cli.main()
 
     assert output.read_text() == "SCAD"
-    assert fetched_args['params'] == ("user", "tok", 2021, 2021)
+    assert fetched_args["params"] == ("user", "tok", 2021, 2021)
     captured = capsys.readouterr()
     assert f"Wrote {output}" in captured.out
 
