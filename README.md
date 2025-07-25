@@ -16,9 +16,10 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 ```bash
 pip install -e .
 python -m gitshelves.cli <github-username> --token <gh-token> \
-    --start-year 2021 --end-year 2023
+    --start-year 2021 --end-year 2023 \
+    --months-per-row 10 --stl contributions.stl
 ```
 
-The command will create `contributions.scad` in the current directory. Months are arranged in a 1x12 grid for each year so multiple years fit on a single platform.
+The command will create `contributions.scad` (and optionally `contributions.stl`) in the current directory. Months are arranged in rows of twelve by default, but you can choose the grid width via `--months-per-row`.
 
 See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs under [docs/](docs/).
