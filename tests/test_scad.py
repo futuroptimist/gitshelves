@@ -1,7 +1,10 @@
+import pytest
+
 from gitshelves.scad import (
     blocks_for_contributions,
     generate_scad,
     generate_scad_monthly,
+    scad_to_stl,
 )
 
 
@@ -23,6 +26,40 @@ def test_generate_scad_monthly():
     assert "translate([0, 0, 0]) cube(10);" in scad
     assert "translate([0, 12, 0]) cube(10);" in scad
     assert "translate([0, 12, 10]) cube(10);" in scad
+
+
+def test_generate_scad_monthly_custom_rows():
+    counts = {
+        (2021, 1): 1,
+        (2021, 2): 10,
+    }
+    scad = generate_scad_monthly(counts, months_per_row=1)
+    assert "translate([0, 0, 0]) cube(10);" in scad
+    assert "translate([0, 12, 0]) cube(10);" in scad
+
+
+def test_scad_to_stl_missing(monkeypatch, tmp_path):
+    scad = tmp_path / "m.scad"
+    stl = tmp_path / "m.stl"
+    scad.write_text("cube(1);")
+    monkeypatch.setattr("shutil.which", lambda x: None)
+    with pytest.raises(FileNotFoundError):
+        scad_to_stl(str(scad), str(stl))
+
+
+def test_scad_to_stl_calls_openscad(monkeypatch, tmp_path):
+    scad = tmp_path / "m.scad"
+    stl = tmp_path / "m.stl"
+    scad.write_text("cube(1);")
+    monkeypatch.setattr("shutil.which", lambda x: "/usr/bin/openscad")
+    called = {}
+
+    def fake_run(cmd, check):
+        called["cmd"] = cmd
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+    scad_to_stl(str(scad), str(stl))
+    assert called["cmd"] == ["openscad", "-o", str(stl), str(scad)]
 
 
 def test_generate_scad():

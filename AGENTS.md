@@ -10,6 +10,6 @@ This repository uses a simple Python package for generating 3D printable GitHub 
   ```bash
   pytest -q
   ```
-- **Update documentation** (README.md and this file) if CLI usage or agent instructions change. The CLI now accepts `--start-year` and `--end-year` to control the contribution range.
+- **Update documentation** (README.md and this file) if CLI usage or agent instructions change. The CLI now accepts `--start-year`, `--end-year`, `--months-per-row` and optional `--stl` output to control the contribution range and output format.
 - New prompt templates or other agent-facing strings should include comments describing their purpose and context.
 
