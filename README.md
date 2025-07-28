@@ -11,15 +11,28 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 ## Usage
 
 1. Install the package in editable mode.
-2. Run the CLI to generate a `.scad` file.
+2. Generate a personal access token from GitHub ("Settings → Developer settings → Personal access tokens") and assign it to `GH_TOKEN`.
+3. Run the CLI to generate a `.scad` file.
+
+```bash
+GH_TOKEN=<your-token>
+```
 
 ```bash
 pip install -e .
-python -m gitshelves.cli <github-username> --token <gh-token> \
+python -m gitshelves.cli <github-username> --token "$GH_TOKEN" \
     --start-year 2021 --end-year 2023 \
     --months-per-row 10 --stl contributions.stl
 ```
 
 The command will create `contributions.scad` (and optionally `contributions.stl`) in the current directory. Months are arranged in rows of twelve by default, but you can choose the grid width via `--months-per-row`.
+
+```
+# = block (higher stacks mean more contributions)
+
+  #      ##     ###
+  #      ##     ###
+         ##     ###
+```
 
 See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs under [docs/](docs/).
