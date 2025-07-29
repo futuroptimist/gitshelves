@@ -15,6 +15,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+    - name: Fetch Gridfinity library
+      run: |
+        git clone --depth 1 https://github.com/kennetek/gridfinity-rebuilt-openscad \
+          openscad/lib/gridfinity-rebuilt
     - name: Install OpenSCAD
       run: sudo apt-get update && sudo apt-get install -y openscad
     - name: Build STL
