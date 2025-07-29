@@ -1,15 +1,28 @@
-# Agent Workflow Guide
+# Gitshelves Agent Guide
 
-This repository uses a simple Python package for generating 3D printable GitHub contribution charts. When updating code or documentation, follow these guidelines:
+> Gitshelves generates 3D printable GitHub contribution charts from the GitHub API. Use this guide when updating code or docs.
 
-- **Install** dependencies in editable mode before running tests:
-  ```bash
-  pip install -e .
-  ```
-- **Run tests** after making changes:
-  ```bash
-  pytest -q
-  ```
-- **Update documentation** (README.md and this file) if CLI usage or agent instructions change. The CLI now accepts `--start-year`, `--end-year`, `--months-per-row` and optional `--stl` output to control the contribution range and output format.
-- New prompt templates or other agent-facing strings should include comments describing their purpose and context.
+## Project Structure
+- `gitshelves/` Python package with CLI modules
+- `tests/` pytest suite
+- `docs/` additional documentation
 
+## Coding Conventions
+- Python code is formatted with `black`
+- Keep functions small with descriptive names
+- Document non-obvious logic
+
+## Testing Requirements
+```bash
+pip install -e .
+pytest -q
+```
+
+## Pull Request Guidelines
+1. Run all checks before pushing:
+   ```bash
+   black --check .
+   pytest -q
+   ```
+2. Update `README.md` and `AGENTS.md` when CLI options or workflows change.
+3. Include a clear description and reference relevant issues.

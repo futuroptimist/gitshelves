@@ -1,0 +1,21 @@
+# Gitshelves
+
+> Python tool that turns GitHub contribution data into 3D printable charts.
+
+Important notes:
+- Install in editable mode and run tests:
+  ```bash
+  pip install -e .
+  pytest -q
+  ```
+- Format code with `black` and ensure `black --check .` passes.
+- CLI options include `--start-year`, `--end-year`, `--months-per-row` and optional `--stl` output.
+
+## Docs
+- [README](README.md): usage instructions
+- [Agent guide](AGENTS.md): workflow for contributors and LLMs
+- [Project docs](docs/index.md): CLI options overview
+
+## Optional
+- [GitHub repo](https://github.com/futuroptimist/gitshelves): issues and source
+- [llms.txt spec](https://llmstxt.org/): file format reference
