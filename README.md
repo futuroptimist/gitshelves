@@ -53,3 +53,9 @@ openscad -o stl/2024/baseplate_1x12.stl openscad/baseplate_1x12.scad
 ```
 
 Run `black --check .` and `pytest -q` before submitting changes.
+
+## STL Build Outputs
+
+The `build-stl` workflow runs on every push to `main` and attaches the rendered
+STL files as downloadable artifacts. Navigate to the workflow run and download
+`stl-<year>` to obtain the converted models.
