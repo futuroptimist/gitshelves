@@ -18,7 +18,9 @@ jobs:
     - name: Prepare library folder
       run: mkdir -p openscad/lib
     - name: Fetch Gridfinity library
-      run: git clone --depth 1 https://github.com/kennetek/gridfinity-rebuilt-openscad openscad/lib/gridfinity-rebuilt
+      run: |
+        rm -rf openscad/lib/gridfinity-rebuilt
+        git clone --depth 1 https://github.com/kennetek/gridfinity-rebuilt-openscad openscad/lib/gridfinity-rebuilt
     - name: Install OpenSCAD
       run: sudo apt-get update && sudo apt-get install -y openscad
     - name: Build STL
