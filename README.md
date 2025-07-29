@@ -41,7 +41,7 @@ See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs und
 
  - [Gridfinity-Rebuilt-OpenSCAD](https://github.com/kennetek/gridfinity-rebuilt-openscad) – parametric Gridfinity modules. **TODO:** add as a submodule in `openscad/lib/gridfinity-rebuilt`.
 - [OpenSCAD](https://openscad.org/) ≥ 2024.06 – required to render STL files.
-- [openscad-build-action](https://github.com/pkoehlers/openscad-build-action) – used in CI to convert `.scad` sources to binary STL outputs.
+- GitHub Actions installs `openscad` via `apt` to convert `.scad` sources to binary STL outputs.
 
 ## How to Build Locally
 

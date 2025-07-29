@@ -15,8 +15,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+    - name: Install OpenSCAD
+      run: sudo apt-get update && sudo apt-get install -y openscad
     - name: Build STL
-      uses: pkoehlers/openscad-build-action@v1
-      with:
-        input-file: openscad/baseplate_1x12.scad
-        output-file: stl/${{ matrix.year }}/baseplate_1x12.stl
+      run: |
+        mkdir -p stl/${{ matrix.year }}
+        openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
+          openscad/baseplate_1x12.scad --export-format binstl

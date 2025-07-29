@@ -102,7 +102,7 @@ bin(
 |------|--------|
 | checkout | actions/checkout@v4 |
 | setup OpenSCAD | Use Docker image openscad/openscad:latest |
-| build | pkoehlers/openscad-build-action@v1 per file |
+| build | install openscad via apt and run `openscad` per file |
 | matrix | Years = [2021…2025]; pass -Dyear=… if future parameterisation needed |
 | artefacts | Upload each rendered STL; optionally commit to stl/YYYY/ on main via ad-m/github-push-action@v0.8.0. |
 
@@ -126,11 +126,13 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+    - name: Install OpenSCAD
+      run: sudo apt-get update && sudo apt-get install -y openscad
     - name: Build STL
-      uses: pkoehlers/openscad-build-action@v1
-      with:
-        input-file: openscad/baseplate_1x12.scad
-        output-file: stl/${{ matrix.year }}/baseplate_1x12.stl
+      run: |
+        mkdir -p stl/${{ matrix.year }}
+        openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
+          openscad/baseplate_1x12.scad --export-format binstl
 ```
 
 The action internally calls
@@ -144,7 +146,7 @@ openscad -o stl/$year/baseplate_1x12.stl openscad/baseplate_1x12.scad --export-f
 ## 6  Dependency Declaration
 Gridfinity-Rebuilt-OpenSCAD (submodule at openscad/lib/gridfinity-rebuilt) – provides parametric geometry
 OpenSCAD ≥ 2024.06 – required for FAST CSG and customizer options
-openscad-build-action – encapsulates CLI calls
+CI installs OpenSCAD with `apt` and runs the CLI directly
 
 Add a short Dependencies block to the root README.md, linking to each repo.
 
@@ -191,7 +193,7 @@ GitHub Action wrapper for OpenSCAD – GitHub
 > 2. Add submodule `kennetek/gridfinity-rebuilt-openscad` at `openscad/lib/gridfinity-rebuilt`.  
 > 3. Create `openscad/baseplate_1x12.scad` and `openscad/contrib_cube.scad` per the spec in `docs/gridfinity_design.md`.  
 > 4. Generate folders `stl/{2021..2025}` (keep empty – CI will fill).  
-> 5. Add `.github/workflows/build-stl.yml` implementing the matrix build with **pkoehlers/openscad-build-action@v1**; output binary STLs.  
+> 5. Add `.github/workflows/build-stl.yml` implementing the matrix build using apt-installed OpenSCAD; output binary STLs.
 > 6. Update root `README.md` to include a *Dependencies* and *How to Build Locally* section.  
 > 7. Commit, sign off (`git commit -s`), and open a pull-request titled “Gridfinity support & automated STL builds”.  
 > **Assistant**: implement every step and show the diff.
