@@ -1,0 +1,22 @@
+name: build-stl
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        year: [2021, 2022, 2023, 2024, 2025]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Build STL
+      uses: pkoehlers/openscad-build-action@v1
+      with:
+        input-file: openscad/baseplate_1x12.scad
+        output-file: stl/${{ matrix.year }}/baseplate_1x12.stl

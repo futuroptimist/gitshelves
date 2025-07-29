@@ -6,6 +6,8 @@
 - `gitshelves/` Python package with CLI modules
 - `tests/` pytest suite
 - `docs/` additional documentation
+- `.github/workflows/build-stl.yml` renders STL files from SCAD sources
+- `openscad/lib/gridfinity-rebuilt/` placeholder for Gridfinity library (clone manually)
 
 ## Coding Conventions
 - Python code is formatted with `black`
@@ -26,3 +28,4 @@ pytest -q
    ```
 2. Update `README.md` and `AGENTS.md` when CLI options or workflows change.
 3. Include a clear description and reference relevant issues.
+4. Clone the Gridfinity library into `openscad/lib/gridfinity-rebuilt` if it's missing.
