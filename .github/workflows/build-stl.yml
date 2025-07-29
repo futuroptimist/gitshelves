@@ -28,3 +28,8 @@ jobs:
         mkdir -p stl/${{ matrix.year }}
         openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
           openscad/baseplate_1x12.scad --export-format binstl
+    - name: Upload STL
+      uses: actions/upload-artifact@v4
+      with:
+        name: stl-${{ matrix.year }}
+        path: stl/${{ matrix.year }}/baseplate_1x12.stl
