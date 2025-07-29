@@ -6,7 +6,7 @@
 - `gitshelves/` Python package with CLI modules
 - `tests/` pytest suite
 - `docs/` additional documentation
-- `.github/workflows/build-stl.yml` renders STL files from SCAD sources
+- `.github/workflows/build-stl.yml` installs OpenSCAD via `apt` and renders STL files from SCAD sources
 - `openscad/lib/gridfinity-rebuilt/` placeholder for Gridfinity library (clone manually)
 
 ## Coding Conventions
