@@ -36,3 +36,19 @@ The command will create `contributions.scad` (and optionally `contributions.stl`
 ```
 
 See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs under [docs/](docs/).
+
+## Dependencies
+
+ - [Gridfinity-Rebuilt-OpenSCAD](https://github.com/kennetek/gridfinity-rebuilt-openscad) – parametric Gridfinity modules. **TODO:** add as a submodule in `openscad/lib/gridfinity-rebuilt`.
+- [OpenSCAD](https://openscad.org/) ≥ 2024.06 – required to render STL files.
+- [openscad-build-action](https://github.com/pkoehlers/openscad-build-action) – used in CI to convert `.scad` sources to binary STL outputs.
+
+## How to Build Locally
+
+```bash
+git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
+    openscad/lib/gridfinity-rebuilt
+openscad -o stl/2024/baseplate_1x12.stl openscad/baseplate_1x12.scad
+```
+
+Run `black --check .` and `pytest -q` before submitting changes.
