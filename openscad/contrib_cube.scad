@@ -1,5 +1,5 @@
 // openscad/contrib_cube.scad
-use <lib/gridfinity-rebuilt/gridfinity-rebuilt-bin.scad>;
+include <lib/gridfinity-rebuilt/gridfinity-rebuilt-bin.scad>;
 
 bin(
     ux = 1, uy = 1, uh = 1,              // 1×1 base, 1 unit high
