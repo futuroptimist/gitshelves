@@ -68,11 +68,28 @@ def generate_scad_monthly(
 
 
 def scad_to_stl(scad_file: str, stl_file: str) -> None:
-    """Convert ``scad_file`` to ``stl_file`` using the ``openscad`` CLI."""
+    """Convert ``scad_file`` to ``stl_file`` using the ``openscad`` CLI.
+
+    If the current environment lacks an X display (``$DISPLAY`` is unset), the
+    command is automatically wrapped in ``xvfb-run`` when available. This mirrors
+    the CI configuration and prevents ``openscad`` from exiting with code ``1``
+    on headless servers.
+    """
+    import os
     import shutil
     import subprocess
 
     if shutil.which("openscad") is None:
         raise FileNotFoundError("openscad not found")
 
-    subprocess.run(["openscad", "-o", stl_file, scad_file], check=True)
+    cmd = ["openscad", "-o", stl_file, scad_file]
+    if "DISPLAY" not in os.environ:
+        if shutil.which("xvfb-run") is None:
+            raise RuntimeError("xvfb-run required for headless rendering")
+        cmd = [
+            "xvfb-run",
+            "--auto-servernum",
+            "--server-args=-screen 0 1024x768x24",
+        ] + cmd
+
+    subprocess.run(cmd, check=True)

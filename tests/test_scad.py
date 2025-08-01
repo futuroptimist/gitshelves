@@ -63,8 +63,34 @@ def test_scad_to_stl_calls_openscad(monkeypatch, tmp_path):
         called["cmd"] = cmd
 
     monkeypatch.setattr("subprocess.run", fake_run)
+    monkeypatch.setenv("DISPLAY", ":0")
     scad_to_stl(str(scad), str(stl))
     assert called["cmd"] == ["openscad", "-o", str(stl), str(scad)]
+
+
+def test_scad_to_stl_uses_xvfb(monkeypatch, tmp_path):
+    scad = tmp_path / "m.scad"
+    stl = tmp_path / "m.stl"
+    scad.write_text("cube(1);")
+
+    def which(binary):
+        if binary == "openscad":
+            return "/usr/bin/openscad"
+        if binary == "xvfb-run":
+            return "/usr/bin/xvfb-run"
+        return None
+
+    monkeypatch.setattr("shutil.which", which)
+    monkeypatch.delenv("DISPLAY", raising=False)
+    called = {}
+
+    def fake_run(cmd, check):
+        called["cmd"] = cmd
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    scad_to_stl(str(scad), str(stl))
+    assert called["cmd"][0] == "xvfb-run"
 
 
 def test_generate_scad():
