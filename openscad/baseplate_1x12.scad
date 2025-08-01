@@ -1,7 +1,7 @@
 // openscad/baseplate_1x12.scad
 // Render with:  openscad -o ../stl/YYYY/baseplate_1x12.stl $fn=120 baseplate_1x12.scad
 
-use <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
+include <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
 
 units_x = 12;
 units_y = 1;
