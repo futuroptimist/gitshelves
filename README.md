@@ -60,3 +60,11 @@ Run `black --check .` and `pytest -q` before submitting changes.
 The `build-stl` workflow runs on every push to `main` and attaches the rendered
 STL files as downloadable artifacts. Navigate to the workflow run and download
 `stl-<year>` to obtain the converted models.
+## Troubleshooting
+
+OpenSCAD exits with status 1 when it cannot access an X display. On CI this is handled automatically, but for headless local machines you must wrap the command in `xvfb-run`:
+
+```bash
+xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
+  openscad -o output.stl input.scad
+```
