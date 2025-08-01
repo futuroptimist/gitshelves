@@ -21,13 +21,16 @@ jobs:
       run: |
         rm -rf openscad/lib/gridfinity-rebuilt
         git clone --depth 1 https://github.com/kennetek/gridfinity-rebuilt-openscad openscad/lib/gridfinity-rebuilt
-    - name: Install OpenSCAD
-      run: sudo apt-get update && sudo apt-get install -y openscad
+    - name: Install OpenSCAD + Xvfb
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends openscad xvfb
     - name: Build STL
       run: |
         mkdir -p stl/${{ matrix.year }}
-        openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
-          openscad/baseplate_1x12.scad --export-format binstl
+        xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
+          openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
+            openscad/baseplate_1x12.scad --export-format binstl
     - name: Upload STL
       uses: actions/upload-artifact@v4
       with:
