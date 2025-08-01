@@ -29,3 +29,14 @@ pytest -q
 2. Update `README.md` and `AGENTS.md` when CLI options or workflows change.
 3. Include a clear description and reference relevant issues.
 4. For local testing, clone `gridfinity-rebuilt-openscad` into `openscad/lib/gridfinity-rebuilt` if it's not already present.
+
+## Gridfinity
+The STL workflow uses Gridfinity base plates and contribution cubes. Month-to-cube height conversion follows the **Gridfinity scoring metric**:
+
+- 1–9 contributions → 1 cube
+- 10–99 contributions → 2 cubes
+- 100–999 contributions → 3 cubes
+- and so on
+
+Mathematically `floor(log10(count)) + 1` cubes are stacked for any count ≥ 1 (else 0). This mirrors `gitshelves.scad.blocks_for_contributions()`.
+
