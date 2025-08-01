@@ -93,7 +93,7 @@ def test_scad_to_stl_uses_xvfb(monkeypatch, tmp_path):
     assert called["cmd"][0] == "xvfb-run"
 
 
-def test_scad_to_stl_no_xvfb(monkeypatch, tmp_path):
+def test_scad_to_stl_xvfb_missing(monkeypatch, tmp_path):
     scad = tmp_path / "m.scad"
     stl = tmp_path / "m.stl"
     scad.write_text("cube(1);")
@@ -105,7 +105,6 @@ def test_scad_to_stl_no_xvfb(monkeypatch, tmp_path):
 
     monkeypatch.setattr("shutil.which", which)
     monkeypatch.delenv("DISPLAY", raising=False)
-
     with pytest.raises(RuntimeError):
         scad_to_stl(str(scad), str(stl))
 

@@ -49,7 +49,9 @@ See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs und
 # Clone the Gridfinity library locally (the CI workflow does this automatically)
 git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
     openscad/lib/gridfinity-rebuilt
-# Wrap with `xvfb-run` if running on a headless server
+# `scad_to_stl` automatically wraps `openscad` in `xvfb-run` when `$DISPLAY`
+# is missing, matching the CI configuration. Ensure `xvfb-run` is installed on
+# headless systems.
 openscad -o stl/2024/baseplate_1x12.stl openscad/baseplate_1x12.scad
 ```
 
@@ -62,9 +64,7 @@ STL files as downloadable artifacts. Navigate to the workflow run and download
 `stl-<year>` to obtain the converted models.
 ## Troubleshooting
 
-OpenSCAD exits with status 1 when it cannot access an X display. On CI this is handled automatically, but for headless local machines you must wrap the command in `xvfb-run`:
-
-```bash
-xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
-  openscad -o output.stl input.scad
-```
+OpenSCAD exits with status 1 when it cannot access an X display. The
+`scad_to_stl` helper wraps the command in `xvfb-run` when `$DISPLAY` is
+missing. Install `xvfb-run` if you still encounter this error on a headless
+machine.
