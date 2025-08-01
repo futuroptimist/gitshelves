@@ -113,7 +113,7 @@ bin(
 |------|--------|
 | checkout | actions/checkout@v4 |
 | setup OpenSCAD | Use Docker image openscad/openscad:latest |
-| build | install openscad via apt and run `openscad` per file |
+| build | install openscad and xvfb via apt; run `xvfb-run openscad` per file |
 | matrix | Years = [2021…2025]; pass -Dyear=… if future parameterisation needed |
 | artefacts | Upload each rendered STL; optionally commit to stl/YYYY/ on main via ad-m/github-push-action@v0.8.0. |
 
@@ -137,19 +137,23 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Install OpenSCAD
-      run: sudo apt-get update && sudo apt-get install -y openscad
+    - name: Install OpenSCAD + Xvfb
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends openscad xvfb
     - name: Build STL
       run: |
         mkdir -p stl/${{ matrix.year }}
-        openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
-          openscad/baseplate_1x12.scad --export-format binstl
+        xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
+          openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
+            openscad/baseplate_1x12.scad --export-format binstl
 ```
 
 The action internally calls
 
 ```
-openscad -o stl/$year/baseplate_1x12.stl openscad/baseplate_1x12.scad --export-format binstl
+xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
+  openscad -o stl/$year/baseplate_1x12.stl openscad/baseplate_1x12.scad --export-format binstl
 ```
 
 ---

@@ -41,7 +41,7 @@ See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs und
 
  - [Gridfinity-Rebuilt-OpenSCAD](https://github.com/kennetek/gridfinity-rebuilt-openscad) – parametric Gridfinity modules. The CI workflow clones this repo into `openscad/lib/gridfinity-rebuilt` when building STL files.
 - [OpenSCAD](https://openscad.org/) ≥ 2024.06 – required to render STL files.
-- GitHub Actions installs `openscad` via `apt` to convert `.scad` sources to binary STL outputs.
+- GitHub Actions installs `openscad` with `xvfb` to convert `.scad` sources to binary STL outputs in a headless environment.
 
 ## How to Build Locally
 
@@ -49,6 +49,7 @@ See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs und
 # Clone the Gridfinity library locally (the CI workflow does this automatically)
 git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
     openscad/lib/gridfinity-rebuilt
+# Wrap with `xvfb-run` if running on a headless server
 openscad -o stl/2024/baseplate_1x12.stl openscad/baseplate_1x12.scad
 ```
 
