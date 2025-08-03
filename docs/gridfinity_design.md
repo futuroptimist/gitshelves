@@ -11,10 +11,10 @@ We want:
 
 * **stl/** at repo root  
   * **2021 … 2025** sub-folders (five total).  
-  * Each folder holds one `baseplate_1x12.stl`, automatically generated from its matching `.scad`.
+* Each folder holds one `baseplate_2x6.stl`, automatically generated from its matching `.scad`.
 
 * **OpenSCAD sources** describing  
-  * A **1 × 12 base plate** (12 columns, 1 row) that obeys the 42 mm grid and 41.5 mm clearance rules.  
+* A **2 × 6 base plate** (6 columns, 2 rows) that obeys the 42 mm grid and 41.5 mm clearance rules.
   * A **"contribution cube"** (1 × 1 × 1 U) used to encode the order of magnitude of monthly commits.
 
 * **CI pipeline** (GitHub Actions) that converts every `*.scad` into a binary STL artefact on each push and publishes them as build outputs.
@@ -44,13 +44,13 @@ gitshelves/
 ├─ .github/workflows/
 │  └― build-stl.yml # CI (see §5)
 ├─ openscad/ # All CAD sources live here
-│  ├─ baseplate_1x12.scad
+│  ├─ baseplate_2x6.scad
 │  ├─ contrib_cube.scad
 │  └― lib/gridfinity-rebuilt/ # git submodule
 ├─ stl/
-│  ├─ 2021/baseplate_1x12.stl
+│  ├─ 2021/baseplate_2x6.stl
 │  ├─ …
-│  └― 2025/baseplate_1x12.stl
+│  └― 2025/baseplate_2x6.stl
 └― docs/gridfinity_design.md # ← this file
 ```
 
@@ -62,33 +62,19 @@ gitshelves/
 Use **kennetek/gridfinity-rebuilt-openscad** (MIT) as a submodule, providing canonical modules `gridfinityBaseplate()` and `bin()`. We also consult **vector76/gridfinity_openscad** (MIT) for additional design guidance.
 
 ```scad
-// openscad/baseplate_1x12.scad
-// Render with:  openscad -o ../stl/YYYY/baseplate_1x12.stl $fn=120 baseplate_1x12.scad
+// openscad/baseplate_2x6.scad
+// Render with:  openscad -o ../stl/YYYY/baseplate_2x6.stl baseplate_2x6.scad
 
-use <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
+include <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
 
-units_x = 12;
-units_y = 1;
-
-// Set to false for lighter plates
-include_magnets = true;
-
-gridfinityBaseplate(
-    [units_x, units_y],
-    l_grid,
-    [0, 0],
-    0,
-    bundle_hole_options(
-        refined_hole=false,
-        magnet_hole=include_magnets,
-        screw_hole=false,
-        crush_ribs=true,
-        chamfer=true,
-        supportless=false
-    ),
-    0,
-    [0, 0]
-);
+// grid_x = columns, grid_y = rows
+gridfinity_baseplate(grid_x = 6,
+                     grid_y = 2,
+                     u_height = 6,          // keep stock 6-U thickness
+                     lip = true,            // stacking lip
+                     magnet_style = "gridfinity_refine",
+                     magnets_corners_only = false,
+                     screw_holes = false);
 ```
 
 ### 4.2 Contribution cube
@@ -145,15 +131,15 @@ jobs:
       run: |
         mkdir -p stl/${{ matrix.year }}
         xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
-          openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
-            openscad/baseplate_1x12.scad --export-format binstl
+          openscad -o stl/${{ matrix.year }}/baseplate_2x6.stl \
+            openscad/baseplate_2x6.scad --export-format binstl
 ```
 
 The action internally calls
 
 ```
 xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
-  openscad -o stl/$year/baseplate_1x12.stl openscad/baseplate_1x12.scad --export-format binstl
+  openscad -o stl/$year/baseplate_2x6.stl openscad/baseplate_2x6.scad --export-format binstl
 ```
 
 ---
@@ -166,7 +152,7 @@ CI installs OpenSCAD with `apt` and runs the CLI directly
 Add a short Dependencies block to the root README.md, linking to each repo.
 
 ## 7  Printing & Assembly Notes
-PLA/PLA+ recommended for cubes; PETG for long 1×12 base (reduces warp).
+PLA/PLA+ recommended for cubes; PETG for long 2×6 base (reduces warp).
 For fridge/white-board mounting insert Ø6×2 mm N35 magnets into each corner pocket before final layer.
 
 Colour scheme:
@@ -208,7 +194,7 @@ GitHub Action wrapper for OpenSCAD – GitHub
 > 1. Clone `https://github.com/futuroptimist/gitshelves`.
 > 2. Add submodule `kennetek/gridfinity-rebuilt-openscad` at `openscad/lib/gridfinity-rebuilt`.
 > 3. Review `vector76/gridfinity_openscad` for design guidance; do not vendor its sources.
-> 4. Create `openscad/baseplate_1x12.scad` and `openscad/contrib_cube.scad` per the spec in `docs/gridfinity_design.md`.
+> 4. Create `openscad/baseplate_2x6.scad` and `openscad/contrib_cube.scad` per the spec in `docs/gridfinity_design.md`.
 > 5. Generate folders `stl/{2021..2025}` (keep empty – CI will fill).
 > 6. Add `.github/workflows/build-stl.yml` implementing the matrix build using apt-installed OpenSCAD; output binary STLs.
 > 7. Update root `README.md` to include a *Dependencies* and *How to Build Locally* section.

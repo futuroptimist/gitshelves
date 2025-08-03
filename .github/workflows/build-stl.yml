@@ -31,10 +31,10 @@ jobs:
       run: |
         mkdir -p stl/${{ matrix.year }}
         xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
-          openscad -o stl/${{ matrix.year }}/baseplate_1x12.stl \
-            openscad/baseplate_1x12.scad --export-format binstl
+          openscad -o stl/${{ matrix.year }}/baseplate_2x6.stl \
+            openscad/baseplate_2x6.scad --export-format binstl
     - name: Upload STL
       uses: actions/upload-artifact@v4
       with:
         name: stl-${{ matrix.year }}
-        path: stl/${{ matrix.year }}/baseplate_1x12.stl
+        path: stl/${{ matrix.year }}/baseplate_2x6.stl
