@@ -60,9 +60,9 @@ Run `black --check .` and `pytest -q` before submitting changes.
 
 ## STL Build Outputs
 
-The `build-stl` workflow runs on every push to `main` and attaches the rendered
-STL files as downloadable artifacts. Navigate to the workflow run and download
-`stl-<year>` to obtain the converted models.
+The `build-stl` workflow runs on every push and pull request targeting `main`
+and attaches the rendered STL files as downloadable artifacts. Navigate to the
+workflow run and download `stl-<year>` to obtain the converted models.
 ## Troubleshooting
 
 OpenSCAD exits with status 1 when it cannot access an X display. The
