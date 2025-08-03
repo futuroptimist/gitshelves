@@ -1,4 +1,5 @@
 // openscad/contrib_cube.scad
+// Dimensions cross-checked with vector76/gridfinity_openscad.
 include <lib/gridfinity-rebuilt/gridfinity-rebuilt-bin.scad>;
 
 bin(
