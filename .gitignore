@@ -211,3 +211,7 @@ __marimo__/
 !openscad/lib/gridfinity-rebuilt/
 !openscad/lib/gridfinity-rebuilt/**
 
+
+# Generated STL models
+*.stl
+
