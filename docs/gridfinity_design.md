@@ -5,8 +5,9 @@
 
 ## 1  Background & Goal
 
-`gitshelves` visualises personal GitHub activity as physical objects.  
+`gitshelves` visualises personal GitHub activity as physical objects.
 This iteration makes the project **Gridfinity-compatible** so that the printed parts integrate with the de-facto 42 × 42 mm modular storage standard.
+Dimensions and clearances follow the [vector76/gridfinity_openscad](https://github.com/vector76/gridfinity_openscad) reference implementation.
 We want:
 
 * **stl/** at repo root  
@@ -190,6 +191,7 @@ Official community spec summary – Printables
 Magnet polarity guidelines – Reddit
 Extended spec & stacking lip debate – Reddit
 Parametric OpenSCAD libraries – GitHub
+vector76/gridfinity_openscad – canonical reference implementation
 Chris’s Notes
 Gridfinity primer articles – All3DP
 gridfinity.perplexinglabs.com
