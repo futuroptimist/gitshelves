@@ -53,7 +53,7 @@ git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
 # `scad_to_stl` automatically wraps `openscad` in `xvfb-run` when `$DISPLAY`
 # is missing, matching the CI configuration. Ensure `xvfb-run` is installed on
 # headless systems.
-openscad -o stl/2024/baseplate_1x12.stl openscad/baseplate_1x12.scad
+openscad -o stl/2024/baseplate_2x6.stl openscad/baseplate_2x6.scad
 ```
 
 Run `black --check .` and `pytest -q` before submitting changes.
