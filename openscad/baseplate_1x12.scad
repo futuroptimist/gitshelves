@@ -1,6 +1,8 @@
 // openscad/baseplate_1x12.scad
 // Render with:  openscad -o ../stl/YYYY/baseplate_1x12.stl $fn=120 baseplate_1x12.scad
 
+// Dimensions cross-checked with vector76/gridfinity_openscad.
+
 include <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
 
 units_x = 12;

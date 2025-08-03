@@ -59,7 +59,7 @@ gitshelves/
 ## 4  OpenSCAD Implementation Details
 
 ### 4.1  Third-party library  
-Use **kennetek/gridfinity-rebuilt-openscad** (MIT) as a submodule, providing canonical modules `gridfinityBaseplate()` and `bin()`.
+Use **kennetek/gridfinity-rebuilt-openscad** (MIT) as a submodule, providing canonical modules `gridfinityBaseplate()` and `bin()`. We also consult **vector76/gridfinity_openscad** (MIT) for additional design guidance.
 
 ```scad
 // openscad/baseplate_1x12.scad
@@ -190,6 +190,7 @@ Official community spec summary – Printables
 Magnet polarity guidelines – Reddit
 Extended spec & stacking lip debate – Reddit
 Parametric OpenSCAD libraries – GitHub
+vector76/gridfinity_openscad – GitHub
 Chris’s Notes
 Gridfinity primer articles – All3DP
 gridfinity.perplexinglabs.com
@@ -203,12 +204,13 @@ GitHub Action wrapper for OpenSCAD – GitHub
 ## Codex Prompt (paste verbatim)
 
 > **System**: You are a senior DevOps & CAD automation engineer.  
-> **User**:  
-> 1. Clone `https://github.com/futuroptimist/gitshelves`.  
-> 2. Add submodule `kennetek/gridfinity-rebuilt-openscad` at `openscad/lib/gridfinity-rebuilt`.  
-> 3. Create `openscad/baseplate_1x12.scad` and `openscad/contrib_cube.scad` per the spec in `docs/gridfinity_design.md`.  
-> 4. Generate folders `stl/{2021..2025}` (keep empty – CI will fill).  
-> 5. Add `.github/workflows/build-stl.yml` implementing the matrix build using apt-installed OpenSCAD; output binary STLs.
-> 6. Update root `README.md` to include a *Dependencies* and *How to Build Locally* section.  
-> 7. Commit, sign off (`git commit -s`), and open a pull-request titled “Gridfinity support & automated STL builds”.  
+> **User**:
+> 1. Clone `https://github.com/futuroptimist/gitshelves`.
+> 2. Add submodule `kennetek/gridfinity-rebuilt-openscad` at `openscad/lib/gridfinity-rebuilt`.
+> 3. Review `vector76/gridfinity_openscad` for design guidance; do not vendor its sources.
+> 4. Create `openscad/baseplate_1x12.scad` and `openscad/contrib_cube.scad` per the spec in `docs/gridfinity_design.md`.
+> 5. Generate folders `stl/{2021..2025}` (keep empty – CI will fill).
+> 6. Add `.github/workflows/build-stl.yml` implementing the matrix build using apt-installed OpenSCAD; output binary STLs.
+> 7. Update root `README.md` to include a *Dependencies* and *How to Build Locally* section.
+> 8. Commit, sign off (`git commit -s`), and open a pull-request titled “Gridfinity support & automated STL builds”.
 > **Assistant**: implement every step and show the diff.
