@@ -4,6 +4,7 @@ from datetime import datetime
 
 from .fetch import fetch_user_contributions
 from .scad import generate_scad_monthly, scad_to_stl
+from .readme import write_year_readme
 
 
 def main():
@@ -42,6 +43,9 @@ def main():
         dt = datetime.fromisoformat(d)
         key = (dt.year, dt.month)
         counts[key] = counts.get(key, 0) + 1
+
+    for year in {y for y, _ in counts}:
+        write_year_readme(year, counts)
 
     scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
     Path(args.output).write_text(scad_text)
