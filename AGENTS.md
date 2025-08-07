@@ -9,6 +9,7 @@
 - `.github/workflows/build-stl.yml` runs on pushes and pull requests to `main`, removes any existing Gridfinity library folder, clones the library, installs OpenSCAD and Xvfb via `apt`, renders `openscad/baseplate_2x6.scad` to `stl/<year>/baseplate_2x6.stl` using `xvfb-run`, and uploads them as workflow artifacts
 - `scad_to_stl` wraps `openscad` in `xvfb-run` automatically when `$DISPLAY` is missing to mirror the CI workflow
 - `openscad/lib/gridfinity-rebuilt/` holds the Gridfinity library (MIT). CI clones it automatically; clone it manually for local builds and keep the `LICENSE` file. We consult vector76/gridfinity_openscad for guidance
+- `--colors` controls multi-color output, grouping logarithmic levels into up to four block colors
 
 ## Coding Conventions
 - Python code is formatted with `black`

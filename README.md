@@ -22,10 +22,17 @@ GH_TOKEN=<your-token>
 pip install -e .
 python -m gitshelves.cli <github-username> --token "$GH_TOKEN" \
     --start-year 2021 --end-year 2023 \
-    --months-per-row 10 --stl contributions.stl
+    --months-per-row 10 --stl contributions.stl --colors 1
 ```
 
 The command will create `contributions.scad` (and optionally `contributions.stl`) in the current directory. Months are arranged in rows of twelve by default, but you can choose the grid width via `--months-per-row`.
+
+Use `--colors` to control multi-color outputs. `--colors 2` produces one blocks file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group.
+
+Open `docs/viewer.html` in a browser to preview generated STL files with Three.js and experiment with different color counts.
+Use the file picker to load your baseplate and level STLs.
+
+If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 
 ```
 # = block (higher stacks mean more contributions)
