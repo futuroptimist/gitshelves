@@ -3,7 +3,10 @@
 
 // Dimensions cross-checked with vector76/gridfinity_openscad.
 
-include <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
+use <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
+
+// Grid unit length (mm) from Gridfinity specification
+l_grid = 42;
 
 units_x = 12;
 units_y = 1;
