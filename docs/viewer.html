@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gitshelves Viewer</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #controls { position: fixed; top: 0; left: 0; background: #fff8; padding: 8px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/STLLoader.js"></script>
+</head>
+<body>
+<div id="controls">
+  <input type="file" id="files" multiple />
+  <label>Colors
+    <select id="colorCount">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </select>
+  </label>
+</div>
+<script>
+const palette = [0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728];
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+ document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf0f0f0);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+camera.position.set(120, 120, 120);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+const loader = new THREE.STLLoader();
+function clearMeshes() {
+  scene.children.filter(o => o.isMesh).forEach(o => scene.remove(o));
+}
+function loadFiles(list) {
+  clearMeshes();
+  const stls = [];
+  for (const file of list) {
+    let level = 0;
+    if (/level(\d+)/i.test(file.name)) level = parseInt(RegExp.$1, 10);
+    if (/baseplate/i.test(file.name)) level = 0;
+    stls.push({ file, level });
+  }
+  const maxLevel = Math.max(...stls.map(s => s.level), 1);
+  const groups = parseInt(document.getElementById('colorCount').value, 10) - 1;
+  const levelsPerGroup = Math.ceil(maxLevel / Math.max(groups, 1));
+  stls.forEach(({ file, level }) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const geo = loader.parse(e.target.result);
+      let idx = 0;
+      if (level > 0 && groups > 0) idx = Math.floor((level - 1) / levelsPerGroup) + 1;
+      const mat = new THREE.MeshPhongMaterial({ color: palette[idx % palette.length] });
+      const mesh = new THREE.Mesh(geo, mat);
+      scene.add(mesh);
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+const input = document.getElementById('files');
+input.addEventListener('change', e => loadFiles(e.target.files));
+document.getElementById('colorCount').addEventListener('change', () => {
+  if (input.files.length) loadFiles(input.files);
+});
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(1, 1, 1).normalize();
+scene.add(light);
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
