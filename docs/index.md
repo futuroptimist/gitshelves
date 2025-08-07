@@ -6,4 +6,6 @@ output path.
 
 ## Prompts
 
-- [Repo feature summary prompt](repo_feature_summary_prompt.md) – collect data for flywheel's feature matrix.
+- [Repo feature summary prompt](repo_feature_summary_prompt.md) – collect flywheel feature data
+- [Codex automation prompt](prompts-codex.md) – baseline instructions for automated agents.
+- [Codex spellcheck prompt](prompts-codex-spellcheck.md) – fix typos in docs.
