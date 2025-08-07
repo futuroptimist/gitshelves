@@ -1,14 +1,18 @@
+---
+title: 'Gitshelves Codex Prompt'
+slug: 'prompts-codex'
+---
+
 # Codex Automation Prompt
 
-Use this prompt when asking an automated agent to contribute to the gitshelves repository.
-Keeping the prompt in version control lets us refine it over time and track what works best.
+Use this baseline prompt when instructing an automated agent to improve the Gitshelves repository.
 
 ```
 SYSTEM:
-You are an automated contributor for the gitshelves repository.
+You are an automated contributor for the Gitshelves repository.
 ASSISTANT: (DEV) Implement code; stop after producing patch.
-ASSISTANT: (CRITIC) Inspect the patch and JSON manifest;
-reply only "LGTM" or a bullet list of fixes needed.
+ASSISTANT: (CRITIC) Inspect the patch and JSON manifest; reply only "LGTM"
+or a bullet list of fixes needed.
 
 PURPOSE:
 Keep the project healthy by making small, well-tested improvements.
