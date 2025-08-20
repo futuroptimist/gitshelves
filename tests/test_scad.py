@@ -159,3 +159,19 @@ def test_generate_scad():
     assert "translate([24, 0, 0]) cube(10);" in scad
     assert "translate([24, 0, 10]) cube(10);" in scad
     assert "translate([0, 0, 0]) cube(10);" not in scad
+
+
+def test_generate_scad_monthly_requires_positive_months_per_row():
+    counts = {(2021, 1): 1}
+    with pytest.raises(ValueError):
+        generate_scad_monthly(counts, months_per_row=0)
+    with pytest.raises(ValueError):
+        generate_scad_monthly(counts, months_per_row=-1)
+
+
+def test_generate_scad_monthly_levels_requires_positive_months_per_row():
+    counts = {(2021, 1): 1}
+    with pytest.raises(ValueError):
+        generate_scad_monthly_levels(counts, months_per_row=0)
+    with pytest.raises(ValueError):
+        generate_scad_monthly_levels(counts, months_per_row=-2)
