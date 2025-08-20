@@ -115,13 +115,17 @@ def generate_scad_monthly_levels(
 def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str]:
     """Combine level-specific SCAD snippets into ``groups`` color groups.
 
-    ``groups`` is the number of distinct block colors. Levels are distributed
-    evenly across groups. Each output retains the standard header.
+    ``groups`` is the number of distinct block colors and must be at least ``1``.
+    Levels are distributed evenly across groups. Each output retains the
+    standard header.
     """
+    if groups < 1:
+        raise ValueError("groups must be >= 1")
+
     if not level_scads:
         return {}
 
-    if groups <= 1:
+    if groups == 1:
         lines: list[str] = []
         for text in level_scads.values():
             lines.extend(text.splitlines()[1:])
