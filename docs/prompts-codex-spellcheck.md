@@ -12,7 +12,8 @@ Keep Markdown documentation free of spelling errors.
 
 CONTEXT:
 - Run `codespell docs README.md` to scan for typos.
-- Add unknown but legitimate words to `dict/allow.txt` (create if missing).
+ - Add unknown but legitimate words to `dict/allow.txt`, keeping entries
+   sorted alphabetically.
 - Follow `AGENTS.md` and ensure these commands succeed:
   - `black --check .`
   - `pytest -q`

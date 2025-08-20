@@ -10,3 +10,8 @@ output path, and `--colors` to split blocks into up to four color groups.
 - [Repo feature summary prompt](repo_feature_summary_prompt.md) – collect flywheel feature data
 - [Codex automation prompt](prompts-codex.md) – baseline instructions for automated agents.
 - [Codex spellcheck prompt](prompts-codex-spellcheck.md) – fix typos in docs.
+
+## Spellcheck
+
+Run `codespell` to catch typos. Project-specific words such as OpenSCAD and
+Gridfinity live in `dict/allow.txt`.
