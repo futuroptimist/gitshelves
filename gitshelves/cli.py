@@ -1,4 +1,5 @@
 import argparse
+import os
 from pathlib import Path
 from datetime import datetime
 
@@ -17,7 +18,9 @@ def main():
         description="Generate 3D GitHub contribution charts"
     )
     parser.add_argument("username", help="GitHub username")
-    parser.add_argument("--token", help="GitHub API token")
+    parser.add_argument(
+        "--token", help="GitHub API token (defaults to GH_TOKEN env var)"
+    )
     parser.add_argument("--start-year", type=int, help="First year of contributions")
     parser.add_argument("--end-year", type=int, help="Last year of contributions")
     parser.add_argument(
@@ -42,9 +45,10 @@ def main():
     )
     args = parser.parse_args()
 
+    token = args.token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     contribs = fetch_user_contributions(
         args.username,
-        token=args.token,
+        token=token,
         start_year=args.start_year,
         end_year=args.end_year,
     )
