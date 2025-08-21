@@ -1,3 +1,8 @@
+---
+title: 'Codex Spellcheck Prompt'
+slug: 'prompts-codex-spellcheck'
+---
+
 # Codex Spellcheck Prompt
 
 Use this prompt to automatically find and fix spelling mistakes in Markdown documentation.
