@@ -14,7 +14,9 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 2. Generate a personal access token from GitHub ("Settings → Developer settings →
    Personal access tokens") and assign it to `GH_TOKEN`.
 3. Run the CLI to generate a `.scad` file. The token is read from `GH_TOKEN`
-   if `--token` is omitted.
+   if `--token` is omitted. Library functions such as
+   `fetch_user_contributions` also fall back to `GH_TOKEN` or `GITHUB_TOKEN`
+   when no token is provided.
 
 ```bash
 GH_TOKEN=<your-token>
