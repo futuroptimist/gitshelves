@@ -27,7 +27,15 @@ python -m gitshelves.cli <github-username> \
     --months-per-row 10 --stl contributions.stl --colors 1
 ```
 
-The command will create `contributions.scad` (and optionally `contributions.stl`) in the current directory. Months are arranged in rows of twelve by default, but you can choose the grid width via `--months-per-row`.
+The command will create `contributions.scad` (and optionally `contributions.stl`) in the current
+directory. Months are arranged in rows of twelve by default, but you can choose the grid width via
+`--months-per-row`.
+
+The default layout fits twelve months on each row:
+
+```
+Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+```
 
 For instance, `--months-per-row 8` lays out eight months per row:
 
