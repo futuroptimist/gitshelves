@@ -7,3 +7,12 @@ def test_write_year_readme(tmp_path):
     text = readme.read_text()
     assert "January: 5 contributions" in text
     assert "February: 20 contributions" in text
+
+
+def test_write_year_readme_zero_and_plural(tmp_path):
+    counts = {(2024, 1): 1, (2024, 2): 10}
+    readme = write_year_readme(2024, counts, outdir=tmp_path)
+    text = readme.read_text()
+    assert "January: 1 contributions \u2192 1 cube" in text
+    assert "February: 10 contributions \u2192 2 cubes" in text
+    assert "March: 0 contributions \u2192 0 cubes" in text
