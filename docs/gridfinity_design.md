@@ -1,4 +1,4 @@
-# GitShelves × Gridfinity – Design Specification  
+# Gitshelves × Gridfinity – Design Specification
 *(v0.9 – 2025-07-29)*
 
 ---

@@ -19,6 +19,10 @@ def test_blocks_for_contributions():
     assert blocks_for_contributions(100) == 3
 
 
+def test_blocks_for_contributions_negative():
+    assert blocks_for_contributions(-5) == 0
+
+
 def test_generate_scad_monthly():
     counts = {
         (2021, 1): 1,
@@ -130,6 +134,31 @@ def test_scad_to_stl_uses_xvfb(monkeypatch, tmp_path):
 
     monkeypatch.setattr("shutil.which", which)
     monkeypatch.delenv("DISPLAY", raising=False)
+    called = {}
+
+    def fake_run(cmd, check):
+        called["cmd"] = cmd
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    scad_to_stl(str(scad), str(stl))
+    assert called["cmd"][0] == "xvfb-run"
+
+
+def test_scad_to_stl_empty_display(monkeypatch, tmp_path):
+    scad = tmp_path / "m.scad"
+    stl = tmp_path / "m.stl"
+    scad.write_text("cube(1);")
+
+    def which(binary):
+        if binary == "openscad":
+            return "/usr/bin/openscad"
+        if binary == "xvfb-run":
+            return "/usr/bin/xvfb-run"
+        return None
+
+    monkeypatch.setattr("shutil.which", which)
+    monkeypatch.setenv("DISPLAY", "")
     called = {}
 
     def fake_run(cmd, check):

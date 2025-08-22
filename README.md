@@ -11,17 +11,14 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 ## Usage
 
 1. Install the package in editable mode.
-2. Generate a personal access token from GitHub ("Settings → Developer settings →
-   Personal access tokens") and assign it to `GH_TOKEN`.
-3. Run the CLI to generate a `.scad` file. The token is read from `GH_TOKEN`
-   if `--token` is omitted.
-
-```bash
-GH_TOKEN=<your-token>
-```
+2. Generate a [personal access token](https://github.com/settings/tokens) and export it as
+   `GH_TOKEN`.
+3. Run the CLI to generate a `.scad` file. The token is read from `GH_TOKEN` or
+   `GITHUB_TOKEN` if `--token` is omitted.
 
 ```bash
 pip install -e .
+export GH_TOKEN=<your-token>
 python -m gitshelves.cli <github-username> \
     --start-year 2021 --end-year 2023 \
     --months-per-row 10 --stl contributions.stl --colors 1
@@ -45,7 +42,8 @@ Sep Oct Nov Dec
 
 Use `--colors` to control multi-color outputs. `--colors 2` produces one blocks file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group.
 
-Open `docs/viewer.html` in a browser to preview generated STL files with Three.js and experiment with different color counts.
+Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
+Three.js and experiment with different color counts.
 Use the file picker to load your baseplate and level STLs.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
@@ -74,12 +72,13 @@ See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs und
 git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
     openscad/lib/gridfinity-rebuilt
 # `scad_to_stl` automatically wraps `openscad` in `xvfb-run` when `$DISPLAY`
-# is missing, matching the CI configuration. Ensure `xvfb-run` is installed on
-# headless systems.
+# is unset or empty, matching the CI configuration. Ensure `xvfb-run` is
+# installed on headless systems.
 openscad -o stl/2024/baseplate_2x6.stl openscad/baseplate_2x6.scad
 ```
 
-Run `black --check .` and `pytest -q` before submitting changes.
+Run `black --check .`, `pytest -q`, and `codespell docs README.md` before submitting
+changes. Add project-specific terms to `dict/allow.txt`.
 
 ## STL Build Outputs
 
@@ -92,5 +91,5 @@ Each `stl/<year>` directory includes a generated `README.md` summarizing the bas
 
 OpenSCAD exits with status 1 when it cannot access an X display. The
 `scad_to_stl` helper wraps the command in `xvfb-run` when `$DISPLAY` is
-missing. Install `xvfb-run` if you still encounter this error on a headless
+unset or empty. Install `xvfb-run` if you still encounter this error on a headless
 machine.

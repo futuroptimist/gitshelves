@@ -1,6 +1,8 @@
 from datetime import datetime
 import types
+import pytest
 
+import pytest
 import gitshelves.fetch as fetch
 
 
@@ -72,3 +74,15 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
     assert headers_used[0]["Authorization"] == "token T"
     assert items == [{"page": 1}, {"page": 2}]
     assert "2021-01-01" in queries[0]
+
+
+def test_fetch_user_contributions_rejects_invalid_year_range(monkeypatch):
+    """start_year must not be greater than end_year."""
+
+    def fake_get(*args, **kwargs):  # pragma: no cover - should not be called
+        raise AssertionError("network call not expected")
+
+    monkeypatch.setattr(fetch.requests, "get", fake_get)
+
+    with pytest.raises(ValueError):
+        fetch.fetch_user_contributions("me", start_year=2025, end_year=2024)
