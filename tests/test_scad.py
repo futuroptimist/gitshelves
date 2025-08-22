@@ -19,6 +19,10 @@ def test_blocks_for_contributions():
     assert blocks_for_contributions(100) == 3
 
 
+def test_blocks_for_contributions_negative():
+    assert blocks_for_contributions(-5) == 0
+
+
 def test_generate_scad_monthly():
     counts = {
         (2021, 1): 1,
