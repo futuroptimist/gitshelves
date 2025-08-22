@@ -51,6 +51,41 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     assert f"Wrote {output}" in captured.out
 
 
+def test_cli_creates_output_dirs(tmp_path, monkeypatch):
+    output = tmp_path / "nested" / "dir" / "out.scad"
+    args = argparse.Namespace(
+        username="u",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=str(tmp_path / "nested" / "dir" / "out.stl"),
+        colors=1,
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "DATA"
+    )
+    called = {}
+
+    def fake_stl(src, dest):
+        called["stl"] = (src, dest)
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
+
+    cli.main()
+
+    assert output.read_text() == "DATA"
+    assert called["stl"][0] == str(output)
+    assert (tmp_path / "nested" / "dir").is_dir()
+
+
 def test_cli_env_token(tmp_path, monkeypatch):
     output = tmp_path / "out.scad"
     args = argparse.Namespace(
