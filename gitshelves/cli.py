@@ -65,11 +65,15 @@ def main():
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
-        Path(args.output).write_text(scad_text)
-        print(f"Wrote {args.output}")
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(scad_text)
+        print(f"Wrote {output_path}")
         if args.stl:
-            scad_to_stl(str(Path(args.output)), str(Path(args.stl)))
-            print(f"Wrote {args.stl}")
+            stl_path = Path(args.stl)
+            stl_path.parent.mkdir(parents=True, exist_ok=True)
+            scad_to_stl(str(output_path), str(stl_path))
+            print(f"Wrote {stl_path}")
     else:
         level_scads = generate_scad_monthly_levels(
             counts, months_per_row=args.months_per_row
@@ -78,11 +82,14 @@ def main():
             level_scads, args.colors - 1 if args.colors > 1 else 1
         )
         base_output = Path(args.output)
+        base_output.parent.mkdir(parents=True, exist_ok=True)
         if base_output.suffix:
             base_output = base_output.with_suffix("")
         base_stl = Path(args.stl) if args.stl else None
-        if base_stl and base_stl.suffix:
-            base_stl = base_stl.with_suffix("")
+        if base_stl:
+            base_stl.parent.mkdir(parents=True, exist_ok=True)
+            if base_stl.suffix:
+                base_stl = base_stl.with_suffix("")
         for idx, text in grouped.items():
             scad_path = base_output.with_name(f"{base_output.name}_color{idx}.scad")
             scad_path.write_text(text)

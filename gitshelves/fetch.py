@@ -20,7 +20,7 @@ def fetch_user_contributions(
     end = datetime.utcnow().year if end_year is None else end_year
     start = end if start_year is None else start_year
     if start > end:
-        raise ValueError("start_year must be <= end_year")
+        raise ValueError("start_year cannot be after end_year")
     start_date = datetime(start, 1, 1)
     end_date = datetime(end, 12, 31)
     query = f"author:{username} created:{start_date.strftime('%Y-%m-%d')}..{end_date.strftime('%Y-%m-%d')}"

@@ -1,5 +1,6 @@
 from datetime import datetime
 import types
+import pytest
 
 import pytest
 import gitshelves.fetch as fetch
