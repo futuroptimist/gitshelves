@@ -79,7 +79,8 @@ git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
 openscad -o stl/2024/baseplate_2x6.stl openscad/baseplate_2x6.scad
 ```
 
-Run `black --check .` and `pytest -q` before submitting changes.
+Run `black --check .`, `pytest -q`, and `codespell docs README.md` before submitting
+changes. Add project-specific terms to `dict/allow.txt`.
 
 ## STL Build Outputs
 
