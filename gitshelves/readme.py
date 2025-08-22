@@ -32,7 +32,7 @@ def write_year_readme(
         cubes = blocks_for_contributions(count)
         name = datetime(year, month, 1).strftime("%B")
         lines.append(
-            f"- {name}: {count} contributions \u2192 {cubes} cube{'s' if cubes != 1 else ''}"
+            f"- {name}: {count} contribution{'s' if count != 1 else ''} \u2192 {cubes} cube{'s' if cubes != 1 else ''}"
         )
 
     lines += [
