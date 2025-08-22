@@ -159,7 +159,7 @@ def scad_to_stl(scad_file: str, stl_file: str) -> None:
         raise FileNotFoundError("openscad not found")
 
     cmd = ["openscad", "-o", stl_file, scad_file]
-    if "DISPLAY" not in os.environ:
+    if not os.environ.get("DISPLAY"):
         if shutil.which("xvfb-run") is None:
             raise RuntimeError("xvfb-run required for headless rendering")
         cmd = [
