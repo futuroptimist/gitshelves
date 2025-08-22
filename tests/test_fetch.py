@@ -1,5 +1,6 @@
 from datetime import datetime
 import types
+import pytest
 
 import gitshelves.fetch as fetch
 
@@ -72,3 +73,8 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
     assert headers_used[0]["Authorization"] == "token T"
     assert items == [{"page": 1}, {"page": 2}]
     assert "2021-01-01" in queries[0]
+
+
+def test_fetch_invalid_year_range():
+    with pytest.raises(ValueError):
+        fetch.fetch_user_contributions("me", start_year=2022, end_year=2021)
