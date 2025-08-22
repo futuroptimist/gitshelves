@@ -74,8 +74,8 @@ See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs und
 git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
     openscad/lib/gridfinity-rebuilt
 # `scad_to_stl` automatically wraps `openscad` in `xvfb-run` when `$DISPLAY`
-# is missing, matching the CI configuration. Ensure `xvfb-run` is installed on
-# headless systems.
+# is unset or empty, matching the CI configuration. Ensure `xvfb-run` is
+# installed on headless systems.
 openscad -o stl/2024/baseplate_2x6.stl openscad/baseplate_2x6.scad
 ```
 
@@ -92,5 +92,5 @@ Each `stl/<year>` directory includes a generated `README.md` summarizing the bas
 
 OpenSCAD exits with status 1 when it cannot access an X display. The
 `scad_to_stl` helper wraps the command in `xvfb-run` when `$DISPLAY` is
-missing. Install `xvfb-run` if you still encounter this error on a headless
+unset or empty. Install `xvfb-run` if you still encounter this error on a headless
 machine.

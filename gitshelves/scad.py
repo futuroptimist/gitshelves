@@ -146,10 +146,10 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
 def scad_to_stl(scad_file: str, stl_file: str) -> None:
     """Convert ``scad_file`` to ``stl_file`` using the ``openscad`` CLI.
 
-    If the current environment lacks an X display (``$DISPLAY`` is unset), the
-    command is automatically wrapped in ``xvfb-run`` when available. This mirrors
-    the CI configuration and prevents ``openscad`` from exiting with code ``1``
-    on headless servers.
+    If the current environment lacks an X display (``$DISPLAY`` is unset or
+    empty), the command is automatically wrapped in ``xvfb-run`` when
+    available. This mirrors the CI configuration and prevents ``openscad`` from
+    exiting with code ``1`` on headless servers.
     """
     import os
     import shutil
@@ -159,7 +159,7 @@ def scad_to_stl(scad_file: str, stl_file: str) -> None:
         raise FileNotFoundError("openscad not found")
 
     cmd = ["openscad", "-o", stl_file, scad_file]
-    if "DISPLAY" not in os.environ:
+    if not os.environ.get("DISPLAY"):
         if shutil.which("xvfb-run") is None:
             raise RuntimeError("xvfb-run required for headless rendering")
         cmd = [
