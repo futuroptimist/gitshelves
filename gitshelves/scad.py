@@ -129,10 +129,10 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
 def scad_to_stl(scad_file: str, stl_file: str) -> None:
     """Convert ``scad_file`` to ``stl_file`` using the ``openscad`` CLI.
 
-    If the current environment lacks an X display (``$DISPLAY`` is unset), the
-    command is automatically wrapped in ``xvfb-run`` when available. This mirrors
-    the CI configuration and prevents ``openscad`` from exiting with code ``1``
-    on headless servers.
+    If the current environment lacks an X display (``$DISPLAY`` is unset or
+    empty), the command is automatically wrapped in ``xvfb-run`` when
+    available. This mirrors the CI configuration and prevents ``openscad`` from
+    exiting with code ``1`` on headless servers.
     """
     import os
     import shutil
