@@ -1,6 +1,8 @@
 from datetime import datetime
 import types
+import pytest
 
+import pytest
 import gitshelves.fetch as fetch
 
 
@@ -100,3 +102,15 @@ def test_fetch_uses_env_token(monkeypatch):
     fetch.fetch_user_contributions("me")
 
     assert headers_used.get("Authorization") == "token SECRET"
+    
+    
+def test_fetch_user_contributions_rejects_invalid_year_range(monkeypatch):
+    """start_year must not be greater than end_year."""
+
+    def fake_get(*args, **kwargs):  # pragma: no cover - should not be called
+        raise AssertionError("network call not expected")
+
+    monkeypatch.setattr(fetch.requests, "get", fake_get)
+
+    with pytest.raises(ValueError):
+        fetch.fetch_user_contributions("me", start_year=2025, end_year=2024)
