@@ -1,3 +1,4 @@
+# Words allowed by codespell. Keep sorted alphabetically.
 Gitshelves
 Gridfinity
 OpenSCAD

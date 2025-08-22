@@ -13,5 +13,6 @@ output path, and `--colors` to split blocks into up to four color groups.
 
 ## Spellcheck
 
-Run `codespell` to catch typos. Project-specific words such as OpenSCAD and
-Gridfinity live in `dict/allow.txt`.
+Run `codespell` to catch typos. Project-specific words such as Gitshelves,
+Gridfinity, OpenSCAD, and Xvfb live in `dict/allow.txt`. Keep the list sorted
+alphabetically.
