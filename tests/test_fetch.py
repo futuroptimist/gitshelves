@@ -1,7 +1,4 @@
 from datetime import datetime
-import types
-import pytest
-
 import pytest
 import gitshelves.fetch as fetch
 
@@ -74,6 +71,33 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
     assert headers_used[0]["Authorization"] == "token T"
     assert items == [{"page": 1}, {"page": 2}]
     assert "2021-01-01" in queries[0]
+
+
+def test_fetch_user_contributions_env_token(monkeypatch):
+    called = {}
+
+    def fake_get(url, headers=None, params=None, timeout=10):
+        called["headers"] = headers
+
+        class Resp:
+            links = {}
+
+            @staticmethod
+            def raise_for_status():
+                pass
+
+            @staticmethod
+            def json():
+                return {"items": []}
+
+        return Resp()
+
+    monkeypatch.setattr(fetch.requests, "get", fake_get)
+    monkeypatch.setenv("GH_TOKEN", "T")
+
+    fetch.fetch_user_contributions("me")
+
+    assert called["headers"]["Authorization"] == "token T"
 
 
 def test_fetch_user_contributions_rejects_invalid_year_range(monkeypatch):
