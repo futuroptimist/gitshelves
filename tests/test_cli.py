@@ -120,6 +120,41 @@ def test_cli_env_token(tmp_path, monkeypatch):
     assert captured["token"] == "envtok"
 
 
+def test_cli_github_token_env(tmp_path, monkeypatch):
+    output = tmp_path / "out.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+    )
+
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "envtok2")
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+
+    captured = {}
+
+    def fake_fetch(username, token=None, start_year=None, end_year=None):
+        captured["token"] = token
+        return [{"created_at": "2021-01-01T00:00:00Z"}]
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", fake_fetch)
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "S"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda a, b: None)
+
+    cli.main()
+
+    assert output.read_text() == "S"
+    assert captured["token"] == "envtok2"
+
+
 def test_cli_runpy(tmp_path, monkeypatch):
     output = tmp_path / "file.scad"
     args = argparse.Namespace(
@@ -212,3 +247,16 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
     assert called == [(str(scad1), str(stl1)), (str(scad2), str(stl2))]
     captured = capsys.readouterr()
     assert f"Wrote {scad1}" in captured.out
+
+
+def test_cli_help_mentions_env_vars():
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, "-m", "gitshelves.cli", "--help"],
+        capture_output=True,
+        text=True,
+    )
+    assert "GH_TOKEN" in result.stdout
+    assert "GITHUB_TOKEN" in result.stdout
