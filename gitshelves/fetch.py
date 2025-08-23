@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from typing import Dict, Iterable, List
 
@@ -41,15 +42,18 @@ def fetch_user_contributions(
     """Fetch contribution data for a user using GitHub's Search API.
 
     Parameters can specify a range of years to query. If no range is
-    provided, only the current year is fetched.
+    provided, only the current year is fetched. When ``token`` is omitted,
+    ``GH_TOKEN`` or ``GITHUB_TOKEN`` environment variables are used if set.
     """
     start, end = _determine_year_range(start_year, end_year)
     start_date = datetime(start, 1, 1)
     end_date = datetime(end, 12, 31)
+
     query = (
         f"author:{username} "
         f"created:{start_date.strftime('%Y-%m-%d')}..{end_date.strftime('%Y-%m-%d')}"
     )
+    token = token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     headers = {"Authorization": f"token {token}"} if token else {}
     params = {"q": query, "per_page": 100}
     return list(_search_api(GITHUB_API, headers, params))
