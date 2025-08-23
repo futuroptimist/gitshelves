@@ -111,6 +111,9 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     if not level_scads:
         return {}
 
+    if min(level_scads) < 1:
+        raise ValueError("level keys must be >= 1")
+
     if groups == 1:
         lines: list[str] = []
         for text in level_scads.values():
