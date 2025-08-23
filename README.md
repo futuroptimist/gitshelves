@@ -15,6 +15,8 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
    `GH_TOKEN`.
 3. Run the CLI to generate a `.scad` file. The token is read from `GH_TOKEN` or
    `GITHUB_TOKEN` if `--token` is omitted.
+   `fetch_user_contributions` likewise falls back to these variables when
+   no token argument is supplied.
 
 ```bash
 pip install -e .
