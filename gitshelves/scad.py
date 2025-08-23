@@ -126,14 +126,14 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
 
     if groups == 1:
         lines: list[str] = []
-        for text in level_scads.values():
-            lines.extend(text.splitlines()[1:])
+        for level in sorted(level_scads):
+            lines.extend(level_scads[level].splitlines()[1:])
         return {1: HEADER + "\n" + "\n".join(lines)} if lines else {}
 
     max_level = max(level_scads)
     levels_per_group = math.ceil(max_level / groups)
     grouped: Dict[int, list[str]] = defaultdict(list)
-    for level, text in level_scads.items():
+    for level, text in sorted(level_scads.items()):
         idx = (level - 1) // levels_per_group + 1
         grouped[idx].extend(text.splitlines()[1:])
     return {idx: HEADER + "\n" + "\n".join(lines) for idx, lines in grouped.items()}
