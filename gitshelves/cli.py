@@ -19,7 +19,8 @@ def main():
     )
     parser.add_argument("username", help="GitHub username")
     parser.add_argument(
-        "--token", help="GitHub API token (defaults to GH_TOKEN env var)"
+        "--token",
+        help="GitHub API token (defaults to GH_TOKEN or GITHUB_TOKEN env vars)",
     )
     parser.add_argument("--start-year", type=int, help="First year of contributions")
     parser.add_argument("--end-year", type=int, help="Last year of contributions")

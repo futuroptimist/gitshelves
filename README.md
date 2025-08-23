@@ -18,7 +18,7 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 
 ```bash
 pip install -e .
-export GH_TOKEN=<your-token>
+export GH_TOKEN=<your-token>  # or GITHUB_TOKEN
 python -m gitshelves.cli <github-username> \
     --start-year 2021 --end-year 2023 \
     --months-per-row 10 --stl contributions.stl --colors 1
