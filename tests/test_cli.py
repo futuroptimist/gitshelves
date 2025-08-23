@@ -212,3 +212,16 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
     assert called == [(str(scad1), str(stl1)), (str(scad2), str(stl2))]
     captured = capsys.readouterr()
     assert f"Wrote {scad1}" in captured.out
+
+
+def test_cli_help_mentions_env_vars():
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, "-m", "gitshelves.cli", "--help"],
+        capture_output=True,
+        text=True,
+    )
+    assert "GH_TOKEN" in result.stdout
+    assert "GITHUB_TOKEN" in result.stdout
