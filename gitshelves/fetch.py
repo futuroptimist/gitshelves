@@ -1,9 +1,35 @@
 import os
 import requests
 from datetime import datetime, UTC
-from typing import List, Dict
+from typing import Dict, Iterable, List
 
 GITHUB_API = "https://api.github.com/search/issues"
+
+
+def _determine_year_range(
+    start_year: int | None, end_year: int | None
+) -> tuple[int, int]:
+    """Return inclusive start and end years, validating user input."""
+    end = datetime.utcnow().year if end_year is None else end_year
+    start = end if start_year is None else start_year
+    if start > end:
+        raise ValueError("start_year cannot be after end_year")
+    return start, end
+
+
+def _search_api(url: str, headers: dict, params: dict) -> Iterable[Dict]:
+    """Yield items across paginated GitHub search API responses."""
+    page = 1
+    while True:
+        resp = requests.get(
+            url, headers=headers, params={**params, "page": page}, timeout=10
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        yield from data.get("items", [])
+        if "next" not in resp.links:
+            break
+        page += 1
 
 
 def fetch_user_contributions(
@@ -18,28 +44,24 @@ def fetch_user_contributions(
     provided, only the current year is fetched. When ``token`` is omitted,
     ``GH_TOKEN`` or ``GITHUB_TOKEN`` environment variables are used if set.
     """
+    # Determine year range
     end = datetime.now(UTC).year if end_year is None else end_year
     start = end if start_year is None else start_year
     if start > end:
         raise ValueError("start_year cannot be after end_year")
+
+    # Build query dates
     start_date = datetime(start, 1, 1)
     end_date = datetime(end, 12, 31)
-    query = f"author:{username} created:{start_date.strftime('%Y-%m-%d')}..{end_date.strftime('%Y-%m-%d')}"
-    url = GITHUB_API
-    headers = {}
+
+    query = (
+        f"author:{username} "
+        f"created:{start_date.strftime('%Y-%m-%d')}..{end_date.strftime('%Y-%m-%d')}"
+    )
+
+    # Resolve token (explicit > env vars)
     token = token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
-    if token:
-        headers["Authorization"] = f"token {token}"
+    headers = {"Authorization": f"token {token}"} if token else {}
+
     params = {"q": query, "per_page": 100}
-    items = []
-    page = 1
-    while True:
-        params["page"] = page
-        resp = requests.get(url, headers=headers, params=params, timeout=10)
-        resp.raise_for_status()
-        data = resp.json()
-        items.extend(data.get("items", []))
-        if "next" not in resp.links:
-            break
-        page += 1
-    return items
+    return list(_search_api(GITHUB_API, headers, params))
