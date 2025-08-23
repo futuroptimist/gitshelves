@@ -11,8 +11,8 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 ## Usage
 
 1. Install the package in editable mode.
-2. Generate a [personal access token](https://github.com/settings/tokens) and export it as
-   `GH_TOKEN`.
+2. Generate a [personal access token](https://github.com/settings/personal-access-tokens/new)
+   and export it as `GH_TOKEN`.
 3. Run the CLI to generate a `.scad` file. The token is read from `GH_TOKEN` or
    `GITHUB_TOKEN` if `--token` is omitted.
 
@@ -43,7 +43,7 @@ Sep Oct Nov Dec
 Use `--colors` to control multi-color outputs. `--colors 2` produces one blocks file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
-Three.js and experiment with different color counts.
+[Three.js](https://threejs.org/) and experiment with different color counts.
 Use the file picker to load your baseplate and level STLs.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
