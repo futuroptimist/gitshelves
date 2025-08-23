@@ -11,6 +11,10 @@ output path, and `--colors` to split blocks into up to four color groups.
 - [Codex automation prompt](prompts-codex.md) – baseline instructions for automated agents.
 - [Codex spellcheck prompt](prompts-codex-spellcheck.md) – fix typos in docs.
 
+## Design
+
+- [Gridfinity design specification](gridfinity_design.md) – baseplate and cube dimensions.
+
 ## Spellcheck
 
 Run `codespell` to catch typos. Project-specific words such as Gitshelves,
