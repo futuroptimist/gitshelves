@@ -5,7 +5,7 @@
 
 ## 1  Background & Goal
 
-`gitshelves` visualises personal GitHub activity as physical objects.  
+`gitshelves` visualizes personal GitHub activity as physical objects.
 This iteration makes the project **Gridfinity-compatible** so that the printed parts integrate with the de-facto 42 × 42 mm modular storage standard.
 We want:
 
@@ -79,7 +79,7 @@ gridfinity_baseplate(grid_x = 6,
 ```
 
 ### 4.2 Contribution cube
-Each cube is a 1 × 1 × 1 U bin with a solid top; colour is a post-print choice (filament swap).
+Each cube is a 1 × 1 × 1 U bin with a solid top; color is a post-print choice (filament swap).
 Stacking one cube per order of magnitude (1s, 10s, 100s,…) produces a vertical bar chart for each month.
 
 ```scad
