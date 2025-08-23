@@ -15,7 +15,8 @@ def fetch_user_contributions(
     """Fetch contribution data for a user using GitHub's Search API.
 
     Parameters can specify a range of years to query. If no range is
-    provided, only the current year is fetched.
+    provided, only the current year is fetched. When ``token`` is omitted,
+    ``GH_TOKEN`` or ``GITHUB_TOKEN`` environment variables are used if set.
     """
     end = datetime.utcnow().year if end_year is None else end_year
     start = end if start_year is None else start_year
@@ -26,6 +27,7 @@ def fetch_user_contributions(
     query = f"author:{username} created:{start_date.strftime('%Y-%m-%d')}..{end_date.strftime('%Y-%m-%d')}"
     url = GITHUB_API
     headers = {}
+    token = token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     if token:
         headers["Authorization"] = f"token {token}"
     params = {"q": query, "per_page": 100}
