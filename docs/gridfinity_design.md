@@ -17,7 +17,8 @@ We want:
 * A **2 × 6 base plate** (6 columns, 2 rows) that obeys the 42 mm grid and 41.5 mm clearance rules.
   * A **"contribution cube"** (1 × 1 × 1 U) used to encode the order of magnitude of monthly commits.
 
-* **CI pipeline** (GitHub Actions) that converts every `*.scad` into a binary STL artifact on each push and publishes them as build outputs.
+* **CI pipeline** (GitHub Actions) that converts every `*.scad` into a binary STL artifact on each
+  push and publishes them as build outputs.
 
 * Gridfinity libraries vendored (or declared as `git submodule`) so anyone can regenerate the models locally.
 
@@ -101,7 +102,7 @@ bin(
 | setup OpenSCAD | Use Docker image openscad/openscad:latest |
 | build | install openscad and xvfb via apt; run `xvfb-run openscad` per file |
 | matrix | Years = [2021…2025]; pass -Dyear=… if future parameterisation needed |
-| artifacts | Upload each rendered STL; optionally commit to stl/YYYY/ on main via ad-m/github-push-action@v0.8.0. |
+| artifacts | Upload rendered STLs; optionally commit stl/YYYY/ via github-push-action@v0.8.0. |
 
 Example (high-level):
 

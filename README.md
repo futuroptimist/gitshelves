@@ -11,8 +11,8 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 ## Usage
 
 1. Install the package in editable mode.
-2. Generate a [personal access token](https://github.com/settings/tokens) and export it as
-   `GH_TOKEN`.
+2. Generate a [personal access token](https://github.com/settings/personal-access-tokens/new)
+   and export it as `GH_TOKEN`.
 3. Run the CLI to generate a `.scad` file. The token is read from `GH_TOKEN` or
    `GITHUB_TOKEN` if `--token` is omitted.
 
@@ -24,7 +24,7 @@ python -m gitshelves.cli <github-username> \
     --months-per-row 10 --stl contributions.stl --colors 1
 ```
 
-The command will create `contributions.scad` (and optionally `contributions.stl`) in the current directory. Months are arranged in rows of twelve by default, but you can choose the grid width via `--months-per-row`.
+The command will create `contributions.scad` (and optionally `contributions.stl`) in the current directory. The example sets `--months-per-row 10`; omit this flag to keep the default of 12 months per row.
 
 For instance, `--months-per-row 8` lays out eight months per row:
 
@@ -40,10 +40,10 @@ Jan Feb Mar Apr May Jun Jul Aug
 Sep Oct Nov Dec
 ```
 
-Use `--colors` to control multi-color outputs. `--colors 2` produces one blocks file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group.
+Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
-Three.js and experiment with different color counts.
+[Three.js](https://threejs.org/) and experiment with different color counts.
 Use the file picker to load your baseplate and level STLs.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
@@ -56,7 +56,8 @@ If you fork this repository, replace `futuroptimist` with your GitHub username i
          ##     ###
 ```
 
-See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs under [docs/](docs/).
+See [AGENTS.md](AGENTS.md) for agent workflow guidelines and
+[docs](docs/index.md) for additional documentation.
 
 ## Dependencies
 
