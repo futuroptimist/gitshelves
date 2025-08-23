@@ -56,7 +56,8 @@ If you fork this repository, replace `futuroptimist` with your GitHub username i
          ##     ###
 ```
 
-See [AGENTS.md](AGENTS.md) for agent workflow guidelines and additional docs under [docs/](docs/).
+See [AGENTS.md](AGENTS.md) for agent workflow guidelines and
+[docs](docs/index.md) for additional documentation.
 
 ## Dependencies
 
