@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 import pytest
 import gitshelves.fetch as fetch
 
@@ -59,8 +59,8 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
 
     class DummyDateTime(datetime):
         @classmethod
-        def utcnow(cls):
-            return datetime(2021, 1, 1)
+        def now(cls, tz=None):
+            return datetime(2021, 1, 1, tzinfo=tz)
 
     monkeypatch.setattr(fetch, "datetime", DummyDateTime)
     monkeypatch.setattr(fetch.requests, "get", fake_get)
@@ -112,16 +112,24 @@ def test_fetch_user_contributions_rejects_invalid_year_range(monkeypatch):
         fetch.fetch_user_contributions("me", start_year=2025, end_year=2024)
 
 
-def test_determine_year_range_defaults(monkeypatch):
-    """Defaults should fall back to the current year."""
+def test_determine_year_range_uses_timezone(monkeypatch):
+    """Uses timezone-aware datetime to determine the current year."""
+
+    called = {}
 
     class DummyDateTime(datetime):
         @classmethod
-        def utcnow(cls):
-            return datetime(2022, 6, 1)
+        def now(cls, tz=None):
+            called["tz"] = tz
+            return datetime(2021, 1, 1, tzinfo=tz)
+
+        @classmethod
+        def utcnow(cls):  # pragma: no cover - should not be called
+            raise AssertionError("utcnow should not be used")
 
     monkeypatch.setattr(fetch, "datetime", DummyDateTime)
 
-    assert fetch._determine_year_range(None, None) == (2022, 2022)
-    assert fetch._determine_year_range(None, 2020) == (2020, 2020)
-    assert fetch._determine_year_range(2020, None) == (2020, 2022)
+    start, end = fetch._determine_year_range(None, None)
+
+    assert start == end == 2021
+    assert called["tz"] is UTC
