@@ -42,18 +42,20 @@ def _iter_monthly_block_positions(
 
     first_year = min(year for year, _ in contributions)
     last_year = max(year for year, _ in contributions)
-    idx = 0
-    for year in range(first_year, last_year + 1):
-        for month in range(1, 13):
-            count = contributions.get((year, month), 0)
-            for level in range(blocks_for_contributions(count)):
-                col = idx % months_per_row
-                row = idx // months_per_row
-                x = col * SPACING
-                y = row * SPACING
-                z = level * BLOCK_SIZE
-                yield _BlockPosition(x, y, z, year, month, level)
-            idx += 1
+    month_iter = (
+        (year, month)
+        for year in range(first_year, last_year + 1)
+        for month in range(1, 13)
+    )
+    for idx, (year, month) in enumerate(month_iter):
+        count = contributions.get((year, month), 0)
+        for level in range(blocks_for_contributions(count)):
+            col = idx % months_per_row
+            row = idx // months_per_row
+            x = col * SPACING
+            y = row * SPACING
+            z = level * BLOCK_SIZE
+            yield _BlockPosition(x, y, z, year, month, level)
 
 
 def _format_block(pos: _BlockPosition) -> str:
@@ -63,16 +65,22 @@ def _format_block(pos: _BlockPosition) -> str:
     )
 
 
+def _iter_monthly_block_lines(
+    contributions: Dict[Tuple[int, int], int], months_per_row: int
+) -> Iterator[tuple[int, str]]:
+    """Yield block level and formatted line for monthly contributions."""
+    for pos in _iter_monthly_block_positions(contributions, months_per_row):
+        yield pos.level, _format_block(pos)
+
+
 def generate_scad(contributions: Iterable[int]) -> str:
     """Generate an OpenSCAD script for a sequence of daily contributions."""
     scad_lines = [HEADER]
     for idx, count in enumerate(contributions):
-        blocks = blocks_for_contributions(count)
-        for level in range(blocks):
-            x = idx * SPACING
-            y = 0
+        x = idx * SPACING
+        for level in range(blocks_for_contributions(count)):
             z = level * BLOCK_SIZE
-            scad_lines.append(f"translate([{x}, {y}, {z}]) cube({BLOCK_SIZE});")
+            scad_lines.append(f"translate([{x}, 0, {z}]) cube({BLOCK_SIZE});")
     return "\n".join(scad_lines)
 
 
@@ -88,8 +96,8 @@ def generate_scad_monthly(
     so on.
     """
     scad_lines = [HEADER]
-    for pos in _iter_monthly_block_positions(contributions, months_per_row):
-        scad_lines.append(_format_block(pos))
+    for _, line in _iter_monthly_block_lines(contributions, months_per_row):
+        scad_lines.append(line)
     return "\n".join(scad_lines)
 
 
@@ -102,10 +110,15 @@ def generate_scad_monthly_levels(
     This allows printing different contribution magnitudes in separate colors.
     """
     levels: Dict[int, list[str]] = defaultdict(list)
-    for pos in _iter_monthly_block_positions(contributions, months_per_row):
-        levels[pos.level + 1].append(_format_block(pos))
+    for level, line in _iter_monthly_block_lines(contributions, months_per_row):
+        levels[level + 1].append(line)
 
     return {lvl: HEADER + "\n" + "\n".join(lines) for lvl, lines in levels.items()}
+
+
+def _body_lines(scad_text: str) -> list[str]:
+    """Return SCAD lines without the generated header."""
+    return scad_text.splitlines()[1:]
 
 
 def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str]:
@@ -124,18 +137,12 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     if min(level_scads) < 1:
         raise ValueError("level keys must be >= 1")
 
-    if groups == 1:
-        lines: list[str] = []
-        for level in sorted(level_scads):
-            lines.extend(level_scads[level].splitlines()[1:])
-        return {1: HEADER + "\n" + "\n".join(lines)} if lines else {}
-
     max_level = max(level_scads)
     levels_per_group = math.ceil(max_level / groups)
     grouped: Dict[int, list[str]] = defaultdict(list)
     for level, text in sorted(level_scads.items()):
         idx = (level - 1) // levels_per_group + 1
-        grouped[idx].extend(text.splitlines()[1:])
+        grouped[idx].extend(_body_lines(text))
     return {idx: HEADER + "\n" + "\n".join(lines) for idx, lines in grouped.items()}
 
 
