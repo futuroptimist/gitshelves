@@ -55,11 +55,12 @@ def test_iter_monthly_block_positions_empty():
 
 
 def test_iter_monthly_block_positions_requires_positive_months_per_row():
-    counts = {(2021, 1): 1}
+    """months_per_row must be a positive integer."""
+
     with pytest.raises(ValueError):
-        list(_iter_monthly_block_positions(counts, 0))
+        list(_iter_monthly_block_positions({(2021, 1): 1}, 0))
     with pytest.raises(ValueError):
-        list(_iter_monthly_block_positions(counts, -1))
+        list(_iter_monthly_block_positions({(2021, 1): 1}, -1))
 
 
 def test_generate_scad_monthly_levels():
