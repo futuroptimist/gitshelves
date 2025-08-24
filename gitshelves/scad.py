@@ -108,6 +108,11 @@ def generate_scad_monthly_levels(
     return {lvl: HEADER + "\n" + "\n".join(lines) for lvl, lines in levels.items()}
 
 
+def _body_lines(scad_text: str) -> list[str]:
+    """Return SCAD lines without the generated header."""
+    return scad_text.splitlines()[1:]
+
+
 def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str]:
     """Combine level-specific SCAD snippets into ``groups`` color groups.
 
@@ -124,18 +129,12 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     if min(level_scads) < 1:
         raise ValueError("level keys must be >= 1")
 
-    if groups == 1:
-        lines: list[str] = []
-        for level in sorted(level_scads):
-            lines.extend(level_scads[level].splitlines()[1:])
-        return {1: HEADER + "\n" + "\n".join(lines)} if lines else {}
-
     max_level = max(level_scads)
     levels_per_group = math.ceil(max_level / groups)
     grouped: Dict[int, list[str]] = defaultdict(list)
     for level, text in sorted(level_scads.items()):
         idx = (level - 1) // levels_per_group + 1
-        grouped[idx].extend(text.splitlines()[1:])
+        grouped[idx].extend(_body_lines(text))
     return {idx: HEADER + "\n" + "\n".join(lines) for idx, lines in grouped.items()}
 
 
