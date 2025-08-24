@@ -1,7 +1,9 @@
 import argparse
 from pathlib import Path
 
+import pytest
 import gitshelves.cli as cli
+import gitshelves
 
 
 def test_cli_main(tmp_path, monkeypatch, capsys):
@@ -32,7 +34,9 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
         colors=1,
     )
 
-    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
     monkeypatch.setattr(cli, "fetch_user_contributions", fake_fetch)
     called = {}
     monkeypatch.setattr(cli, "generate_scad_monthly", fake_generate)
@@ -63,7 +67,9 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
         stl=str(tmp_path / "nested" / "dir" / "out.stl"),
         colors=1,
     )
-    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
     monkeypatch.setattr(
         cli,
         "fetch_user_contributions",
@@ -100,7 +106,9 @@ def test_cli_env_token(tmp_path, monkeypatch):
     )
 
     monkeypatch.setenv("GH_TOKEN", "envtok")
-    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
 
     captured = {}
 
@@ -135,7 +143,9 @@ def test_cli_github_token_env(tmp_path, monkeypatch):
 
     monkeypatch.delenv("GH_TOKEN", raising=False)
     monkeypatch.setenv("GITHUB_TOKEN", "envtok2")
-    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
 
     captured = {}
 
@@ -168,7 +178,9 @@ def test_cli_runpy(tmp_path, monkeypatch):
         colors=1,
     )
 
-    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
 
     import sys, types, runpy
 
@@ -212,7 +224,9 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
         stl=str(tmp_path / "c.stl"),
         colors=3,
     )
-    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
 
     def fake_fetch(username, token=None, start_year=None, end_year=None):
         return [{"created_at": "2021-02-01T00:00:00Z"}]
@@ -247,6 +261,13 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
     assert called == [(str(scad1), str(stl1)), (str(scad2), str(stl2))]
     captured = capsys.readouterr()
     assert f"Wrote {scad1}" in captured.out
+
+
+def test_cli_version(capsys):
+    with pytest.raises(SystemExit):
+        cli.main(["--version"])
+    out = capsys.readouterr().out.strip()
+    assert gitshelves.__version__ in out
 
 
 def test_cli_help_mentions_env_vars():
