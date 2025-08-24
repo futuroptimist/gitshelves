@@ -1,4 +1,6 @@
 from datetime import datetime
+import warnings
+
 import pytest
 import gitshelves.fetch as fetch
 
@@ -62,6 +64,10 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
         def utcnow(cls):
             return datetime(2021, 1, 1)
 
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2021, 1, 1, tzinfo=tz)
+
     monkeypatch.setattr(fetch, "datetime", DummyDateTime)
     monkeypatch.setattr(fetch.requests, "get", fake_get)
 
@@ -98,6 +104,35 @@ def test_fetch_user_contributions_env_token(monkeypatch):
     fetch.fetch_user_contributions("me")
 
     assert called["headers"]["Authorization"] == "token T"
+
+
+def test_fetch_user_contributions_no_deprecation(monkeypatch):
+    """fetch_user_contributions should not emit DeprecationWarning."""
+
+    def fake_get(url, headers=None, params=None, timeout=10):
+        class Resp:
+            links = {}
+
+            @staticmethod
+            def raise_for_status():
+                pass
+
+            @staticmethod
+            def json():
+                return {"items": []}
+
+        return Resp()
+
+    monkeypatch.setattr(fetch.requests, "get", fake_get)
+    monkeypatch.setenv("GH_TOKEN", "T")
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.filterwarnings("always", category=DeprecationWarning)
+        fetch.fetch_user_contributions("me")
+
+    assert not any(
+        issubclass(warning.category, DeprecationWarning) for warning in caught
+    )
 
 
 def test_fetch_user_contributions_rejects_invalid_year_range(monkeypatch):
