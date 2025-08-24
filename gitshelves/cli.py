@@ -2,6 +2,7 @@ import argparse
 import os
 from pathlib import Path
 from datetime import datetime
+from importlib import metadata
 
 from .fetch import fetch_user_contributions
 from .scad import (
@@ -13,7 +14,7 @@ from .scad import (
 from .readme import write_year_readme
 
 
-def main():
+def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Generate 3D GitHub contribution charts"
     )
@@ -44,7 +45,14 @@ def main():
         default=1,
         help="Number of print colors (1-4)",
     )
-    args = parser.parse_args()
+    try:  # pragma: no cover - metadata lookup
+        pkg_version = metadata.version("gitshelves")
+    except metadata.PackageNotFoundError:  # pragma: no cover
+        pkg_version = "0.0.0"
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {pkg_version}"
+    )
+    args = parser.parse_args(argv)
 
     token = args.token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     contribs = fetch_user_contributions(
