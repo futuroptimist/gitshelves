@@ -110,3 +110,18 @@ def test_fetch_user_contributions_rejects_invalid_year_range(monkeypatch):
 
     with pytest.raises(ValueError):
         fetch.fetch_user_contributions("me", start_year=2025, end_year=2024)
+
+
+def test_determine_year_range_defaults(monkeypatch):
+    """Defaults should fall back to the current year."""
+
+    class DummyDateTime(datetime):
+        @classmethod
+        def utcnow(cls):
+            return datetime(2022, 6, 1)
+
+    monkeypatch.setattr(fetch, "datetime", DummyDateTime)
+
+    assert fetch._determine_year_range(None, None) == (2022, 2022)
+    assert fetch._determine_year_range(None, 2021) == (2021, 2021)
+    assert fetch._determine_year_range(2020, None) == (2020, 2022)
