@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import pytest
 import gitshelves.fetch as fetch
 
@@ -58,9 +58,12 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
         return Resp(params["page"])
 
     class DummyDateTime(datetime):
+        tz_used = None
+
         @classmethod
-        def utcnow(cls):
-            return datetime(2021, 1, 1)
+        def now(cls, tz=None):
+            cls.tz_used = tz
+            return datetime(2021, 1, 1, tzinfo=tz)
 
     monkeypatch.setattr(fetch, "datetime", DummyDateTime)
     monkeypatch.setattr(fetch.requests, "get", fake_get)
@@ -71,6 +74,24 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
     assert headers_used[0]["Authorization"] == "token T"
     assert items == [{"page": 1}, {"page": 2}]
     assert "2021-01-01" in queries[0]
+    assert DummyDateTime.tz_used == timezone.utc
+
+
+def test_determine_year_range_defaults(monkeypatch):
+    """Defaults should fall back to the current year."""
+
+    class DummyDateTime(datetime):
+        tz_used = None
+
+        @classmethod
+        def now(cls, tz=None):
+            cls.tz_used = tz
+            return datetime(2022, 6, 1, tzinfo=tz)
+
+    monkeypatch.setattr(fetch, "datetime", DummyDateTime)
+
+    assert fetch._determine_year_range(None, None) == (2022, 2022)
+    assert DummyDateTime.tz_used == timezone.utc
 
 
 def test_fetch_user_contributions_env_token(monkeypatch):
