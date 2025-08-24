@@ -1,4 +1,6 @@
 from datetime import datetime
+import warnings
+
 import pytest
 import gitshelves.fetch as fetch
 
@@ -59,8 +61,8 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
 
     class DummyDateTime(datetime):
         @classmethod
-        def utcnow(cls):
-            return datetime(2021, 1, 1)
+        def now(cls, tz=None):
+            return datetime(2021, 1, 1, tzinfo=tz)
 
     monkeypatch.setattr(fetch, "datetime", DummyDateTime)
     monkeypatch.setattr(fetch.requests, "get", fake_get)
@@ -110,3 +112,11 @@ def test_fetch_user_contributions_rejects_invalid_year_range(monkeypatch):
 
     with pytest.raises(ValueError):
         fetch.fetch_user_contributions("me", start_year=2025, end_year=2024)
+
+
+def test_determine_year_range_no_deprecation_warning():
+    """_determine_year_range should not emit DeprecationWarning."""
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        fetch._determine_year_range(None, None)
