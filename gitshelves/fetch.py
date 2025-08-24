@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Dict, Iterable, List
 
 import requests
@@ -11,7 +11,7 @@ def _determine_year_range(
     start_year: int | None, end_year: int | None
 ) -> tuple[int, int]:
     """Return inclusive start and end years, validating user input."""
-    end = datetime.utcnow().year if end_year is None else end_year
+    end = datetime.now(UTC).year if end_year is None else end_year
     start = end if start_year is None else start_year
     if start > end:
         raise ValueError("start_year cannot be after end_year")

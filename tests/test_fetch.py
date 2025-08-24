@@ -59,8 +59,12 @@ def test_fetch_multiple_pages_with_token(monkeypatch):
 
     class DummyDateTime(datetime):
         @classmethod
-        def utcnow(cls):
-            return datetime(2021, 1, 1)
+        def now(cls, tz=None):
+            return datetime(2021, 1, 1, tzinfo=tz)
+
+        @classmethod
+        def utcnow(cls):  # pragma: no cover - should not be called
+            raise AssertionError("utcnow should not be used")
 
     monkeypatch.setattr(fetch, "datetime", DummyDateTime)
     monkeypatch.setattr(fetch.requests, "get", fake_get)
