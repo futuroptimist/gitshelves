@@ -277,6 +277,7 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
         colors=3,
     )
     monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+
     monkeypatch.setattr(
         cli,
         "fetch_user_contributions",
