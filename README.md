@@ -48,6 +48,12 @@ Jan Feb Mar Apr May Jun Jul Aug
 Sep Oct Nov Dec
 ```
 
+Print the current version with:
+
+```bash
+python -m gitshelves.cli --version
+```
+
 Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
