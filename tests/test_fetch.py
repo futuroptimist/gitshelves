@@ -1,6 +1,4 @@
-from datetime import datetime
-import warnings
-
+from datetime import UTC, datetime
 import pytest
 import gitshelves.fetch as fetch
 
@@ -114,9 +112,24 @@ def test_fetch_user_contributions_rejects_invalid_year_range(monkeypatch):
         fetch.fetch_user_contributions("me", start_year=2025, end_year=2024)
 
 
-def test_determine_year_range_no_deprecation_warning():
-    """_determine_year_range should not emit DeprecationWarning."""
+def test_determine_year_range_uses_timezone(monkeypatch):
+    """Uses timezone-aware datetime to determine the current year."""
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", DeprecationWarning)
-        fetch._determine_year_range(None, None)
+    called = {}
+
+    class DummyDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            called["tz"] = tz
+            return datetime(2021, 1, 1, tzinfo=tz)
+
+        @classmethod
+        def utcnow(cls):  # pragma: no cover - should not be called
+            raise AssertionError("utcnow should not be used")
+
+    monkeypatch.setattr(fetch, "datetime", DummyDateTime)
+
+    start, end = fetch._determine_year_range(None, None)
+
+    assert start == end == 2021
+    assert called["tz"] is UTC
