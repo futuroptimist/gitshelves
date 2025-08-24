@@ -63,6 +63,14 @@ def _format_block(pos: _BlockPosition) -> str:
     )
 
 
+def _iter_monthly_block_lines(
+    contributions: Dict[Tuple[int, int], int], months_per_row: int
+) -> Iterator[tuple[int, str]]:
+    """Yield block level and formatted line for monthly contributions."""
+    for pos in _iter_monthly_block_positions(contributions, months_per_row):
+        yield pos.level, _format_block(pos)
+
+
 def generate_scad(contributions: Iterable[int]) -> str:
     """Generate an OpenSCAD script for a sequence of daily contributions."""
     scad_lines = [HEADER]
@@ -88,8 +96,8 @@ def generate_scad_monthly(
     so on.
     """
     scad_lines = [HEADER]
-    for pos in _iter_monthly_block_positions(contributions, months_per_row):
-        scad_lines.append(_format_block(pos))
+    for _, line in _iter_monthly_block_lines(contributions, months_per_row):
+        scad_lines.append(line)
     return "\n".join(scad_lines)
 
 
@@ -102,8 +110,8 @@ def generate_scad_monthly_levels(
     This allows printing different contribution magnitudes in separate colors.
     """
     levels: Dict[int, list[str]] = defaultdict(list)
-    for pos in _iter_monthly_block_positions(contributions, months_per_row):
-        levels[pos.level + 1].append(_format_block(pos))
+    for level, line in _iter_monthly_block_lines(contributions, months_per_row):
+        levels[level + 1].append(line)
 
     return {lvl: HEADER + "\n" + "\n".join(lines) for lvl, lines in levels.items()}
 
