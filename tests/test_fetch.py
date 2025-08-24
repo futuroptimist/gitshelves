@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 import pytest
 import gitshelves.fetch as fetch
 
