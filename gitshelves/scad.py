@@ -42,18 +42,20 @@ def _iter_monthly_block_positions(
 
     first_year = min(year for year, _ in contributions)
     last_year = max(year for year, _ in contributions)
-    idx = 0
-    for year in range(first_year, last_year + 1):
-        for month in range(1, 13):
-            count = contributions.get((year, month), 0)
+    month_iter = (
+        (year, month)
+        for year in range(first_year, last_year + 1)
+        for month in range(1, 13)
+    )
+    for idx, (year, month) in enumerate(month_iter):
+        count = contributions.get((year, month), 0)
+        for level in range(blocks_for_contributions(count)):
             col = idx % months_per_row
             row = idx // months_per_row
             x = col * SPACING
             y = row * SPACING
-            for level in range(blocks_for_contributions(count)):
-                z = level * BLOCK_SIZE
-                yield _BlockPosition(x, y, z, year, month, level)
-            idx += 1
+            z = level * BLOCK_SIZE
+            yield _BlockPosition(x, y, z, year, month, level)
 
 
 def _format_block(pos: _BlockPosition) -> str:
