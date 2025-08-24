@@ -46,11 +46,11 @@ def _iter_monthly_block_positions(
     for year in range(first_year, last_year + 1):
         for month in range(1, 13):
             count = contributions.get((year, month), 0)
+            col = idx % months_per_row
+            row = idx // months_per_row
+            x = col * SPACING
+            y = row * SPACING
             for level in range(blocks_for_contributions(count)):
-                col = idx % months_per_row
-                row = idx // months_per_row
-                x = col * SPACING
-                y = row * SPACING
                 z = level * BLOCK_SIZE
                 yield _BlockPosition(x, y, z, year, month, level)
             idx += 1
@@ -67,12 +67,10 @@ def generate_scad(contributions: Iterable[int]) -> str:
     """Generate an OpenSCAD script for a sequence of daily contributions."""
     scad_lines = [HEADER]
     for idx, count in enumerate(contributions):
-        blocks = blocks_for_contributions(count)
-        for level in range(blocks):
-            x = idx * SPACING
-            y = 0
+        x = idx * SPACING
+        for level in range(blocks_for_contributions(count)):
             z = level * BLOCK_SIZE
-            scad_lines.append(f"translate([{x}, {y}, {z}]) cube({BLOCK_SIZE});")
+            scad_lines.append(f"translate([{x}, 0, {z}]) cube({BLOCK_SIZE});")
     return "\n".join(scad_lines)
 
 
