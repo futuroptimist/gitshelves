@@ -69,12 +69,10 @@ def generate_scad(contributions: Iterable[int]) -> str:
     """Generate an OpenSCAD script for a sequence of daily contributions."""
     scad_lines = [HEADER]
     for idx, count in enumerate(contributions):
-        blocks = blocks_for_contributions(count)
-        for level in range(blocks):
-            x = idx * SPACING
-            y = 0
+        x = idx * SPACING
+        for level in range(blocks_for_contributions(count)):
             z = level * BLOCK_SIZE
-            scad_lines.append(f"translate([{x}, {y}, {z}]) cube({BLOCK_SIZE});")
+            scad_lines.append(f"translate([{x}, 0, {z}]) cube({BLOCK_SIZE});")
     return "\n".join(scad_lines)
 
 
