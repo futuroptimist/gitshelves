@@ -17,6 +17,8 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
    `GITHUB_TOKEN` if `--token` is omitted.
    `fetch_user_contributions` likewise falls back to these variables when
    no token argument is supplied.
+   Without `--start-year` and `--end-year`, only the current year's
+   contributions are included.
 
 ```bash
 pip install -e .
