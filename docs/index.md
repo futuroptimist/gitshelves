@@ -3,10 +3,10 @@
 For setup and usage details, see the [README](../README.md).
 
 The CLI can export OpenSCAD scripts and, if `openscad` is installed, STL meshes.
-Use `--months-per-row` to control the grid width, `--stl` to specify an STL
-output path, and `--colors` to split blocks into up to four color groups.
-By default, the current year's contributions are fetched unless
-`--start-year` and `--end-year` specify a range.
+Use `--output` to change the `.scad` filename, `--months-per-row` to control the
+grid width, `--stl` to specify an STL output path, and `--colors` to split
+blocks into up to four color groups. By default, the current year's contributions
+are fetched unless `--start-year` and `--end-year` specify a range.
 [`viewer.html`](viewer.html) previews the resulting STLs in the browser with
 [Three.js](https://threejs.org/).
 

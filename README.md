@@ -28,7 +28,10 @@ python -m gitshelves.cli <github-username> \
     --months-per-row 10 --stl contributions.stl --colors 1
 ```
 
-The command will create `contributions.scad` (and optionally `contributions.stl`) in the current directory. The example sets `--months-per-row 10`; omit this flag to keep the default of 12 months per row.
+The command creates `contributions.scad` (and optionally `contributions.stl`)
+in the current directory. The example sets `--months-per-row 10`; omit this
+flag to keep the default of 12 months per row. Use `--output` to pick a
+different `.scad` filename.
 
 For instance, `--months-per-row 8` lays out eight months per row:
 
