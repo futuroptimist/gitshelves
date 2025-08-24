@@ -123,5 +123,5 @@ def test_determine_year_range_defaults(monkeypatch):
     monkeypatch.setattr(fetch, "datetime", DummyDateTime)
 
     assert fetch._determine_year_range(None, None) == (2022, 2022)
-    assert fetch._determine_year_range(None, 2021) == (2021, 2021)
+    assert fetch._determine_year_range(None, 2020) == (2020, 2020)
     assert fetch._determine_year_range(2020, None) == (2020, 2022)
