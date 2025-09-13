@@ -214,4 +214,5 @@ __marimo__/
 
 # Generated STL models
 *.stl
+!stl/shelf_with_mount_holes.stl
 

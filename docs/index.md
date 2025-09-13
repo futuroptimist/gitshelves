@@ -19,6 +19,8 @@ are fetched unless `--start-year` and `--end-year` specify a range.
 ## Design
 
 - [Gridfinity design specification](gridfinity_design.md) – baseplate and cube dimensions.
+- Simple wall-mount shelf: `openscad/shelf_with_mount_holes.scad` models a 200 mm ×
+ 100 mm board with 5 mm holes spaced 160 mm apart.
 
 ## Spellcheck
 

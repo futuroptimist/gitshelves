@@ -102,6 +102,12 @@ and attaches the rendered STL files as downloadable artifacts. Navigate to the
 workflow run and download `stl-<year>` to obtain the converted models.
 To avoid bloating the repository, pre-generated baseplate models are no longer stored in the repo. Download the `stl-<year>` artifact or generate them locally.
 Each `stl/<year>` directory includes a generated `README.md` summarizing the baseplate and monthly cube counts.
+
+## Wall-Mount Shelf
+
+`openscad/shelf_with_mount_holes.scad` defines a 200 mm × 100 mm shelf with two
+5 mm mounting holes spaced 160 mm apart. A prebuilt STL lives at
+`stl/shelf_with_mount_holes.stl` for direct printing.
 ## Troubleshooting
 
 OpenSCAD exits with status 1 when it cannot access an X display. The
