@@ -8,6 +8,8 @@
 
 Gitshelves fetches GitHub contribution data and turns it into 3D printable models. Each month of activity becomes a stack of blocks whose height is determined logarithmically by the number of contributions. The models are exported as `.scad` files for OpenSCAD and can be previewed with Three.js.
 
+A simple wall shelf with drywall mounting holes lives in `openscad/shelf.scad`. Use the pre-rendered `stl/shelf.stl` to print a matching display shelf for your contribution charts.
+
 ## Usage
 
 1. Install the package in editable mode.
