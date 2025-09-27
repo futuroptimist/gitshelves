@@ -12,9 +12,9 @@ are fetched unless `--start-year` and `--end-year` specify a range.
 
 ## Prompts
 
-- [Repo feature summary prompt](repo_feature_summary_prompt.md) – collect flywheel feature data
-- [Codex automation prompt](prompts-codex.md) – baseline instructions for automated agents.
-- [Codex spellcheck prompt](prompts-codex-spellcheck.md) – fix typos in docs.
+- [Repo feature summary prompt](prompts/codex/repo_feature_summary_prompt.md) – collect flywheel feature data
+- [Codex automation prompt](prompts/codex/prompts-codex.md) – baseline instructions for automated agents.
+- [Codex spellcheck prompt](prompts/codex/prompts-codex-spellcheck.md) – fix typos in docs.
 
 ## Design
 
