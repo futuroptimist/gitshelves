@@ -10,6 +10,9 @@ dependencies = ["requests"]
 [tool.setuptools]
 packages = ["gitshelves"]
 
+[tool.setuptools.package-data]
+gitshelves = ["data/*.scad"]
+
 [tool.black]
 line-length = 88
 exclude = '''
