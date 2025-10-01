@@ -348,3 +348,26 @@ def test_cli_help_mentions_env_vars():
     )
     assert "GH_TOKEN" in result.stdout
     assert "GITHUB_TOKEN" in result.stdout
+
+
+def test_baseplate_source_reads_packaged_template():
+    data = cli._baseplate_source()
+    assert "Gridfinity 2×6 baseplate" in data
+
+
+def test_baseplate_source_missing_template(monkeypatch):
+    class FakePackage:
+        class Missing:
+            def is_file(self):
+                return False
+
+            def read_text(self):  # pragma: no cover - defensive guard
+                raise AssertionError("read_text should not be called")
+
+        def joinpath(self, name):
+            return self.Missing()
+
+    monkeypatch.setattr(cli.resources, "files", lambda _: FakePackage())
+
+    with pytest.raises(FileNotFoundError):
+        cli._baseplate_source()

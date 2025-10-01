@@ -2,7 +2,7 @@ import argparse
 import os
 from pathlib import Path
 from datetime import datetime
-from importlib import metadata
+from importlib import metadata, resources
 
 from .fetch import fetch_user_contributions
 from .scad import (
@@ -17,13 +17,23 @@ from .readme import write_year_readme
 BASEPLATE_FILENAME = "baseplate_2x6.scad"
 
 
-def _baseplate_source() -> Path:
-    """Return the repository path to the baseplate template."""
+def _baseplate_source() -> str:
+    """Return the contents of the packaged baseplate template."""
 
-    baseplate = Path(__file__).resolve().parent.parent / "openscad" / BASEPLATE_FILENAME
-    if not baseplate.exists():
-        raise FileNotFoundError(f"Missing baseplate template: {baseplate}")
-    return baseplate
+    try:
+        template = resources.files("gitshelves.data").joinpath(BASEPLATE_FILENAME)
+    except (
+        FileNotFoundError,
+        ModuleNotFoundError,
+    ) as exc:  # pragma: no cover - defensive
+        raise FileNotFoundError(
+            f"Missing baseplate template package: gitshelves.data/{BASEPLATE_FILENAME}"
+        ) from exc
+    if not template.is_file():
+        raise FileNotFoundError(
+            f"Missing baseplate template: gitshelves.data/{BASEPLATE_FILENAME}"
+        )
+    return template.read_text()
 
 
 def main(argv: list[str] | None = None):
@@ -125,7 +135,7 @@ def main(argv: list[str] | None = None):
 
         baseplate_src = _baseplate_source()
         baseplate_dest = base_output.with_name(f"{base_output.name}_baseplate.scad")
-        baseplate_dest.write_text(baseplate_src.read_text())
+        baseplate_dest.write_text(baseplate_src)
         print(f"Wrote {baseplate_dest}")
         if base_stl:
             baseplate_stl = base_stl.with_name(f"{base_stl.name}_baseplate.stl")
