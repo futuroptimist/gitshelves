@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from importlib import metadata
 
+from .baseplate import load_baseplate_scad
 from .fetch import fetch_user_contributions, _determine_year_range
 from .scad import (
     generate_scad_monthly,
@@ -103,6 +104,13 @@ def main(argv: list[str] | None = None):
             base_stl.parent.mkdir(parents=True, exist_ok=True)
             if base_stl.suffix:
                 base_stl = base_stl.with_suffix("")
+        baseplate_path = base_output.with_name(f"{base_output.name}_baseplate.scad")
+        baseplate_path.write_text(load_baseplate_scad())
+        print(f"Wrote {baseplate_path}")
+        if base_stl:
+            baseplate_stl = base_stl.with_name(f"{base_stl.name}_baseplate.stl")
+            scad_to_stl(str(baseplate_path), str(baseplate_stl))
+            print(f"Wrote {baseplate_stl}")
         for idx, text in grouped.items():
             scad_path = base_output.with_name(f"{base_output.name}_color{idx}.scad")
             scad_path.write_text(text)

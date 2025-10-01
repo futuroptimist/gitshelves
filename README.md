@@ -56,7 +56,7 @@ Print the current version with:
 python -m gitshelves.cli --version
 ```
 
-Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group.
+Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group, and the baseplate is written as `<name>_baseplate.scad` (and `.stl` when requested).
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
 [Three.js](https://threejs.org/) and experiment with different color counts.
