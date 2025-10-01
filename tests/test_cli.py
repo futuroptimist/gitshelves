@@ -191,6 +191,9 @@ def test_cli_runpy(tmp_path, monkeypatch):
         return [{"created_at": "2021-01-01T00:00:00Z"}]
 
     fetch_mod.fetch_user_contributions = fake_fetch
+    from gitshelves.fetch import _determine_year_range as real_determine_year_range
+
+    fetch_mod._determine_year_range = real_determine_year_range
 
     scad_mod = types.ModuleType("gitshelves.scad")
 
@@ -324,6 +327,80 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
     assert f"Wrote {baseplate_scad}" in out
     assert f"Wrote {scad}" in out
     assert captured["groups"] == 2
+
+
+def test_cli_writes_readmes_for_full_range(tmp_path, monkeypatch):
+    base = tmp_path / "out.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2023,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+
+    def fake_fetch(username, token=None, start_year=None, end_year=None):
+        return [
+            {"created_at": "2021-01-01T00:00:00Z"},
+            {"created_at": "2023-12-31T00:00:00Z"},
+        ]
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", fake_fetch)
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    called_years: list[int] = []
+
+    def fake_write(year, counts):
+        called_years.append(year)
+        return tmp_path / str(year) / "README.md"
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write)
+
+    cli.main()
+
+    assert called_years == [2021, 2022, 2023]
+    assert base.read_text() == "SCAD"
+
+
+def test_cli_writes_readme_when_no_contributions(tmp_path, monkeypatch):
+    base = tmp_path / "empty.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=None,
+        end_year=None,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+    monkeypatch.setattr(cli, "_determine_year_range", lambda start, end: (2042, 2042))
+
+    captured: list[tuple[int, dict]] = []
+
+    def fake_write(year, counts):
+        captured.append((year, dict(counts)))
+        return tmp_path / str(year) / "README.md"
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write)
+
+    cli.main()
+
+    assert captured == [(2042, {})]
+    assert base.read_text() == "SCAD"
 
 
 def test_cli_version(capsys):

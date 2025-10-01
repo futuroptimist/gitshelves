@@ -103,7 +103,9 @@ The `build-stl` workflow runs on every push and pull request targeting `main`
 and attaches the rendered STL files as downloadable artifacts. Navigate to the
 workflow run and download `stl-<year>` to obtain the converted models.
 To avoid bloating the repository, pre-generated baseplate models are no longer stored in the repo. Download the `stl-<year>` artifact or generate them locally.
-Each `stl/<year>` directory includes a generated `README.md` summarizing the baseplate and monthly cube counts.
+Each `stl/<year>` directory includes a generated `README.md` summarizing the baseplate and monthly
+cube counts. The CLI writes these summaries for every year in the requested range, even when a year
+has no contributions, so your shelf layout stays predictable.
 ## Troubleshooting
 
 OpenSCAD exits with status 1 when it cannot access an X display. The
