@@ -14,6 +14,18 @@ from .scad import (
 from .readme import write_year_readme
 
 
+BASEPLATE_FILENAME = "baseplate_2x6.scad"
+
+
+def _baseplate_source() -> Path:
+    """Return the repository path to the baseplate template."""
+
+    baseplate = Path(__file__).resolve().parent.parent / "openscad" / BASEPLATE_FILENAME
+    if not baseplate.exists():
+        raise FileNotFoundError(f"Missing baseplate template: {baseplate}")
+    return baseplate
+
+
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Generate 3D GitHub contribution charts"
@@ -110,6 +122,15 @@ def main(argv: list[str] | None = None):
                 stl_path = base_stl.with_name(f"{base_stl.name}_color{idx}.stl")
                 scad_to_stl(str(scad_path), str(stl_path))
                 print(f"Wrote {stl_path}")
+
+        baseplate_src = _baseplate_source()
+        baseplate_dest = base_output.with_name(f"{base_output.name}_baseplate.scad")
+        baseplate_dest.write_text(baseplate_src.read_text())
+        print(f"Wrote {baseplate_dest}")
+        if base_stl:
+            baseplate_stl = base_stl.with_name(f"{base_stl.name}_baseplate.stl")
+            scad_to_stl(str(baseplate_dest), str(baseplate_stl))
+            print(f"Wrote {baseplate_stl}")
 
 
 if __name__ == "__main__":

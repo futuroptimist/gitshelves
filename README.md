@@ -56,7 +56,10 @@ Print the current version with:
 python -m gitshelves.cli --version
 ```
 
-Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group.
+Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a
+[`baseplate_2x6`](openscad/baseplate_2x6.scad) copy for two-color prints. `--colors 3` or `4`
+group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`)
+contains the blocks for a color group, and `_baseplate` files mirror the shared Gridfinity base.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
 [Three.js](https://threejs.org/) and experiment with different color counts.
