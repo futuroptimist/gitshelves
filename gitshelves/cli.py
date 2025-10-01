@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from importlib import metadata, resources
 
-from .fetch import fetch_user_contributions
+from .fetch import fetch_user_contributions, _determine_year_range
 from .scad import (
     generate_scad_monthly,
     generate_scad_monthly_levels,
@@ -94,7 +94,8 @@ def main(argv: list[str] | None = None):
         key = (dt.year, dt.month)
         counts[key] = counts.get(key, 0) + 1
 
-    for year in {y for y, _ in counts}:
+    start_year, end_year = _determine_year_range(args.start_year, args.end_year)
+    for year in range(start_year, end_year + 1):
         write_year_readme(year, counts)
 
     if args.colors == 1:

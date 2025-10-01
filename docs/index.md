@@ -9,6 +9,8 @@ blocks into up to four color groups. By default, the current year's contribution
 are fetched unless `--start-year` and `--end-year` specify a range. Multi-color
 exports include a `_baseplate` companion generated from
 [`openscad/baseplate_2x6.scad`](../openscad/baseplate_2x6.scad).
+The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the
+requested range so folders exist even when a year has zero contributions.
 [`viewer.html`](viewer.html) previews the resulting STLs in the browser with
 [Three.js](https://threejs.org/).
 
