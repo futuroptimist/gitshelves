@@ -7,6 +7,8 @@ Use `--output` to change the `.scad` filename, `--months-per-row` to control the
 grid width, `--stl` to specify an STL output path, and `--colors` to split
 blocks into up to four color groups. By default, the current year's contributions
 are fetched unless `--start-year` and `--end-year` specify a range.
+The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the
+requested range so folders exist even when a year has zero contributions.
 [`viewer.html`](viewer.html) previews the resulting STLs in the browser with
 [Three.js](https://threejs.org/).
 

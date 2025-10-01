@@ -19,7 +19,7 @@ jobs:
           coverage report --fail-under=100
       - name: Upload coverage
         if: hashFiles('coverage.xml') != ''
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
