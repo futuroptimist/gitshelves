@@ -12,5 +12,6 @@ This index lists prompt documents for the Gitshelves repository.
 | [prompts-codex-spellcheck.md](./prompts/codex/prompts-codex-spellcheck.md) | Codex Spellcheck Prompt |
 | [prompts-codex-tests.md](./prompts/codex/prompts-codex-tests.md) | Codex Test Prompt |
 | [repo_feature_summary_prompt.md](./prompts/codex/repo_feature_summary_prompt.md) | Repo Feature Summary Prompt |
+| [usage.md](./usage.md) | Usage Guide |
 
 _Updated manually: 2025-08-21_

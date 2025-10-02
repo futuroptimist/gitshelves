@@ -168,7 +168,6 @@ This creates an intuitive heat-map effect.
 ## 8  Future Enhancements
 * Auto-query GitHub GraphQL API each month → pre-populate contrib_cube_*.stl counts.
 * Provide a parametric SCAD that arranges cubes on-plate automatically.
-* Add docs/usage.md with slicer presets and AMS filament script examples.
 
 ## 9  Reference Sources
 Base-plate tolerance discussion – Reddit

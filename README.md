@@ -73,7 +73,8 @@ If you fork this repository, replace `futuroptimist` with your GitHub username i
 ```
 
 See [AGENTS.md](AGENTS.md) for agent workflow guidelines and
-[docs](docs/index.md) for additional documentation.
+[docs](docs/index.md) for additional documentation, including a detailed
+[usage guide](docs/usage.md) with slicer presets and AMS filament scripting tips.
 
 ## Dependencies
 
