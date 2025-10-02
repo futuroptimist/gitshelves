@@ -42,7 +42,13 @@ function loadFiles(list) {
   const stls = [];
   for (const file of list) {
     let level = 0;
-    if (/level(\d+)/i.test(file.name)) level = parseInt(RegExp.$1, 10);
+    const colorMatch = file.name.match(/color(\d+)/i);
+    const levelMatch = file.name.match(/level(\d+)/i);
+    if (colorMatch) {
+      level = parseInt(colorMatch[1], 10);
+    } else if (levelMatch) {
+      level = parseInt(levelMatch[1], 10);
+    }
     if (/baseplate/i.test(file.name)) level = 0;
     stls.push({ file, level });
   }

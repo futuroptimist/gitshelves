@@ -60,7 +60,9 @@ Use `--colors` to control multi-color outputs. `--colors 2` produces one block f
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
 [Three.js](https://threejs.org/) and experiment with different color counts.
-Use the file picker to load your baseplate and level STLs.
+Use the file picker to load your baseplate and `_colorN` (or legacy `levelN`)
+STLs—the viewer automatically maps these names back to the color groups that the CLI
+generates.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 
