@@ -17,9 +17,9 @@ row (with a partial row for 31-day months) so the footprint fits within a 256 mm
 
 ## Prompts
 
-- [Repo feature summary prompt](prompts/codex/repo_feature_summary_prompt.md) – collect flywheel feature data
-- [Codex automation prompt](prompts/codex/prompts-codex.md) – baseline instructions for automated agents.
-- [Codex spellcheck prompt](prompts/codex/prompts-codex-spellcheck.md) – fix typos in docs.
+- [Repo feature summary prompt](prompts/codex/repo-feature-summary.md) – collect flywheel feature data
+- [Codex automation prompt](prompts/codex/automation.md) – baseline instructions for automated agents.
+- [Codex spellcheck prompt](prompts/codex/spellcheck.md) – fix typos in docs.
 
 ## Design
 
