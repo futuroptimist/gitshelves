@@ -15,7 +15,7 @@ Important notes:
 - [README](README.md): usage instructions
 - [Agent guide](AGENTS.md): workflow for contributors and LLMs
 - [Project docs](docs/index.md): CLI options overview
-- [Repo feature summary prompt](docs/prompts/codex/repo_feature_summary_prompt.md): gather flywheel matrix data
+- [Repo feature summary prompt](docs/prompts/codex/repo-feature-summary.md): gather flywheel matrix data
 
 ## Optional
 - [GitHub repo](https://github.com/futuroptimist/gitshelves): issues and source
