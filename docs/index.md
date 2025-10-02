@@ -2,7 +2,8 @@
 
 For setup and usage details, see the [README](../README.md).
 
-The CLI can export OpenSCAD scripts and, if `openscad` is installed, STL meshes.
+The CLI can export OpenSCAD scripts and, if `openscad` is installed, STL meshes
+using binary output (`--export-format binstl`) to mirror the CI workflow.
 Use `--output` to change the `.scad` filename, `--months-per-row` to control the
 grid width, `--stl` to specify an STL output path, and `--colors` to split
 blocks into up to four color groups. By default, the current year's contributions

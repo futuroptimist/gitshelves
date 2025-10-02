@@ -151,7 +151,8 @@ def scad_to_stl(scad_file: str, stl_file: str) -> None:
 
     If the current environment lacks an X display (``$DISPLAY`` is unset or
     empty), the command is automatically wrapped in ``xvfb-run`` when
-    available. This mirrors the CI configuration and prevents ``openscad`` from
+    available. The STL is exported in binary format (``--export-format
+    binstl``) to mirror the CI configuration and prevent ``openscad`` from
     exiting with code ``1`` on headless servers.
     """
     import os
@@ -161,7 +162,7 @@ def scad_to_stl(scad_file: str, stl_file: str) -> None:
     if shutil.which("openscad") is None:
         raise FileNotFoundError("openscad not found")
 
-    cmd = ["openscad", "-o", stl_file, scad_file]
+    cmd = ["openscad", "-o", stl_file, "--export-format", "binstl", scad_file]
     if not os.environ.get("DISPLAY"):
         if shutil.which("xvfb-run") is None:
             raise RuntimeError("xvfb-run required for headless rendering")
