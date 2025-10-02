@@ -7,6 +7,7 @@ def test_write_year_readme(tmp_path):
     text = readme.read_text()
     assert "January: 5 contributions" in text
     assert "February: 20 contributions" in text
+    assert "`monthly-5x6`" in text
 
 
 def test_write_year_readme_zero_and_plural(tmp_path):

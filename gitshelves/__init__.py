@@ -2,7 +2,13 @@
 
 from importlib import metadata
 
-from .scad import generate_scad, generate_scad_monthly, blocks_for_contributions
+from .scad import (
+    generate_scad,
+    generate_scad_monthly,
+    generate_month_calendar_scad,
+    generate_monthly_calendar_scads,
+    blocks_for_contributions,
+)
 from .fetch import fetch_user_contributions
 
 try:  # pragma: no cover - handled in package distribution
@@ -13,6 +19,8 @@ except metadata.PackageNotFoundError:  # pragma: no cover
 __all__ = [
     "generate_scad",
     "generate_scad_monthly",
+    "generate_month_calendar_scad",
+    "generate_monthly_calendar_scads",
     "blocks_for_contributions",
     "fetch_user_contributions",
     "__version__",
