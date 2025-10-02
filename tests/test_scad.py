@@ -173,7 +173,14 @@ def test_scad_to_stl_calls_openscad(monkeypatch, tmp_path):
     monkeypatch.setattr("subprocess.run", fake_run)
     monkeypatch.setenv("DISPLAY", ":0")
     scad_to_stl(str(scad), str(stl))
-    assert called["cmd"] == ["openscad", "-o", str(stl), str(scad)]
+    assert called["cmd"] == [
+        "openscad",
+        "-o",
+        str(stl),
+        "--export-format",
+        "binstl",
+        str(scad),
+    ]
 
 
 def test_scad_to_stl_uses_xvfb(monkeypatch, tmp_path):
@@ -198,7 +205,17 @@ def test_scad_to_stl_uses_xvfb(monkeypatch, tmp_path):
     monkeypatch.setattr("subprocess.run", fake_run)
 
     scad_to_stl(str(scad), str(stl))
-    assert called["cmd"][0] == "xvfb-run"
+    assert called["cmd"] == [
+        "xvfb-run",
+        "--auto-servernum",
+        "--server-args=-screen 0 1024x768x24",
+        "openscad",
+        "-o",
+        str(stl),
+        "--export-format",
+        "binstl",
+        str(scad),
+    ]
 
 
 def test_scad_to_stl_empty_display(monkeypatch, tmp_path):
@@ -224,6 +241,8 @@ def test_scad_to_stl_empty_display(monkeypatch, tmp_path):
 
     scad_to_stl(str(scad), str(stl))
     assert called["cmd"][0] == "xvfb-run"
+    assert "--export-format" in called["cmd"]
+    assert "binstl" in called["cmd"]
 
 
 def test_scad_to_stl_xvfb_missing(monkeypatch, tmp_path):
