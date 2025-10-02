@@ -9,6 +9,8 @@ blocks into up to four color groups. By default, the current year's contribution
 are fetched unless `--start-year` and `--end-year` specify a range.
 The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the
 requested range so folders exist even when a year has zero contributions.
+Monthly day-level calendars live in `stl/<year>/monthly-5x6/`. Each SCAD arranges up to five days per
+row (with a partial row for 31-day months) so the footprint fits within a 256 mm square build area.
 [`viewer.html`](viewer.html) previews the resulting STLs in the browser with
 [Three.js](https://threejs.org/).
 

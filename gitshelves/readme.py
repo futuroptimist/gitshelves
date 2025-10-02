@@ -38,7 +38,10 @@ def write_year_readme(
     lines += [
         "",
         "## Versions",
-        "- `monthly-5x6`: zoomed view of days per month in 5×6 grid (256 mm³)",
+        (
+            "- `monthly-5x6`: daily calendars in [`monthly-5x6/`](monthly-5x6) "
+            "that fit a 256 mm square bed"
+        ),
     ]
 
     readme_path = path / "README.md"

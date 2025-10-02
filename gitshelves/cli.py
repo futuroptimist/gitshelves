@@ -1,5 +1,6 @@
 import argparse
 import os
+from calendar import month_name
 from pathlib import Path
 from datetime import datetime
 from importlib import metadata
@@ -9,6 +10,7 @@ from .fetch import fetch_user_contributions, _determine_year_range
 from .scad import (
     generate_scad_monthly,
     generate_scad_monthly_levels,
+    generate_monthly_calendar_scads,
     group_scad_levels,
     scad_to_stl,
 )
@@ -67,15 +69,26 @@ def main(argv: list[str] | None = None):
     )
 
     counts = {}
+    daily_counts = {}
     for item in contribs:
         d = item["created_at"][:10]
         dt = datetime.fromisoformat(d)
         key = (dt.year, dt.month)
         counts[key] = counts.get(key, 0) + 1
+        day_key = (dt.year, dt.month, dt.day)
+        daily_counts[day_key] = daily_counts.get(day_key, 0) + 1
 
     start_year, end_year = _determine_year_range(args.start_year, args.end_year)
     for year in range(start_year, end_year + 1):
-        write_year_readme(year, counts)
+        readme_path = write_year_readme(year, counts)
+        calendars = generate_monthly_calendar_scads(daily_counts, year)
+        calendar_dir = readme_path.parent / "monthly-5x6"
+        calendar_dir.mkdir(parents=True, exist_ok=True)
+        for month, text in calendars.items():
+            slug = month_name[month].lower()
+            scad_path = calendar_dir / f"{month:02d}_{slug}.scad"
+            scad_path.write_text(text)
+            print(f"Wrote {scad_path}")
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)

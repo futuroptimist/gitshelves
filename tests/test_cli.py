@@ -12,6 +12,8 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
 
     fetched_args = {}
 
+    monkeypatch.chdir(tmp_path)
+
     def fake_fetch(username, token=None, start_year=None, end_year=None):
         fetched_args["params"] = (username, token, start_year, end_year)
         return [
@@ -54,6 +56,13 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     assert called["stl"][0] == str(output)
     captured = capsys.readouterr()
     assert f"Wrote {output}" in captured.out
+    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    files = sorted(calendar_dir.glob("*.scad"))
+    assert len(files) == 12
+    february = calendar_dir / "02_february.scad"
+    text = february.read_text()
+    assert "2021-02-01" in text
+    assert "2021-02-15" in text
 
 
 def test_cli_creates_output_dirs(tmp_path, monkeypatch):
@@ -68,6 +77,7 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
         stl=str(tmp_path / "nested" / "dir" / "out.stl"),
         colors=1,
     )
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
         argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
     )
@@ -91,6 +101,9 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
     assert output.read_text() == "DATA"
     assert called["stl"][0] == str(output)
     assert (tmp_path / "nested" / "dir").is_dir()
+    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    assert calendar_dir.is_dir()
+    assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
 def test_cli_env_token(tmp_path, monkeypatch):
@@ -106,6 +119,7 @@ def test_cli_env_token(tmp_path, monkeypatch):
         colors=1,
     )
 
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("GH_TOKEN", "envtok")
     monkeypatch.setattr(
         argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
@@ -127,6 +141,8 @@ def test_cli_env_token(tmp_path, monkeypatch):
 
     assert output.read_text() == "S"
     assert captured["token"] == "envtok"
+    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
 def test_cli_github_token_env(tmp_path, monkeypatch):
@@ -142,6 +158,7 @@ def test_cli_github_token_env(tmp_path, monkeypatch):
         colors=1,
     )
 
+    monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("GH_TOKEN", raising=False)
     monkeypatch.setenv("GITHUB_TOKEN", "envtok2")
     monkeypatch.setattr(
@@ -164,6 +181,8 @@ def test_cli_github_token_env(tmp_path, monkeypatch):
 
     assert output.read_text() == "S"
     assert captured["token"] == "envtok2"
+    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
 def test_cli_runpy(tmp_path, monkeypatch):
@@ -179,6 +198,7 @@ def test_cli_runpy(tmp_path, monkeypatch):
         colors=1,
     )
 
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
         argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
     )
@@ -206,6 +226,9 @@ def test_cli_runpy(tmp_path, monkeypatch):
     scad_mod.generate_scad_monthly_levels = lambda counts, months_per_row=12: {}
     scad_mod.group_scad_levels = lambda levels, groups: {1: "G"}
     scad_mod.scad_to_stl = lambda a, b: None
+    scad_mod.generate_monthly_calendar_scads = lambda daily, year, days_per_row=5: {
+        m: "//" for m in range(1, 13)
+    }
 
     sys.modules["gitshelves.fetch"] = fetch_mod
     sys.modules["gitshelves.scad"] = scad_mod
@@ -214,6 +237,8 @@ def test_cli_runpy(tmp_path, monkeypatch):
     runpy.run_module("gitshelves.cli", run_name="__main__")
 
     assert output.read_text() == "DATA"
+    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
 def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
@@ -231,6 +256,7 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
     )
+    monkeypatch.chdir(tmp_path)
 
     def fake_fetch(username, token=None, start_year=None, end_year=None):
         return [{"created_at": "2021-02-01T00:00:00Z"}]
@@ -271,6 +297,8 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
         (str(scad1), str(stl1)),
         (str(scad2), str(stl2)),
     ]
+    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    assert len(list(calendar_dir.glob("*.scad"))) == 12
     captured = capsys.readouterr()
     assert f"Wrote {baseplate_scad}" in captured.out
     assert f"Wrote {scad1}" in captured.out
@@ -289,6 +317,7 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
         colors=3,
     )
     monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
 
     monkeypatch.setattr(
         cli,
@@ -323,6 +352,8 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
     assert scad.read_text() == "// Generated by gitshelves\nG"
     assert baseplate_scad.read_text() == "// Baseplate"
     assert called == []
+    calendar_dir = tmp_path / "monthly-5x6"
+    assert len(list(calendar_dir.glob("*.scad"))) == 12
     out = capsys.readouterr().out
     assert f"Wrote {baseplate_scad}" in out
     assert f"Wrote {scad}" in out
@@ -342,6 +373,7 @@ def test_cli_writes_readmes_for_full_range(tmp_path, monkeypatch):
         colors=1,
     )
     monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
 
     def fake_fetch(username, token=None, start_year=None, end_year=None):
         return [
@@ -367,6 +399,10 @@ def test_cli_writes_readmes_for_full_range(tmp_path, monkeypatch):
 
     assert called_years == [2021, 2022, 2023]
     assert base.read_text() == "SCAD"
+    for year in (2021, 2022, 2023):
+        calendar_dir = tmp_path / str(year) / "monthly-5x6"
+        assert calendar_dir.is_dir()
+        assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
 def test_cli_writes_readme_when_no_contributions(tmp_path, monkeypatch):
@@ -382,6 +418,7 @@ def test_cli_writes_readme_when_no_contributions(tmp_path, monkeypatch):
         colors=1,
     )
     monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -401,6 +438,10 @@ def test_cli_writes_readme_when_no_contributions(tmp_path, monkeypatch):
 
     assert captured == [(2042, {})]
     assert base.read_text() == "SCAD"
+    calendar_dir = tmp_path / "2042" / "monthly-5x6"
+    assert len(list(calendar_dir.glob("*.scad"))) == 12
+    january = calendar_dir / "01_january.scad"
+    assert january.read_text().strip() == "// Generated by gitshelves"
 
 
 def test_cli_version(capsys):
