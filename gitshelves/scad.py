@@ -225,8 +225,6 @@ def generate_gridfinity_plate_scad(
         raise ValueError("columns must be positive")
 
     months = [(month, contributions.get((year, month), 0)) for month in range(1, 13)]
-    if not months:
-        return HEADER
 
     rows = max(1, math.ceil(len(months) / columns))
 
