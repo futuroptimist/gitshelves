@@ -63,6 +63,8 @@ Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL 
 Use the file picker to load your baseplate and `_colorN` (or legacy `levelN`)
 STLs—the viewer automatically maps these names back to the color groups that the CLI
 generates.
+For slicer presets and AMS swap scripts, see [docs/usage.md](docs/usage.md).
+
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 

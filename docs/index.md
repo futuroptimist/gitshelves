@@ -22,6 +22,10 @@ row (with a partial row for 31-day months) so the footprint fits within a 256 mm
 - [Codex automation prompt](prompts/codex/automation.md) – baseline instructions for automated agents.
 - [Codex spellcheck prompt](prompts/codex/spellcheck.md) – fix typos in docs.
 
+## Usage
+
+- [Usage guide](usage.md) – slicer presets and AMS filament workflows.
+
 ## Design
 
 - [Gridfinity design specification](gridfinity_design.md) – baseplate and cube dimensions.
