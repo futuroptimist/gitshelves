@@ -8,6 +8,7 @@ from .scad import (
     generate_month_calendar_scad,
     generate_monthly_calendar_scads,
     blocks_for_contributions,
+    generate_gridfinity_plate_scad,
 )
 from .fetch import fetch_user_contributions
 
@@ -22,6 +23,7 @@ __all__ = [
     "generate_month_calendar_scad",
     "generate_monthly_calendar_scads",
     "blocks_for_contributions",
+    "generate_gridfinity_plate_scad",
     "fetch_user_contributions",
     "__version__",
 ]

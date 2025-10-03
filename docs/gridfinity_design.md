@@ -94,6 +94,13 @@ bin(
 );
 ```
 
+### 4.3 CLI-generated layouts
+`gitshelves.cli` now exposes `--gridfinity-layouts`, producing
+`stl/<year>/gridfinity_plate.scad` files that size a baseplate to the requested
+column count (default six) and stack Gridfinity bins for each month on top of
+it. Adjust `--gridfinity-columns` to generate other footprints without editing
+OpenSCAD manually.
+
 ## 5  GitHub Actions Pipeline (.github/workflows/build-stl.yml)
 
 | Step | Action |
@@ -167,7 +174,6 @@ This creates an intuitive heat-map effect.
 
 ## 8  Future Enhancements
 * Auto-query GitHub GraphQL API each month → pre-populate contrib_cube_*.stl counts.
-* Provide a parametric SCAD that arranges cubes on-plate automatically.
 * Add docs/usage.md with slicer presets and AMS filament script examples.
 
 ## 9  Reference Sources
