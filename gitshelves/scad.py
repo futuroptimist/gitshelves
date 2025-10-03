@@ -1,6 +1,7 @@
 from collections import defaultdict
 import math
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, Iterable, Iterator, Tuple
 import calendar
 
@@ -10,6 +11,14 @@ SPACING = 12
 GRIDFINITY_PITCH = 42  # mm between Gridfinity cells
 GRIDFINITY_BASEPLATE_HEIGHT = 6  # mm
 GRIDFINITY_UNIT_HEIGHT = 7  # mm per Gridfinity cube unit
+
+GRIDFINITY_LIBRARY_ROOT = (
+    Path(__file__).resolve().parent.parent / "openscad" / "lib" / "gridfinity-rebuilt"
+)
+GRIDFINITY_BASEPLATE_SCAD = (
+    GRIDFINITY_LIBRARY_ROOT / "gridfinity-rebuilt-baseplate.scad"
+)
+GRIDFINITY_BIN_SCAD = GRIDFINITY_LIBRARY_ROOT / "gridfinity-rebuilt-bin.scad"
 
 
 def blocks_for_contributions(count: int) -> int:
@@ -221,10 +230,23 @@ def generate_gridfinity_plate_scad(
 
     rows = max(1, math.ceil(len(months) / columns))
 
+    missing_files = [
+        str(path)
+        for path in (GRIDFINITY_BASEPLATE_SCAD, GRIDFINITY_BIN_SCAD)
+        if not path.exists()
+    ]
+    if missing_files:
+        raise FileNotFoundError(
+            "Gridfinity library not found; expected files: " + ", ".join(missing_files)
+        )
+
+    baseplate_include = GRIDFINITY_BASEPLATE_SCAD.as_posix()
+    bin_include = GRIDFINITY_BIN_SCAD.as_posix()
+
     lines = [
         HEADER,
-        "use <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;",
-        "use <lib/gridfinity-rebuilt/gridfinity-rebuilt-bin.scad>;",
+        f"use <{baseplate_include}>;",
+        f"use <{bin_include}>;",
         "",
         f"grid_pitch = {GRIDFINITY_PITCH};",
         f"baseplate_height = {GRIDFINITY_BASEPLATE_HEIGHT};",

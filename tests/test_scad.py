@@ -1,5 +1,6 @@
 import pytest
 
+from gitshelves import scad as scad_module
 from gitshelves.scad import (
     _iter_monthly_block_positions,
     blocks_for_contributions,
@@ -316,7 +317,7 @@ def test_generate_scad_monthly_levels_requires_positive_months_per_row():
         generate_scad_monthly_levels(counts, months_per_row=-2)
 
 
-def test_generate_gridfinity_plate_scad_positions():
+def test_generate_gridfinity_plate_scad_positions(gridfinity_library):
     counts = {
         (2024, 1): 1,
         (2024, 2): 10,
@@ -341,7 +342,7 @@ def test_generate_gridfinity_plate_scad_positions():
     )
 
 
-def test_generate_gridfinity_plate_scad_respects_custom_columns():
+def test_generate_gridfinity_plate_scad_respects_custom_columns(gridfinity_library):
     counts = {(2025, 1): 5}
     scad = generate_gridfinity_plate_scad(counts, 2025, columns=3)
     assert "grid_x = 3;" in scad
@@ -351,3 +352,28 @@ def test_generate_gridfinity_plate_scad_respects_custom_columns():
 def test_generate_gridfinity_plate_scad_requires_positive_columns():
     with pytest.raises(ValueError):
         generate_gridfinity_plate_scad({}, 2024, columns=0)
+
+
+def test_generate_gridfinity_plate_scad_includes_absolute_library_paths(
+    gridfinity_library,
+):
+    counts = {(2025, 1): 1}
+    scad = generate_gridfinity_plate_scad(counts, 2025)
+    baseplate_include = scad_module.GRIDFINITY_BASEPLATE_SCAD.as_posix()
+    bin_include = scad_module.GRIDFINITY_BIN_SCAD.as_posix()
+    assert f"use <{baseplate_include}>;" in scad
+    assert f"use <{bin_include}>;" in scad
+
+
+def test_generate_gridfinity_plate_scad_missing_library(monkeypatch):
+    counts = {(2025, 1): 1}
+    missing_baseplate = scad_module.GRIDFINITY_BASEPLATE_SCAD.with_name(
+        "missing-baseplate.scad"
+    )
+    missing_bin = scad_module.GRIDFINITY_BIN_SCAD.with_name("missing-bin.scad")
+    monkeypatch.setattr(
+        scad_module, "GRIDFINITY_BASEPLATE_SCAD", missing_baseplate, raising=False
+    )
+    monkeypatch.setattr(scad_module, "GRIDFINITY_BIN_SCAD", missing_bin, raising=False)
+    with pytest.raises(FileNotFoundError):
+        generate_gridfinity_plate_scad(counts, 2025)
