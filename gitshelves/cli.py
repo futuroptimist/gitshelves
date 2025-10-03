@@ -11,6 +11,7 @@ from .scad import (
     generate_scad_monthly,
     generate_scad_monthly_levels,
     generate_monthly_calendar_scads,
+    generate_gridfinity_plate_scad,
     group_scad_levels,
     scad_to_stl,
 )
@@ -47,6 +48,17 @@ def main(argv: list[str] | None = None):
         choices=range(1, 5),
         default=1,
         help="Number of print colors (1-4)",
+    )
+    parser.add_argument(
+        "--gridfinity-layouts",
+        action="store_true",
+        help="Generate Gridfinity baseplate layouts per year",
+    )
+    parser.add_argument(
+        "--gridfinity-columns",
+        type=int,
+        default=6,
+        help="Columns per Gridfinity baseplate row when layouts are generated",
     )
     try:  # pragma: no cover - metadata lookup
         pkg_version = metadata.version("gitshelves")
@@ -89,6 +101,13 @@ def main(argv: list[str] | None = None):
             scad_path = calendar_dir / f"{month:02d}_{slug}.scad"
             scad_path.write_text(text)
             print(f"Wrote {scad_path}")
+        if args.gridfinity_layouts:
+            layout_text = generate_gridfinity_plate_scad(
+                counts, year, columns=args.gridfinity_columns
+            )
+            layout_path = readme_path.parent / "gridfinity_plate.scad"
+            layout_path.write_text(layout_text)
+            print(f"Wrote {layout_path}")
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
