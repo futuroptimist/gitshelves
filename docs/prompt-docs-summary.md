@@ -4,6 +4,7 @@ This index lists prompt documents for the Gitshelves repository.
 
 | Document | Title |
 |----------|-------|
+| [usage.md](./usage.md) | Printing & AMS Usage Guide |
 | [automation.md](./prompts/codex/automation.md) | Gitshelves Codex Prompt |
 | [ci-fix.md](./prompts/codex/ci-fix.md) | Codex CI-Failure Fix Prompt |
 | [docs.md](./prompts/codex/docs.md) | Codex Docs Update Prompt |
@@ -13,4 +14,4 @@ This index lists prompt documents for the Gitshelves repository.
 | [tests.md](./prompts/codex/tests.md) | Codex Test Prompt |
 | [repo-feature-summary.md](./prompts/codex/repo-feature-summary.md) | Repo Feature Summary Prompt |
 
-_Updated manually: 2025-08-21_
+_Updated manually: 2025-09-30_
