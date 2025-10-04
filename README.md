@@ -58,6 +58,9 @@ python -m gitshelves.cli --version
 
 Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group, and the baseplate is written as `<name>_baseplate.scad` (and `.stl` when requested).
 
+For print tuning tips—including slicer presets for baseplates and cubes plus AMS
+automation snippets—see [docs/usage.md](docs/usage.md).
+
 Pass `--gridfinity-layouts` to emit a parametric `stl/<year>/gridfinity_plate.scad` that builds a
 Gridfinity baseplate and arranges monthly contribution cubes on top of it. The layout defaults to six
 columns (a 2×6 plate); adjust the footprint with `--gridfinity-columns` to match your storage grid.
