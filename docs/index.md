@@ -20,7 +20,9 @@ Monthly day-level calendars live in `stl/<year>/monthly-5x6/`. Each SCAD arrange
 row (with a partial row for 31-day months) so the footprint fits within a 256 mm square build area.
 [`viewer.html`](viewer.html) previews the resulting STLs in the browser with
 [Three.js](https://threejs.org/). Load the baseplate and `_colorN` (or legacy
-`levelN`) STLs to see each color group rendered with its own material.
+`levelN`) STLs to see each color group rendered with its own material. The viewer
+automatically infers how many color groups are present from the filenames and displays the
+detected count alongside the file picker.
 
 ## Prompts
 

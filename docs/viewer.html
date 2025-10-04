@@ -28,7 +28,7 @@
 const palette = [0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728];
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
- document.body.appendChild(renderer.domElement);
+document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf0f0f0);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
@@ -40,43 +40,38 @@ function clearMeshes() {
 }
 function loadFiles(list) {
   clearMeshes();
+  if (!list.length) return;
   const stls = [];
   for (const file of list) {
-    let level = 0;
+    let colorIndex = 0;
     const colorMatch = file.name.match(/color(\d+)/i);
     const levelMatch = file.name.match(/level(\d+)/i);
-    if (colorMatch) {
-      level = parseInt(colorMatch[1], 10);
-    } else if (levelMatch) {
-      level = parseInt(levelMatch[1], 10);
-    }
-    if (/baseplate/i.test(file.name)) level = 0;
-    stls.push({ file, level });
+    if (colorMatch) colorIndex = parseInt(colorMatch[1], 10);
+    else if (levelMatch) colorIndex = parseInt(levelMatch[1], 10);
+    if (/baseplate/i.test(file.name)) colorIndex = 0;
+    stls.push({ file, colorIndex });
   }
-  const maxLevel = Math.max(...stls.map(s => s.level), 1);
-  const groups = parseInt(document.getElementById('colorCount').value, 10) - 1;
-  const levelsPerGroup = Math.ceil(maxLevel / Math.max(groups, 1));
-  stls.forEach(({ file, level }) => {
+  stls.forEach(({ file, colorIndex }) => {
     const reader = new FileReader();
     reader.onload = e => {
       const geo = loader.parse(e.target.result);
-      let idx = 0;
-      if (level > 0 && groups > 0) idx = Math.floor((level - 1) / levelsPerGroup) + 1;
-      const mat = new THREE.MeshPhongMaterial({ color: palette[idx % palette.length] });
+      const paletteIndex = colorIndex > 0
+        ? ((colorIndex - 1) % (palette.length - 1)) + 1
+        : 0;
+      const mat = new THREE.MeshPhongMaterial({ color: palette[paletteIndex] });
       const mesh = new THREE.Mesh(geo, mat);
+      mesh.name = file.name;
       scene.add(mesh);
     };
     reader.readAsArrayBuffer(file);
   });
 }
-const input = document.getElementById('files');
-input.addEventListener('change', e => loadFiles(e.target.files));
-document.getElementById('colorCount').addEventListener('change', () => {
-  if (input.files.length) loadFiles(input.files);
-});
+document.getElementById('files').addEventListener('change', e => loadFiles(e.target.files));
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(1, 1, 1).normalize();
 scene.add(light);
+const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+scene.add(ambient);
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
