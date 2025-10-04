@@ -45,9 +45,9 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--colors",
         type=int,
-        choices=range(1, 5),
+        choices=range(1, 6),
         default=1,
-        help="Number of print colors (1-4)",
+        help="Number of print colors (1-5)",
     )
     parser.add_argument(
         "--gridfinity-layouts",

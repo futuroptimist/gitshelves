@@ -7,3 +7,4 @@ def test_viewer_detects_color_files_for_grouping():
 
     html = Path("docs/viewer.html").read_text()
     assert "/color(\\d+)/i" in html, "viewer must recognize _colorN STL names"
+    assert 'value="5"' in html, "viewer should offer a five-color option"

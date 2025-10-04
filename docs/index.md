@@ -6,7 +6,7 @@ The CLI can export OpenSCAD scripts and, if `openscad` is installed, STL meshes
 using binary output (`--export-format binstl`) to mirror the CI workflow.
 Use `--output` to change the `.scad` filename, `--months-per-row` to control the
 grid width, `--stl` to specify an STL output path, and `--colors` to split
-blocks into up to four color groups. `--gridfinity-layouts` writes
+blocks into up to four color groups (pass `--colors 5` to unlock all four). `--gridfinity-layouts` writes
 `stl/<year>/gridfinity_plate.scad` so Gridfinity bins are stacked onto a
 parametric baseplate; adjust the footprint with `--gridfinity-columns`. By
 default, the current year's contributions are fetched unless `--start-year` and
