@@ -23,9 +23,10 @@
       <option value="5">5</option>
     </select>
   </label>
+  <span id="detectedColors">Detected block colors: 0</span>
 </div>
 <script>
-const palette = [0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728];
+const palette = [0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728, 0x9467bd];
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -35,14 +36,25 @@ const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerH
 camera.position.set(120, 120, 120);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 const loader = new THREE.STLLoader();
+const colorCount = document.getElementById('colorCount');
+const detectedColors = document.getElementById('detectedColors');
 function clearMeshes() {
   scene.children.filter(o => o.isMesh).forEach(o => scene.remove(o));
 }
 function loadFiles(list) {
   clearMeshes();
-  if (!list.length) return;
+  const files = Array.from(list || []);
+  if (!files.length) {
+    if (detectedColors) {
+      detectedColors.textContent = 'Detected block colors: 0';
+    }
+    if (colorCount) {
+      colorCount.value = '1';
+    }
+    return;
+  }
   const stls = [];
-  for (const file of list) {
+  for (const file of files) {
     let colorIndex = 0;
     const colorMatch = file.name.match(/color(\d+)/i);
     const levelMatch = file.name.match(/level(\d+)/i);
@@ -50,6 +62,26 @@ function loadFiles(list) {
     else if (levelMatch) colorIndex = parseInt(levelMatch[1], 10);
     if (/baseplate/i.test(file.name)) colorIndex = 0;
     stls.push({ file, colorIndex });
+  }
+  const blockColors = new Set(stls.map(item => item.colorIndex).filter(index => index > 0));
+  const baseplateLoaded = stls.some(({ file }) => /baseplate/i.test(file.name));
+  const blockColorCount = blockColors.size;
+  if (detectedColors) {
+    const plural = blockColorCount === 1 ? '' : 's';
+    const baseplateSuffix = baseplateLoaded ? ' + baseplate' : '';
+    detectedColors.textContent = `Detected ${blockColorCount} block color${plural}${baseplateSuffix}`;
+  }
+  if (colorCount && colorCount.options.length) {
+    const totals = Array.from(colorCount.options).map(opt => parseInt(opt.value, 10));
+    const maxColors = Math.max(...totals);
+    let totalGroups = blockColorCount;
+    if (baseplateLoaded) {
+      totalGroups += 1;
+    }
+    if (totalGroups === 0) {
+      totalGroups = 1;
+    }
+    colorCount.value = String(Math.min(totalGroups, maxColors));
   }
   stls.forEach(({ file, colorIndex }) => {
     const reader = new FileReader();

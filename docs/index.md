@@ -21,8 +21,9 @@ row (with a partial row for 31-day months) so the footprint fits within a 256 mm
 [`viewer.html`](viewer.html) previews the resulting STLs in the browser with
 [Three.js](https://threejs.org/). Load the baseplate and `_colorN` (or legacy
 `levelN`) STLs to see each color group rendered with its own material. The viewer
-automatically infers how many color groups are present from the filenames and displays the
-detected count alongside the file picker.
+automatically infers how many color groups are present from the filenames,
+displays the detected block-color count next to the picker, and snaps the Colors
+dropdown to the same total for quick confirmation.
 
 ## Prompts
 
