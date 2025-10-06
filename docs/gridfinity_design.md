@@ -99,7 +99,9 @@ bin(
 `stl/<year>/gridfinity_plate.scad` files that size a baseplate to the requested
 column count (default six) and stack Gridfinity bins for each month on top of
 it. Adjust `--gridfinity-columns` to generate other footprints without editing
-OpenSCAD manually.
+OpenSCAD manually. Pair the flag with `--gridfinity-cubes` to emit
+`contrib_cube_MM.scad`/`.stl` stacks so monthly prints are pre-scaled to each
+month's contribution magnitude.
 
 ## 5  GitHub Actions Pipeline (.github/workflows/build-stl.yml)
 
@@ -173,7 +175,6 @@ Colour scheme:
 This creates an intuitive heat-map effect.
 
 ## 8  Future Enhancements
-* Auto-query GitHub GraphQL API each month → pre-populate contrib_cube_*.stl counts.
 * Add docs/usage.md with slicer presets and AMS filament script examples.
 
 ## 9  Reference Sources

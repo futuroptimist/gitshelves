@@ -315,6 +315,47 @@ def generate_gridfinity_plate_scad(
     return "\n".join(lines)
 
 
+def generate_contrib_cube_stack_scad(levels: int) -> str:
+    """Return a Gridfinity cube stack SCAD for ``levels`` cubes."""
+
+    if levels < 0:
+        raise ValueError("levels must be >= 0")
+
+    if not GRIDFINITY_BIN_SCAD.exists():
+        raise FileNotFoundError(
+            "Gridfinity bin library not found; expected file: " f"{GRIDFINITY_BIN_SCAD}"
+        )
+
+    bin_include = GRIDFINITY_BIN_SCAD.as_posix()
+    lines = [
+        HEADER,
+        f"use <{bin_include}>;",
+        "",
+        "module contribution_cube() {",
+        "    bin(",
+        "        ux = 1, uy = 1, uh = 1,",
+        '        walls = 1.2, floor = 1.6, lid = "none",',
+        "        magnet_pockets = false, stackable = true);",
+        "}",
+        "",
+        f"unit_height = {GRIDFINITY_UNIT_HEIGHT};",
+        "",
+        "module contribution_stack(levels) {",
+        "    for (level = [0:levels-1]) {",
+        "        translate([0, 0, level * unit_height]) contribution_cube();",
+        "    }",
+        "}",
+        "",
+        (
+            f"contribution_stack({levels});"
+            f" // {levels} cube{'s' if levels != 1 else ''}"
+        ),
+    ]
+    if levels == 0:
+        lines.append("// No contributions")
+    return "\n".join(lines)
+
+
 def scad_to_stl(scad_file: str, stl_file: str) -> None:
     """Convert ``scad_file`` to ``stl_file`` using the ``openscad`` CLI.
 
