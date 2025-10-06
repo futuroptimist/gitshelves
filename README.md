@@ -122,6 +122,8 @@ has no contributions, so your shelf layout stays predictable.
 Day-level views are also written to `stl/<year>/monthly-5x6/` as OpenSCAD files. Each calendar lays
 out the month's days in rows of five to stay within a 256 mm square build area, adding a partial row
 for 31-day months.
+Monthly `.scad` exports reserve slots for every month in the requested range as well, so years without
+activity remain in place—they simply render zero-height stacks until you contribute again.
 ## Troubleshooting
 
 OpenSCAD exits with status 1 when it cannot access an X display. The
