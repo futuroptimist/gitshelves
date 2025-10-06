@@ -199,13 +199,28 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     if min(level_scads) < 1:
         raise ValueError("level keys must be >= 1")
 
-    max_level = max(level_scads)
-    levels_per_group = math.ceil(max_level / groups)
-    grouped: Dict[int, list[str]] = defaultdict(list)
-    for level, text in sorted(level_scads.items()):
-        idx = (level - 1) // levels_per_group + 1
-        grouped[idx].extend(_body_lines(text))
-    return {idx: HEADER + "\n" + "\n".join(lines) for idx, lines in grouped.items()}
+    ordered_levels = sorted(level_scads.items())
+    total_groups = min(groups, len(ordered_levels))
+
+    base_size = len(ordered_levels) // total_groups
+    extra = len(ordered_levels) % total_groups
+
+    group_sizes = [base_size + (1 if idx < extra else 0) for idx in range(total_groups)]
+
+    grouped: Dict[int, list[str]] = {}
+    cursor = 0
+    for group_index, size in enumerate(group_sizes, start=1):
+        lines: list[str] = []
+        for _ in range(size):
+            _, text = ordered_levels[cursor]
+            lines.extend(_body_lines(text))
+            cursor += 1
+        grouped[group_index] = lines
+
+    return {
+        idx: HEADER + "\n" + "\n".join(lines) if lines else HEADER
+        for idx, lines in grouped.items()
+    }
 
 
 def generate_gridfinity_plate_scad(
