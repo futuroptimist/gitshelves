@@ -98,6 +98,12 @@ def main(argv: list[str] | None = None):
         daily_counts[day_key] = daily_counts.get(day_key, 0) + 1
 
     start_year, end_year = _determine_year_range(args.start_year, args.end_year)
+    counts = {
+        (year, month): counts.get((year, month), 0)
+        for year in range(start_year, end_year + 1)
+        for month in range(1, 13)
+    }
+
     for year in range(start_year, end_year + 1):
         readme_path = write_year_readme(year, counts)
         calendars = generate_monthly_calendar_scads(daily_counts, year)
