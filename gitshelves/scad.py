@@ -203,9 +203,6 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     total_groups = min(groups, len(ordered_levels))
     level_count = len(ordered_levels)
 
-    if total_groups == 0:
-        return {}
-
     if total_groups == 4 and level_count > total_groups:
         group_sizes = [1, 1, 1, level_count - 3]
     else:
