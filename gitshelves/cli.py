@@ -8,6 +8,8 @@ from importlib import metadata
 from .baseplate import load_baseplate_scad
 from .fetch import fetch_user_contributions, _determine_year_range
 from .scad import (
+    blocks_for_contributions,
+    generate_contrib_cube_stack_scad,
     generate_scad_monthly,
     generate_scad_monthly_levels,
     generate_monthly_calendar_scads,
@@ -60,6 +62,11 @@ def main(argv: list[str] | None = None):
         default=6,
         help="Columns per Gridfinity baseplate row when layouts are generated",
     )
+    parser.add_argument(
+        "--gridfinity-cubes",
+        action="store_true",
+        help="Generate monthly Gridfinity cube stacks",
+    )
     try:  # pragma: no cover - metadata lookup
         pkg_version = metadata.version("gitshelves")
     except metadata.PackageNotFoundError:  # pragma: no cover
@@ -108,6 +115,19 @@ def main(argv: list[str] | None = None):
             layout_path = readme_path.parent / "gridfinity_plate.scad"
             layout_path.write_text(layout_text)
             print(f"Wrote {layout_path}")
+        if args.gridfinity_cubes:
+            year_dir = readme_path.parent
+            for month in range(1, 13):
+                levels = blocks_for_contributions(counts.get((year, month), 0))
+                if levels <= 0:
+                    continue
+                cube_scad = generate_contrib_cube_stack_scad(levels)
+                cube_scad_path = year_dir / f"contrib_cube_{month:02d}.scad"
+                cube_scad_path.write_text(cube_scad)
+                print(f"Wrote {cube_scad_path}")
+                cube_stl_path = cube_scad_path.with_suffix(".stl")
+                scad_to_stl(str(cube_scad_path), str(cube_stl_path))
+                print(f"Wrote {cube_stl_path}")
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
