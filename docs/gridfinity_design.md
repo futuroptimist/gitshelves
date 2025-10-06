@@ -174,8 +174,11 @@ Colour scheme:
 
 This creates an intuitive heat-map effect.
 
-## 8  Future Enhancements
-* Add docs/usage.md with slicer presets and AMS filament script examples.
+## 8  Usage Guide & AMS automation
+[docs/usage.md](usage.md) now captures the recommended slicer presets and AMS
+filament-change scripts for multi-color prints. Refer contributors there for
+printer tuning details and automation examples instead of treating the guidance
+as future work.
 
 ## 9  Reference Sources
 Base-plate tolerance discussion – Reddit
