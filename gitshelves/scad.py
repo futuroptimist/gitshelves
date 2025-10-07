@@ -205,7 +205,9 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     base_size = len(ordered_levels) // total_groups
     extra = len(ordered_levels) % total_groups
 
-    group_sizes = [base_size + (1 if idx < extra else 0) for idx in range(total_groups)]
+    group_sizes = [base_size for _ in range(total_groups)]
+    if total_groups:
+        group_sizes[-1] = base_size + extra
 
     grouped: Dict[int, list[str]] = {}
     cursor = 0
