@@ -44,12 +44,14 @@ class _BlockPosition:
     level: int
 
 
-def _iter_monthly_block_positions(
+def _iter_month_slots(
     contributions: Dict[Tuple[int, int], int], months_per_row: int
-) -> Iterator[_BlockPosition]:
-    """Yield ``_BlockPosition`` objects for monthly contributions."""
+) -> Iterator[tuple[int, int, int, int, int]]:
+    """Yield ``(year, month, count, x, y)`` tuples for each calendar slot."""
+
     if months_per_row <= 0:
         raise ValueError("months_per_row must be positive")
+
     if not contributions:
         return
 
@@ -60,13 +62,23 @@ def _iter_monthly_block_positions(
         for year in range(first_year, last_year + 1)
         for month in range(1, 13)
     )
+
     for idx, (year, month) in enumerate(month_iter):
+        col = idx % months_per_row
+        row = idx // months_per_row
+        x = col * SPACING
+        y = row * SPACING
         count = contributions.get((year, month), 0)
+        yield year, month, count, x, y
+
+
+def _iter_monthly_block_positions(
+    contributions: Dict[Tuple[int, int], int], months_per_row: int
+) -> Iterator[_BlockPosition]:
+    """Yield ``_BlockPosition`` objects for monthly contributions."""
+
+    for year, month, count, x, y in _iter_month_slots(contributions, months_per_row):
         for level in range(blocks_for_contributions(count)):
-            col = idx % months_per_row
-            row = idx // months_per_row
-            x = col * SPACING
-            y = row * SPACING
             z = level * BLOCK_SIZE
             yield _BlockPosition(x, y, z, year, month, level)
 
@@ -158,8 +170,19 @@ def generate_scad_monthly(
     so on.
     """
     scad_lines = [HEADER]
-    for _, line in _iter_monthly_block_lines(contributions, months_per_row):
-        scad_lines.append(line)
+    for year, month, count, x, y in _iter_month_slots(contributions, months_per_row):
+        levels = blocks_for_contributions(count)
+        if levels == 0:
+            scad_lines.append(
+                f"// {year}-{month:02} (0 contributions) reserved at [{x}, {y}]"
+            )
+            continue
+        for level in range(levels):
+            z = level * BLOCK_SIZE
+            scad_lines.append(
+                f"translate([{x}, {y}, {z}]) cube({BLOCK_SIZE}); "
+                f"// {year}-{month:02}"
+            )
     return "\n".join(scad_lines)
 
 
