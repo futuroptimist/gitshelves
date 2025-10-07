@@ -76,7 +76,8 @@ columns (a 2×6 plate); adjust the footprint with `--gridfinity-columns` to matc
 When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl` so the baseplate is
 ready to print alongside the contribution cubes. Pair it with `--gridfinity-cubes` to generate
 `contrib_cube_MM.scad` and `.stl` stacks for every month that recorded contributions so cube prints are
-ready without extra modeling work.
+ready without extra modeling work. Empty months are still annotated in the Gridfinity layout as reserved
+grid cells, keeping the placement map intact even when a month renders zero cubes.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
 [Three.js](https://threejs.org/) and experiment with different color counts.
