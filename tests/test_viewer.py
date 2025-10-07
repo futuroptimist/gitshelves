@@ -21,3 +21,15 @@ def test_viewer_reports_detected_color_groups():
     assert palette, "palette definition missing"
     colors = re.findall(r"0x[0-9a-fA-F]+", palette.group(1))
     assert len(colors) >= 5, "palette should provide baseplate plus four block colors"
+
+
+def test_viewer_dropdown_matches_detected_block_colors():
+    """Colors dropdown should follow the detected block-color count (ignoring baseplate)."""
+
+    html = Path("docs/viewer.html").read_text()
+    assert (
+        "Math.max(blockColorCount, 1)" in html
+    ), "viewer should clamp to at least one color"
+    assert (
+        "totalGroups += 1" not in html
+    ), "baseplate should not inflate block-color selection"
