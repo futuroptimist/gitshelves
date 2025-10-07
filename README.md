@@ -135,6 +135,8 @@ out the month's days in rows of five to stay within a 256 mm square build area, 
 for 31-day months.
 Monthly `.scad` exports reserve slots for every month in the requested range as well, so years without
 activity remain in place—they simply render zero-height stacks until you contribute again.
+Months without contributions are annotated in the SCAD output so you can confirm each slot's
+position when previewing or editing the file.
 ## Troubleshooting
 
 OpenSCAD exits with status 1 when it cannot access an X display. The

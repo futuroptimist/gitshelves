@@ -25,6 +25,8 @@ Monthly day-level calendars live in `stl/<year>/monthly-5x6/`. Each SCAD arrange
 row (with a partial row for 31-day months) so the footprint fits within a 256 mm square build area.
 Monthly contribution `.scad` exports reserve every month in the requested range too, keeping the layout
 stable for years that currently have zero contributions.
+Zero-contribution months are annotated in the generated SCAD so you can double-check slot
+positions even when no cubes are rendered.
 [`viewer.html`](viewer.html) previews the resulting STLs in the browser with
 [Three.js](https://threejs.org/). Load the baseplate and `_colorN` (or legacy
 `levelN`) STLs to see each color group rendered with its own material. The viewer
