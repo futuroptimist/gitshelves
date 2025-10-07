@@ -9,3 +9,6 @@ def test_gridfinity_design_notes_usage_guide_is_shipped():
     assert (
         "Add docs/usage.md" not in text
     ), "Future enhancements section should not list shipped docs"
+    assert (
+        "Add a short Dependencies block" not in text
+    ), "Dependencies guidance should no longer be flagged as future work"

@@ -159,7 +159,8 @@ Gridfinity-Rebuilt-OpenSCAD (submodule at openscad/lib/gridfinity-rebuilt) – p
 OpenSCAD ≥ 2024.06 – required for FAST CSG and customizer options
 CI installs OpenSCAD with `apt` and runs the CLI directly
 
-Add a short Dependencies block to the root README.md, linking to each repo.
+The root README's *Dependencies* section now links to these libraries and highlights the
+`xvfb-run` helper for headless renders so documentation stays aligned with automated tests.
 
 ## 7  Printing & Assembly Notes
 PLA/PLA+ recommended for cubes; PETG for long 2×6 base (reduces warp).
