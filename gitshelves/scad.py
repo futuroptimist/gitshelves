@@ -367,13 +367,16 @@ def generate_gridfinity_plate_scad(
     ]
 
     for idx, (month, count) in enumerate(months):
-        levels = blocks_for_contributions(count)
-        if levels == 0:
-            continue
         col = idx % columns
         row = idx // columns
         x = col * GRIDFINITY_PITCH
         y = row * GRIDFINITY_PITCH
+        levels = blocks_for_contributions(count)
+        if levels == 0:
+            lines.append(
+                f"    // {year}-{month:02} (0 contributions) reserved at [{x}, {y}]"
+            )
+            continue
         lines.append(
             (
                 f"    translate([{x}, {y}, 0]) contribution_stack({levels}); "

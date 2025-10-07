@@ -445,6 +445,15 @@ def test_generate_gridfinity_plate_scad_positions(gridfinity_library):
     )
 
 
+def test_generate_gridfinity_plate_scad_marks_zero_contribution_months(
+    gridfinity_library,
+):
+    counts = {(2024, month): 0 for month in range(1, 13)}
+    scad = generate_gridfinity_plate_scad(counts, 2024)
+    assert "// 2024-01 (0 contributions) reserved at [0, 0]" in scad
+    assert "// 2024-07 (0 contributions) reserved at [0, 42]" in scad
+
+
 def test_generate_gridfinity_plate_scad_respects_custom_columns(gridfinity_library):
     counts = {(2025, 1): 5}
     scad = generate_gridfinity_plate_scad(counts, 2025, columns=3)
