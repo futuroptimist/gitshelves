@@ -12,10 +12,10 @@ additional orders of magnitude share the fourth color).
 bins are stacked onto a parametric baseplate; adjust the footprint with
 `--gridfinity-columns`. When `--stl` is provided, the CLI also renders
 `stl/<year>/gridfinity_plate.stl` so baseplates are printable without manual
-conversion. Enable `--gridfinity-cubes` to export
-`contrib_cube_MM.scad` and `.stl` stacks for every month with activity. By
-default, the current year's contributions are fetched unless `--start-year` and
-`--end-year` specify a range.
+conversion. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
+for every month with activity, and pass `--stl` to render matching `.stl`
+files. By default, the current year's contributions are fetched unless
+`--start-year` and `--end-year` specify a range.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates.

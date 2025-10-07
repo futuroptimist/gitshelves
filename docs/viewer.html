@@ -74,14 +74,8 @@ function loadFiles(list) {
   if (colorCount && colorCount.options.length) {
     const totals = Array.from(colorCount.options).map(opt => parseInt(opt.value, 10));
     const maxColors = Math.max(...totals);
-    let totalGroups = blockColorCount;
-    if (baseplateLoaded) {
-      totalGroups += 1;
-    }
-    if (totalGroups === 0) {
-      totalGroups = 1;
-    }
-    colorCount.value = String(Math.min(totalGroups, maxColors));
+    const selectedColors = Math.max(blockColorCount, 1);
+    colorCount.value = String(Math.min(selectedColors, maxColors));
   }
   stls.forEach(({ file, colorIndex }) => {
     const reader = new FileReader();

@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--gridfinity-cubes",
         action="store_true",
-        help="Generate monthly Gridfinity cube stacks",
+        help="Generate monthly Gridfinity cube stacks (SCAD; add --stl for STLs)",
     )
     try:  # pragma: no cover - metadata lookup
         pkg_version = metadata.version("gitshelves")
@@ -135,9 +135,10 @@ def main(argv: list[str] | None = None):
                 cube_scad_path = year_dir / f"contrib_cube_{month:02d}.scad"
                 cube_scad_path.write_text(cube_scad)
                 print(f"Wrote {cube_scad_path}")
-                cube_stl_path = cube_scad_path.with_suffix(".stl")
-                scad_to_stl(str(cube_scad_path), str(cube_stl_path))
-                print(f"Wrote {cube_stl_path}")
+                if args.stl:
+                    cube_stl_path = cube_scad_path.with_suffix(".stl")
+                    scad_to_stl(str(cube_scad_path), str(cube_stl_path))
+                    print(f"Wrote {cube_stl_path}")
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
