@@ -226,34 +226,28 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
         }
 
     grouped: Dict[int, list[str]] = {}
-    cursor = 0
 
-    if total_groups >= 4 and len(ordered_levels) > total_groups:
-        # Preserve the first three block levels as distinct colors and stack
-        # every higher magnitude into the final accent color.
-        for group_index in range(1, total_groups):
-            _, text = ordered_levels[cursor]
-            grouped[group_index] = _body_lines(text)
-            cursor += 1
-        remaining: list[str] = []
-        for _, text in ordered_levels[cursor:]:
-            remaining.extend(_body_lines(text))
-        grouped[total_groups] = remaining
-    else:
-        base_size = len(ordered_levels) // total_groups
-        extra = len(ordered_levels) % total_groups
+    if total_groups == 1:
+        lines: list[str] = []
+        for _, text in ordered_levels:
+            lines.extend(_body_lines(text))
+        grouped[1] = lines
+        return {
+            idx: HEADER + "\n" + "\n".join(lines) if lines else HEADER
+            for idx, lines in grouped.items()
+        }
 
-        group_sizes = [
-            base_size + (1 if idx < extra else 0) for idx in range(total_groups)
-        ]
+    # Preserve the earliest levels as individual color groups so the final
+    # accent color consistently absorbs every overflow block level, regardless
+    # of how many colors were requested.
+    for index in range(total_groups - 1):
+        _, text = ordered_levels[index]
+        grouped[index + 1] = _body_lines(text)
 
-        for group_index, size in enumerate(group_sizes, start=1):
-            lines: list[str] = []
-            for _ in range(size):
-                _, text = ordered_levels[cursor]
-                lines.extend(_body_lines(text))
-                cursor += 1
-            grouped[group_index] = lines
+    remaining: list[str] = []
+    for _, text in ordered_levels[total_groups - 1 :]:
+        remaining.extend(_body_lines(text))
+    grouped[total_groups] = remaining
 
     return {
         idx: HEADER + "\n" + "\n".join(lines) if lines else HEADER
