@@ -59,7 +59,9 @@ python -m gitshelves.cli --version
 Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a baseplate for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files, and `--colors 5` separates the levels into four distinct block colors. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group, and the baseplate is written as `<name>_baseplate.scad` (and `.stl` when requested). When contribution counts span more than four logarithmic levels, the fourth color collects the remaining higher magnitudes so extra orders reuse the accent color.
 Lower magnitudes stay in the earliest `color` files, and any surplus levels beyond the available
 groups are appended to the final `color` output so accent-colored cubes repeat for larger orders of
-magnitude.
+magnitude. `group_scad_levels` enforces this by keeping the first three levels in their own groups and
+funneling all higher orders into the fourth group whenever five colors are requested, so the accent
+color consistently represents the highest magnitudes.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).
@@ -92,10 +94,14 @@ See [AGENTS.md](AGENTS.md) for agent workflow guidelines and
 
 ## Dependencies
 
- - [Gridfinity-Rebuilt-OpenSCAD](https://github.com/kennetek/gridfinity-rebuilt-openscad) – parametric Gridfinity modules. The CI workflow clones this repo into `openscad/lib/gridfinity-rebuilt` when building STL files.
-- [OpenSCAD](https://openscad.org/) ≥ 2024.06 – required to render STL files.
-- GitHub Actions installs `openscad` with `xvfb` to convert `.scad` sources to binary STL outputs in a headless environment.
-- [vector76/gridfinity_openscad](https://github.com/vector76/gridfinity_openscad) – reference implementation we consult for specification details (MIT).
+- [Gridfinity-Rebuilt-OpenSCAD](https://github.com/kennetek/gridfinity-rebuilt-openscad) –
+  parametric Gridfinity modules. The CI workflow clones this repo into
+  `openscad/lib/gridfinity-rebuilt` when building STL files.
+- [OpenSCAD](https://openscad.org/) ≥ 2024.06 – required to render STL files. Install
+  `xvfb-run` on headless systems; the `scad_to_stl` helper wraps OpenSCAD with it
+  automatically when `$DISPLAY` is missing, mirroring the CI workflow.
+- [vector76/gridfinity_openscad](https://github.com/vector76/gridfinity_openscad) – reference
+  implementation we consult for specification details (MIT).
 
 ## How to Build Locally
 
