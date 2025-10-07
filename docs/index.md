@@ -17,6 +17,9 @@ conversion. Enable `--gridfinity-cubes` to export
 default, the current year's contributions are fetched unless `--start-year` and
 `--end-year` specify a range.
 
+`load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
+cloning the OpenSCAD templates.
+
 For printer-specific guidance, see the [usage guide](usage.md) with slicer
 presets and AMS filament scripting examples.
 The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the

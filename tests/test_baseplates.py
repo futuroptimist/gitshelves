@@ -1,3 +1,4 @@
+import importlib.resources
 from pathlib import Path
 
 from gitshelves.baseplate import load_baseplate_scad
@@ -42,6 +43,18 @@ def test_load_baseplate_scad_prefers_packaged_resource(monkeypatch):
 
     assert load_baseplate_scad() == "// packaged"
     assert captured == {"name": "baseplate_2x6.scad", "encoding": "utf-8"}
+
+
+def test_load_baseplate_scad_loads_packaged_1x12():
+    """The 1×12 template should be bundled for narrow shelves."""
+
+    expected = (
+        importlib.resources.files("gitshelves.data")
+        .joinpath("baseplate_1x12.scad")
+        .read_text(encoding="utf-8")
+    )
+
+    assert load_baseplate_scad("baseplate_1x12.scad") == expected
 
 
 def test_load_baseplate_scad_falls_back_to_repository_checkout(monkeypatch):

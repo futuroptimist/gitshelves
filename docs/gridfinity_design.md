@@ -13,8 +13,10 @@ We want:
   * **2021 … 2025** sub-folders (five total).  
 * Each folder holds one `baseplate_2x6.stl`, automatically generated from its matching `.scad`.
 
-* **OpenSCAD sources** describing  
+* **OpenSCAD sources** describing
 * A **2 × 6 base plate** (6 columns, 2 rows) that obeys the 42 mm grid and 41.5 mm clearance rules.
+  * A packaged **1 × 12 base plate** lives in `gitshelves.data/baseplate_1x12.scad` so tall single-row layouts are available to
+    downstream scripts without copying the raw OpenSCAD files.
   * A **"contribution cube"** (1 × 1 × 1 U) used to encode the order of magnitude of monthly commits.
 
 * **CI pipeline** (GitHub Actions) that converts every `*.scad` into a binary STL artifact on each
