@@ -21,3 +21,12 @@ def test_viewer_reports_detected_color_groups():
     assert palette, "palette definition missing"
     colors = re.findall(r"0x[0-9a-fA-F]+", palette.group(1))
     assert len(colors) >= 5, "palette should provide baseplate plus four block colors"
+
+
+def test_viewer_dropdown_toggles_mesh_visibility():
+    """Colors dropdown should change mesh visibility for quick previews."""
+
+    html = Path("docs/viewer.html").read_text()
+    assert "const loadedMeshes" in html
+    assert "colorCount.addEventListener('change'" in html
+    assert "mesh.visible" in html

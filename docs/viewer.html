@@ -38,8 +38,25 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 const loader = new THREE.STLLoader();
 const colorCount = document.getElementById('colorCount');
 const detectedColors = document.getElementById('detectedColors');
+const loadedMeshes = [];
+let baseplatePresent = false;
 function clearMeshes() {
   scene.children.filter(o => o.isMesh).forEach(o => scene.remove(o));
+  loadedMeshes.length = 0;
+  baseplatePresent = false;
+}
+function updateMeshVisibility() {
+  const selected = parseInt(colorCount ? colorCount.value : '0', 10);
+  const total = Number.isNaN(selected) ? 0 : selected;
+  const blockThreshold = baseplatePresent ? Math.max(total - 1, 0) : Math.max(total, 0);
+  loadedMeshes.forEach(({ mesh, colorIndex }) => {
+    if (colorIndex === 0) {
+      mesh.visible = baseplatePresent && total > 0;
+    } else {
+      const limit = baseplatePresent ? blockThreshold : Math.max(total, 0);
+      mesh.visible = limit >= colorIndex && limit > 0;
+    }
+  });
 }
 function loadFiles(list) {
   clearMeshes();
@@ -65,6 +82,7 @@ function loadFiles(list) {
   }
   const blockColors = new Set(stls.map(item => item.colorIndex).filter(index => index > 0));
   const baseplateLoaded = stls.some(({ file }) => /baseplate/i.test(file.name));
+  baseplatePresent = baseplateLoaded;
   const blockColorCount = blockColors.size;
   if (detectedColors) {
     const plural = blockColorCount === 1 ? '' : 's';
@@ -83,6 +101,7 @@ function loadFiles(list) {
     }
     colorCount.value = String(Math.min(totalGroups, maxColors));
   }
+  updateMeshVisibility();
   stls.forEach(({ file, colorIndex }) => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -94,11 +113,16 @@ function loadFiles(list) {
       const mesh = new THREE.Mesh(geo, mat);
       mesh.name = file.name;
       scene.add(mesh);
+      loadedMeshes.push({ mesh, colorIndex });
+      updateMeshVisibility();
     };
     reader.readAsArrayBuffer(file);
   });
 }
 document.getElementById('files').addEventListener('change', e => loadFiles(e.target.files));
+if (colorCount) {
+  colorCount.addEventListener('change', updateMeshVisibility);
+}
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(1, 1, 1).normalize();
 scene.add(light);

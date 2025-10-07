@@ -35,7 +35,9 @@ positions even when no cubes are rendered.
 `levelN`) STLs to see each color group rendered with its own material. The viewer
 automatically infers how many color groups are present from the filenames,
 displays the detected block-color count next to the picker, and snaps the Colors
-dropdown to the same total for quick confirmation.
+dropdown to the same total for quick confirmation. Lower the value in the
+dropdown to hide higher block-color groups and quickly simulate a print that uses
+fewer colors.
 
 ## Prompts
 
