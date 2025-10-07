@@ -187,10 +187,11 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     """Combine level-specific SCAD snippets into ``groups`` color groups.
 
     ``groups`` is the number of distinct block colors and must be at least ``1``.
-    Levels are distributed evenly across groups unless four groups are
-    requested with more than four levels—in that case the fourth group gathers
-    every remaining high-magnitude level so the accent color remains stable.
-    Each output retains the standard header.
+    Levels are distributed evenly across groups except when four or more block
+    colors are requested and contribution levels exceed the number of colors.
+    In that case the highest magnitudes are appended to the final group so the
+    accent color collects every level beyond the third, mirroring the
+    documentation for ``--colors 5``. Each output retains the standard header.
     """
     if groups < 1:
         raise ValueError("groups must be >= 1")
@@ -203,6 +204,7 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
 
     ordered_levels = sorted(level_scads.items())
     total_groups = min(groups, len(ordered_levels))
+    level_count = len(ordered_levels)
 
     # ``--colors 5`` exposes four block colors. When contributions introduce more than
     # four logarithmic levels, documentation promises the accent color (group 4)
@@ -224,20 +226,44 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
             for idx, lines in grouped_lines.items()
         }
 
-    base_size = len(ordered_levels) // total_groups
-    extra = len(ordered_levels) % total_groups
-
-    group_sizes = [base_size + (1 if idx < extra else 0) for idx in range(total_groups)]
+    if total_groups == 4 and level_count > total_groups:
+        group_sizes = [1, 1, 1, level_count - 3]
+    else:
+        base_size = level_count // total_groups
+        extra = level_count % total_groups
+        group_sizes = [
+            base_size + (1 if idx < extra else 0) for idx in range(total_groups)
+        ]
 
     grouped: Dict[int, list[str]] = {}
     cursor = 0
-    for group_index, size in enumerate(group_sizes, start=1):
-        lines: list[str] = []
-        for _ in range(size):
+
+    if total_groups >= 4 and len(ordered_levels) > total_groups:
+        # Preserve the first three block levels as distinct colors and stack
+        # every higher magnitude into the final accent color.
+        for group_index in range(1, total_groups):
             _, text = ordered_levels[cursor]
-            lines.extend(_body_lines(text))
+            grouped[group_index] = _body_lines(text)
             cursor += 1
-        grouped[group_index] = lines
+        remaining: list[str] = []
+        for _, text in ordered_levels[cursor:]:
+            remaining.extend(_body_lines(text))
+        grouped[total_groups] = remaining
+    else:
+        base_size = len(ordered_levels) // total_groups
+        extra = len(ordered_levels) % total_groups
+
+        group_sizes = [
+            base_size + (1 if idx < extra else 0) for idx in range(total_groups)
+        ]
+
+        for group_index, size in enumerate(group_sizes, start=1):
+            lines: list[str] = []
+            for _ in range(size):
+                _, text = ordered_levels[cursor]
+                lines.extend(_body_lines(text))
+                cursor += 1
+            grouped[group_index] = lines
 
     return {
         idx: HEADER + "\n" + "\n".join(lines) if lines else HEADER
