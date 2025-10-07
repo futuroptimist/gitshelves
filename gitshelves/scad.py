@@ -187,8 +187,10 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     """Combine level-specific SCAD snippets into ``groups`` color groups.
 
     ``groups`` is the number of distinct block colors and must be at least ``1``.
-    Levels are distributed evenly across groups. Each output retains the
-    standard header.
+    Levels are distributed evenly across groups unless four groups are
+    requested with more than four levels—in that case the fourth group gathers
+    every remaining high-magnitude level so the accent color remains stable.
+    Each output retains the standard header.
     """
     if groups < 1:
         raise ValueError("groups must be >= 1")
@@ -201,6 +203,26 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
 
     ordered_levels = sorted(level_scads.items())
     total_groups = min(groups, len(ordered_levels))
+
+    # ``--colors 5`` exposes four block colors. When contributions introduce more than
+    # four logarithmic levels, documentation promises the accent color (group 4)
+    # gathers every remaining high-magnitude level. Ensure the last group collects
+    # level four and above so additional orders reuse the accent palette.
+    if total_groups == 4 and len(ordered_levels) > total_groups:
+        grouped_lines: Dict[int, list[str]] = {
+            idx: [] for idx in range(1, total_groups + 1)
+        }
+        for index, (_, text) in enumerate(ordered_levels):
+            if index < total_groups - 1:
+                target = index + 1
+            else:
+                target = total_groups
+            grouped_lines[target].extend(_body_lines(text))
+
+        return {
+            idx: HEADER + ("\n" + "\n".join(lines) if lines else "")
+            for idx, lines in grouped_lines.items()
+        }
 
     base_size = len(ordered_levels) // total_groups
     extra = len(ordered_levels) % total_groups
