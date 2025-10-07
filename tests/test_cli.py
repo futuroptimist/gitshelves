@@ -735,6 +735,57 @@ def test_cli_generates_gridfinity_layout(
     assert f"Wrote {layout_path.relative_to(tmp_path)}" in captured
 
 
+def test_cli_generates_gridfinity_layout_stl(
+    tmp_path, monkeypatch, capsys, gridfinity_library
+):
+    base = tmp_path / "grid.scad"
+    stl_path = tmp_path / "grid.stl"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=str(stl_path),
+        colors=1,
+        gridfinity_layouts=True,
+        gridfinity_columns=4,
+        gridfinity_cubes=False,
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+
+    stl_calls: list[tuple[Path, Path]] = []
+
+    def fake_stl(src, dest):
+        stl_calls.append((Path(src).resolve(), Path(dest).resolve()))
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
+
+    cli.main()
+
+    layout_path = tmp_path / "stl" / "2021" / "gridfinity_plate.scad"
+    layout_stl = layout_path.with_suffix(".stl")
+    assert (layout_path.resolve(), layout_stl.resolve()) in stl_calls
+    captured = capsys.readouterr().out
+    assert f"Wrote {layout_stl.relative_to(tmp_path)}" in captured
+
+
 def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_library):
     base = tmp_path / "grid.scad"
     args = argparse.Namespace(
