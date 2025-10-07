@@ -75,8 +75,8 @@ Gridfinity baseplate and arranges monthly contribution cubes on top of it. The l
 columns (a 2×6 plate); adjust the footprint with `--gridfinity-columns` to match your storage grid.
 When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl` so the baseplate is
 ready to print alongside the contribution cubes. Pair it with `--gridfinity-cubes` to generate
-`contrib_cube_MM.scad` and `.stl` stacks for every month that recorded contributions so cube prints are
-ready without extra modeling work.
+`contrib_cube_MM.scad` stacks for every month that recorded contributions, and include `--stl` to render
+matching `.stl` files so cube prints are ready without extra modeling work.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
 [Three.js](https://threejs.org/) and experiment with different color counts.

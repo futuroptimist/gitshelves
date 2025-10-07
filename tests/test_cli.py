@@ -787,6 +787,7 @@ def test_cli_generates_gridfinity_layout_stl(
 
 
 def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_library):
+    """`--gridfinity-cubes` alone should only emit SCAD stacks (docs promise)."""
     base = tmp_path / "grid.scad"
     args = argparse.Namespace(
         username="user",
@@ -829,10 +830,8 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
 
     monkeypatch.setattr(cli, "generate_contrib_cube_stack_scad", fake_cube_stack)
 
-    stl_calls: list[tuple[str, str]] = []
-
-    def fake_stl(src, dest):
-        stl_calls.append((Path(src).name, Path(dest).name))
+    def fake_stl(*_args):  # pragma: no cover - should not be called
+        raise AssertionError("scad_to_stl should not run without --stl")
 
     monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
 
@@ -845,6 +844,66 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
     assert feb_scad.read_text() == "// cubes 2"
     assert apr_scad.read_text() == "// cubes 1"
     assert recorded_levels == [2, 1]
+
+
+def test_cli_generates_gridfinity_cube_stls_when_requested(
+    tmp_path, monkeypatch, gridfinity_library
+):
+    """Pairing `--gridfinity-cubes` with `--stl` should render cube STLs."""
+    base = tmp_path / "grid.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=str(tmp_path / "grid.stl"),
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=True,
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    feb_entries = [
+        {"created_at": f"2021-02-{day:02d}T00:00:00Z"} for day in range(1, 11)
+    ]
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: feb_entries + [{"created_at": "2021-04-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+
+    monkeypatch.setattr(
+        cli,
+        "generate_contrib_cube_stack_scad",
+        lambda levels: f"// cubes {levels}",
+    )
+
+    stl_calls: list[tuple[str, str]] = []
+
+    def fake_stl(src, dest):
+        stl_calls.append((Path(src).name, Path(dest).name))
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
+
+    cli.main()
+
+    year_dir = tmp_path / "stl" / "2021"
+    feb_scad = year_dir / "contrib_cube_02.scad"
+    apr_scad = year_dir / "contrib_cube_04.scad"
+    assert feb_scad.read_text() == "// cubes 2"
+    assert apr_scad.read_text() == "// cubes 1"
     assert ("contrib_cube_02.scad", "contrib_cube_02.stl") in stl_calls
     assert ("contrib_cube_04.scad", "contrib_cube_04.stl") in stl_calls
 
