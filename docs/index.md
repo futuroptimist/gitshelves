@@ -10,10 +10,11 @@ blocks into up to four color groups (pass `--colors 5` to unlock all four;
 additional orders of magnitude share the fourth color).
 `--gridfinity-layouts` writes `stl/<year>/gridfinity_plate.scad` so Gridfinity
 bins are stacked onto a parametric baseplate; adjust the footprint with
-`--gridfinity-columns`. Enable `--gridfinity-cubes` to export
-`contrib_cube_MM.scad` and `.stl` stacks for every month with activity. By
-default, the current year's contributions are fetched unless `--start-year` and
-`--end-year` specify a range.
+`--gridfinity-columns`. When `--stl` is provided, matching
+`gridfinity_plate.stl` files are rendered automatically. Enable
+`--gridfinity-cubes` to export `contrib_cube_MM.scad` and `.stl` stacks for
+every month with activity. By default, the current year's contributions are
+fetched unless `--start-year` and `--end-year` specify a range.
 
 For printer-specific guidance, see the [usage guide](usage.md) with slicer
 presets and AMS filament scripting examples.

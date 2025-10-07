@@ -121,6 +121,10 @@ def main(argv: list[str] | None = None):
             layout_path = readme_path.parent / "gridfinity_plate.scad"
             layout_path.write_text(layout_text)
             print(f"Wrote {layout_path}")
+            if args.stl:
+                layout_stl_path = layout_path.with_suffix(".stl")
+                scad_to_stl(str(layout_path), str(layout_stl_path))
+                print(f"Wrote {layout_stl_path}")
         if args.gridfinity_cubes:
             year_dir = readme_path.parent
             for month in range(1, 13):

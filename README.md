@@ -65,10 +65,12 @@ For print tuning tips—including slicer presets for baseplates and cubes plus A
 automation snippets—see [docs/usage.md](docs/usage.md).
 
 Pass `--gridfinity-layouts` to emit a parametric `stl/<year>/gridfinity_plate.scad` that builds a
-Gridfinity baseplate and arranges monthly contribution cubes on top of it. The layout defaults to six
-columns (a 2×6 plate); adjust the footprint with `--gridfinity-columns` to match your storage grid.
-Pair it with `--gridfinity-cubes` to generate `contrib_cube_MM.scad` and `.stl` stacks for every
-month that recorded contributions so cube prints are ready without extra modeling work.
+Gridfinity baseplate and arranges monthly contribution cubes on top of it. When `--stl` is also
+provided, matching `gridfinity_plate.stl` files are rendered automatically so layouts are printable
+without extra manual conversion. The layout defaults to six columns (a 2×6 plate); adjust the
+footprint with `--gridfinity-columns` to match your storage grid. Pair it with `--gridfinity-cubes`
+to generate `contrib_cube_MM.scad` and `.stl` stacks for every month that recorded contributions so
+cube prints are ready without extra modeling work.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
 [Three.js](https://threejs.org/) and experiment with different color counts.
