@@ -102,8 +102,8 @@ bin(
 column count (default six) and stack Gridfinity bins for each month on top of
 it. Adjust `--gridfinity-columns` to generate other footprints without editing
 OpenSCAD manually. Pair the flag with `--gridfinity-cubes` to emit
-`contrib_cube_MM.scad`/`.stl` stacks so monthly prints are pre-scaled to each
-month's contribution magnitude.
+`contrib_cube_MM.scad` stacks so monthly prints are pre-scaled to each month's
+contribution magnitude, and add `--stl` to render matching `.stl` files.
 
 ## 5  GitHub Actions Pipeline (.github/workflows/build-stl.yml)
 
