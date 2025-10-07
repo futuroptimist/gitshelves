@@ -204,7 +204,6 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
 
     ordered_levels = sorted(level_scads.items())
     total_groups = min(groups, len(ordered_levels))
-    level_count = len(ordered_levels)
 
     # ``--colors 5`` exposes four block colors. When contributions introduce more than
     # four logarithmic levels, documentation promises the accent color (group 4)
@@ -225,15 +224,6 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
             idx: HEADER + ("\n" + "\n".join(lines) if lines else "")
             for idx, lines in grouped_lines.items()
         }
-
-    if total_groups == 4 and level_count > total_groups:
-        group_sizes = [1, 1, 1, level_count - 3]
-    else:
-        base_size = level_count // total_groups
-        extra = level_count % total_groups
-        group_sizes = [
-            base_size + (1 if idx < extra else 0) for idx in range(total_groups)
-        ]
 
     grouped: Dict[int, list[str]] = {}
     cursor = 0
