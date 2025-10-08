@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict, Sequence, Tuple
 
 from .scad import blocks_for_contributions
 
@@ -10,11 +10,14 @@ def write_year_readme(
     year: int,
     counts: Dict[Tuple[int, int], int],
     outdir: Path | str = Path("stl"),
+    extras: Sequence[str] | None = None,
 ) -> Path:
     """Write a README detailing materials for ``year``.
 
     A summary of the baseplate STL and monthly cube counts is written to
-    ``stl/<year>/README.md``. The function returns the path to the created file.
+    ``stl/<year>/README.md``. Optional ``extras`` entries append additional
+    bullet points (for example Gridfinity outputs). The function returns the
+    path to the created file.
     """
     path = Path(outdir) / str(year)
     path.mkdir(parents=True, exist_ok=True)
@@ -43,6 +46,10 @@ def write_year_readme(
             "that fit a 256 mm square bed"
         ),
     ]
+
+    if extras:
+        lines += ["", "## Gridfinity"]
+        lines.extend(extras)
 
     readme_path = path / "README.md"
     readme_path.write_text("\n".join(lines))
