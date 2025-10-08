@@ -89,6 +89,8 @@ Use the file picker to load your baseplate and `_colorN` (or legacy `levelN`)
 STLs—the viewer automatically maps these names back to the color groups that the CLI
 generates, shows a detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected files, making manual selection optional.
+Choose a lower value to hide higher-order color stacks while you inspect the layout; the
+baseplate always remains visible so its footprint stays aligned.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 
