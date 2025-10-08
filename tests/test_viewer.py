@@ -39,3 +39,16 @@ def test_viewer_dropdown_matches_detected_block_colors():
     assert (
         "Array.from({ length: detected }" in html
     ), "viewer should derive option values from detected color count"
+
+
+def test_viewer_dropdown_filters_block_colors():
+    """Manual color selection should toggle higher-order stacks (README promise)."""
+
+    html = Path("docs/viewer.html").read_text()
+    assert "const meshRegistry" in html, "viewer should track loaded meshes"
+    assert (
+        "colorCount.addEventListener('change'" in html
+    ), "dropdown should react to manual selections"
+    assert (
+        "mesh.visible = colorIndex === 0 || colorIndex <= maxColors" in html
+    ), "visibility should clamp to the selected color count"

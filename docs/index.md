@@ -40,6 +40,8 @@ positions even when no cubes are rendered.
 automatically infers how many color groups are present from the filenames,
 displays the detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected total for quick confirmation.
+Select a smaller count to temporarily hide higher-order color stacks while you review the
+model; the baseplate stays visible so the footprint remains anchored.
 
 ## Prompts
 

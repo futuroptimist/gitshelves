@@ -38,8 +38,19 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 const loader = new THREE.STLLoader();
 const colorCount = document.getElementById('colorCount');
 const detectedColors = document.getElementById('detectedColors');
+const meshRegistry = [];
+
+function applyColorSelection() {
+  if (!colorCount) return;
+  const maxColors = parseInt(colorCount.value, 10) || 1;
+  meshRegistry.forEach(({ mesh, colorIndex }) => {
+    mesh.visible = colorIndex === 0 || colorIndex <= maxColors;
+  });
+}
+
 function clearMeshes() {
   scene.children.filter(o => o.isMesh).forEach(o => scene.remove(o));
+  meshRegistry.length = 0;
 }
 function loadFiles(list) {
   clearMeshes();
@@ -98,9 +109,14 @@ function loadFiles(list) {
       const mesh = new THREE.Mesh(geo, mat);
       mesh.name = file.name;
       scene.add(mesh);
+      meshRegistry.push({ mesh, colorIndex });
+      applyColorSelection();
     };
     reader.readAsArrayBuffer(file);
   });
+}
+if (colorCount) {
+  colorCount.addEventListener('change', applyColorSelection);
 }
 document.getElementById('files').addEventListener('change', e => loadFiles(e.target.files));
 const light = new THREE.DirectionalLight(0xffffff, 1);
