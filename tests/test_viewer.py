@@ -33,3 +33,9 @@ def test_viewer_dropdown_matches_detected_block_colors():
     assert (
         "totalGroups += 1" not in html
     ), "baseplate should not inflate block-color selection"
+    assert (
+        "colorCount.innerHTML" in html
+    ), "viewer should rebuild dropdown options to match detected colors"
+    assert (
+        "Array.from({ length: detected }" in html
+    ), "viewer should derive option values from detected color count"

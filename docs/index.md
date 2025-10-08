@@ -34,8 +34,8 @@ positions even when no cubes are rendered.
 [Three.js](https://threejs.org/). Load the baseplate and `_colorN` (or legacy
 `levelN`) STLs to see each color group rendered with its own material. The viewer
 automatically infers how many color groups are present from the filenames,
-displays the detected block-color count next to the picker, and snaps the Colors
-dropdown to the same total for quick confirmation.
+displays the detected block-color count next to the picker, and rebuilds the Colors
+dropdown so it shrinks or expands to the detected total for quick confirmation.
 
 ## Prompts
 

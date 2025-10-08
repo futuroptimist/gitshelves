@@ -83,8 +83,8 @@ Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL 
 [Three.js](https://threejs.org/) and experiment with different color counts.
 Use the file picker to load your baseplate and `_colorN` (or legacy `levelN`)
 STLs—the viewer automatically maps these names back to the color groups that the CLI
-generates, shows a detected block-color count next to the picker, and updates the Colors
-dropdown to match the files, so manual selection is optional.
+generates, shows a detected block-color count next to the picker, and rebuilds the Colors
+dropdown so it shrinks or expands to the detected files, making manual selection optional.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 

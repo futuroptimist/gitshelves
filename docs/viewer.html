@@ -49,6 +49,7 @@ function loadFiles(list) {
       detectedColors.textContent = 'Detected block colors: 0';
     }
     if (colorCount) {
+      colorCount.innerHTML = '<option value="1">1</option>';
       colorCount.value = '1';
     }
     return;
@@ -71,11 +72,20 @@ function loadFiles(list) {
     const baseplateSuffix = baseplateLoaded ? ' + baseplate' : '';
     detectedColors.textContent = `Detected ${blockColorCount} block color${plural}${baseplateSuffix}`;
   }
-  if (colorCount && colorCount.options.length) {
-    const totals = Array.from(colorCount.options).map(opt => parseInt(opt.value, 10));
-    const maxColors = Math.max(...totals);
-    const selectedColors = Math.max(blockColorCount, 1);
-    colorCount.value = String(Math.min(selectedColors, maxColors));
+  if (colorCount) {
+    const detected = Math.max(blockColorCount, 1);
+    const values = Array.from({ length: detected }, (_, idx) => String(idx + 1));
+    const existing = Array.from(colorCount.options).map(opt => opt.value);
+    const differs =
+      existing.length !== values.length ||
+      existing.some((value, idx) => value !== values[idx]);
+    if (differs) {
+      colorCount.innerHTML = values
+        .map(value => `<option value="${value}">${value}</option>`)
+        .join('');
+    }
+    const index = blockColorCount > 0 ? blockColorCount - 1 : 0;
+    colorCount.value = values[index] ?? values[0];
   }
   stls.forEach(({ file, colorIndex }) => {
     const reader = new FileReader();
