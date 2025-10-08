@@ -18,6 +18,8 @@ conversion. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
 for every month with activity, and pass `--stl` to render matching `.stl`
 files. By default, the current year's contributions are fetched unless
 `--start-year` and `--end-year` specify a range.
+Color-specific outputs also repeat the zero-contribution annotations so each
+file documents the full monthly layout even when opened in isolation.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates.
@@ -36,8 +38,8 @@ positions even when no cubes are rendered.
 [Three.js](https://threejs.org/). Load the baseplate and `_colorN` (or legacy
 `levelN`) STLs to see each color group rendered with its own material. The viewer
 automatically infers how many color groups are present from the filenames,
-displays the detected block-color count next to the picker, and snaps the Colors
-dropdown to the same total for quick confirmation.
+displays the detected block-color count next to the picker, and rebuilds the Colors
+dropdown so it shrinks or expands to the detected total for quick confirmation.
 
 ## Prompts
 

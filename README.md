@@ -67,7 +67,8 @@ magnitude. `group_scad_levels` enforces this by keeping the first three levels i
 funneling all higher orders into the fourth group whenever five colors are requested, so the accent
 color consistently represents the highest magnitudes. Pass `--baseplate-template baseplate_1x12.scad`
 to copy the bundled tall single-row Gridfinity baseplate when generating multi-color outputs; the
-default template remains `baseplate_2x6.scad`.
+default template remains `baseplate_2x6.scad`. Every color-group SCAD repeats the zero-contribution
+annotations, so layouts stay traceable even when you only open a subset of the color files.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).
@@ -85,8 +86,8 @@ Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL 
 [Three.js](https://threejs.org/) and experiment with different color counts.
 Use the file picker to load your baseplate and `_colorN` (or legacy `levelN`)
 STLs—the viewer automatically maps these names back to the color groups that the CLI
-generates, shows a detected block-color count next to the picker, and updates the Colors
-dropdown to match the files, so manual selection is optional.
+generates, shows a detected block-color count next to the picker, and rebuilds the Colors
+dropdown so it shrinks or expands to the detected files, making manual selection optional.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 
