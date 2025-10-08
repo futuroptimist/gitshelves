@@ -86,6 +86,9 @@ def main(argv: list[str] | None = None):
     else:
         args = parser.parse_args(argv)
 
+    if args.gridfinity_columns <= 0:
+        parser.error("--gridfinity-columns must be positive")
+
     if not hasattr(args, "baseplate_template"):
         args.baseplate_template = "baseplate_2x6.scad"
 
