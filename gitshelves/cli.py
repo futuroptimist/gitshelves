@@ -86,6 +86,9 @@ def main(argv: list[str] | None = None):
     else:
         args = parser.parse_args(argv)
 
+    if not hasattr(args, "baseplate_template"):
+        args.baseplate_template = "baseplate_2x6.scad"
+
     token = args.token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     contribs = fetch_user_contributions(
         args.username,
@@ -178,7 +181,11 @@ def main(argv: list[str] | None = None):
             if base_stl.suffix:
                 base_stl = base_stl.with_suffix("")
         baseplate_path = base_output.with_name(f"{base_output.name}_baseplate.scad")
-        baseplate_path.write_text(load_baseplate_scad(args.baseplate_template))
+        try:
+            baseplate_source = load_baseplate_scad(args.baseplate_template)
+        except TypeError:
+            baseplate_source = load_baseplate_scad()
+        baseplate_path.write_text(baseplate_source)
         print(f"Wrote {baseplate_path}")
         if base_stl:
             baseplate_stl = base_stl.with_name(f"{base_stl.name}_baseplate.stl")
