@@ -1158,6 +1158,42 @@ def test_cli_readme_mentions_gridfinity_outputs(
     assert "Feb" in text and "Apr" in text
 
 
+def test_cli_readme_notes_empty_gridfinity_cubes(tmp_path, monkeypatch):
+    base = tmp_path / "grid.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2022,
+        end_year=2022,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=True,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+
+    cli.main()
+
+    readme_path = tmp_path / "stl" / "2022" / "README.md"
+    text = readme_path.read_text()
+    assert "- Gridfinity cubes: none generated (no contributions)" in text
+
+
 def test_cli_version(capsys):
     with pytest.raises(SystemExit):
         cli.main(["--version"])
