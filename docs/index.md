@@ -16,6 +16,8 @@ conversion. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
 for every month with activity, and pass `--stl` to render matching `.stl`
 files. By default, the current year's contributions are fetched unless
 `--start-year` and `--end-year` specify a range.
+Color-specific outputs also repeat the zero-contribution annotations so each
+file documents the full monthly layout even when opened in isolation.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates.

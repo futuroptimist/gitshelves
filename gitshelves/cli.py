@@ -14,6 +14,7 @@ from .scad import (
     generate_scad_monthly_levels,
     generate_monthly_calendar_scads,
     generate_gridfinity_plate_scad,
+    generate_zero_month_annotations,
     group_scad_levels,
     scad_to_stl,
 )
@@ -158,6 +159,9 @@ def main(argv: list[str] | None = None):
         grouped = group_scad_levels(
             level_scads, args.colors - 1 if args.colors > 1 else 1
         )
+        zero_comments = generate_zero_month_annotations(
+            counts, months_per_row=args.months_per_row
+        )
         base_output = Path(args.output)
         base_output.parent.mkdir(parents=True, exist_ok=True)
         if base_output.suffix:
@@ -176,7 +180,13 @@ def main(argv: list[str] | None = None):
             print(f"Wrote {baseplate_stl}")
         for idx, text in grouped.items():
             scad_path = base_output.with_name(f"{base_output.name}_color{idx}.scad")
-            scad_path.write_text(text)
+            lines = text.splitlines()
+            if zero_comments:
+                if lines and lines[-1].strip():
+                    lines.append("")
+                lines.extend(zero_comments)
+            scad_output = "\n".join(lines)
+            scad_path.write_text(scad_output)
             print(f"Wrote {scad_path}")
             if base_stl:
                 stl_path = base_stl.with_name(f"{base_stl.name}_color{idx}.stl")
