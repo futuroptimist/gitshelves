@@ -27,7 +27,9 @@ cloning the OpenSCAD templates.
 For printer-specific guidance, see the [usage guide](usage.md) with slicer
 presets and AMS filament scripting examples.
 The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the
-requested range so folders exist even when a year has zero contributions.
+requested range so folders exist even when a year has zero contributions. When
+`--gridfinity-layouts` or `--gridfinity-cubes` are enabled, the summary gains a **Gridfinity**
+section that lists the generated layout and cube outputs for quick reference.
 Monthly day-level calendars live in `stl/<year>/monthly-5x6/`. Each SCAD arranges up to five days per
 row (with a partial row for 31-day months) so the footprint fits within a 256 mm square build area.
 Monthly contribution `.scad` exports reserve every month in the requested range too, keeping the layout

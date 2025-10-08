@@ -1,6 +1,6 @@
 import argparse
 import os
-from calendar import month_name
+from calendar import month_name, month_abbr
 from pathlib import Path
 from datetime import datetime
 from importlib import metadata
@@ -115,7 +115,26 @@ def main(argv: list[str] | None = None):
     }
 
     for year in range(start_year, end_year + 1):
-        readme_path = write_year_readme(year, counts)
+        extras: list[str] = []
+        if args.gridfinity_layouts:
+            layout_note = "- Gridfinity layout: `gridfinity_plate.scad`"
+            if args.stl:
+                layout_note += " and `gridfinity_plate.stl`"
+            layout_note += " (auto-generated)"
+            extras.append(layout_note)
+        if args.gridfinity_cubes:
+            months_with_cubes = [
+                month
+                for month in range(1, 13)
+                if blocks_for_contributions(counts.get((year, month), 0)) > 0
+            ]
+            if months_with_cubes:
+                labels = ", ".join(month_abbr[m] for m in months_with_cubes)
+                format_label = "SCAD + STL" if args.stl else "SCAD"
+                extras.append(f"- Gridfinity cubes: {labels} ({format_label})")
+            else:
+                extras.append("- Gridfinity cubes: none generated (no contributions)")
+        readme_path = write_year_readme(year, counts, extras=extras or None)
         calendars = generate_monthly_calendar_scads(daily_counts, year)
         calendar_dir = readme_path.parent / "monthly-5x6"
         calendar_dir.mkdir(parents=True, exist_ok=True)

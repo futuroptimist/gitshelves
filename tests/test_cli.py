@@ -429,7 +429,7 @@ def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
         lambda daily, year: {m: "//" for m in range(1, 13)},
     )
 
-    def fake_write_year_readme(year, counts):
+    def fake_write_year_readme(year, counts, extras=None):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# placeholder")
@@ -577,7 +577,9 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
 
     called = []
     monkeypatch.setattr(cli, "scad_to_stl", lambda s, d: called.append((s, d)))
-    monkeypatch.setattr(cli, "write_year_readme", lambda y, c: tmp_path / "dummy")
+    monkeypatch.setattr(
+        cli, "write_year_readme", lambda y, c, extras=None: tmp_path / "dummy"
+    )
 
     cli.main()
 
@@ -640,7 +642,7 @@ def test_cli_colors_with_more_levels_than_groups(tmp_path, monkeypatch, capsys):
         cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
     )
 
-    def fake_write_year_readme(year, counts):
+    def fake_write_year_readme(year, counts, extras=None):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# materials")
@@ -712,7 +714,7 @@ def test_cli_writes_readmes_for_full_range(tmp_path, monkeypatch):
 
     called_years: list[int] = []
 
-    def fake_write(year, counts):
+    def fake_write(year, counts, extras=None):
         called_years.append(year)
         return tmp_path / str(year) / "README.md"
 
@@ -795,7 +797,7 @@ def test_cli_writes_readme_when_no_contributions(tmp_path, monkeypatch):
 
     captured: list[tuple[int, dict]] = []
 
-    def fake_write(year, counts):
+    def fake_write(year, counts, extras=None):
         captured.append((year, dict(counts)))
         return tmp_path / str(year) / "README.md"
 
@@ -1037,6 +1039,65 @@ def test_cli_generates_gridfinity_cube_stls_when_requested(
     assert apr_scad.read_text() == "// cubes 1"
     assert ("contrib_cube_02.scad", "contrib_cube_02.stl") in stl_calls
     assert ("contrib_cube_04.scad", "contrib_cube_04.stl") in stl_calls
+
+
+def test_cli_readme_mentions_gridfinity_outputs(
+    tmp_path, monkeypatch, gridfinity_library
+):
+    base = tmp_path / "grid.scad"
+    stl_target = tmp_path / "grid.stl"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=str(stl_target),
+        colors=1,
+        gridfinity_layouts=True,
+        gridfinity_columns=6,
+        gridfinity_cubes=True,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    entries = [
+        {"created_at": "2021-02-01T00:00:00Z"},
+        {"created_at": "2021-02-02T00:00:00Z"},
+        {"created_at": "2021-04-01T00:00:00Z"},
+    ]
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: entries)
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_gridfinity_plate_scad",
+        lambda counts, year, columns=6: "// gridfinity",
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_contrib_cube_stack_scad",
+        lambda levels: f"// cubes {levels}",
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    readme_path = tmp_path / "stl" / "2021" / "README.md"
+    text = readme_path.read_text()
+    assert "## Gridfinity" in text
+    assert "gridfinity_plate.scad" in text
+    assert "gridfinity_plate.stl" in text
+    assert "Gridfinity cubes" in text
+    assert "Feb" in text and "Apr" in text
 
 
 def test_cli_version(capsys):
