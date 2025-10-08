@@ -12,7 +12,8 @@ additional orders of magnitude share the fourth color).
 `baseplate_1x12.scad`) is copied when multi-color exports request a baseplate.
 `--gridfinity-layouts` writes `stl/<year>/gridfinity_plate.scad` so Gridfinity
 bins are stacked onto a parametric baseplate; adjust the footprint with
-`--gridfinity-columns`. When `--stl` is provided, the CLI also renders
+`--gridfinity-columns`. Supply a positive integer—values below one raise a
+parser error before any files are generated. When `--stl` is provided, the CLI also renders
 `stl/<year>/gridfinity_plate.stl` so baseplates are printable without manual
 conversion. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
 for every month with activity, and pass `--stl` to render matching `.stl`

@@ -915,6 +915,34 @@ def test_cli_generates_gridfinity_layout_stl(
     assert f"Wrote {layout_stl.relative_to(tmp_path)}" in captured
 
 
+def test_cli_rejects_non_positive_gridfinity_columns(tmp_path, monkeypatch, capsys):
+    """`--gridfinity-columns` should reject non-positive values before running."""
+
+    monkeypatch.chdir(tmp_path)
+
+    def should_not_run(*_args, **_kwargs):
+        raise AssertionError("gridfinity helpers should not run when columns <= 0")
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", should_not_run)
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", should_not_run)
+    monkeypatch.setattr(cli, "generate_scad_monthly", should_not_run)
+    monkeypatch.setattr(cli, "generate_gridfinity_plate_scad", should_not_run)
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(
+            [
+                "user",
+                "--gridfinity-layouts",
+                "--gridfinity-columns",
+                "0",
+            ]
+        )
+
+    assert excinfo.value.code == 2
+    captured = capsys.readouterr()
+    assert "--gridfinity-columns must be positive" in captured.err
+
+
 def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_library):
     """`--gridfinity-cubes` alone should only emit SCAD stacks (docs promise)."""
     base = tmp_path / "grid.scad"
