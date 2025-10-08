@@ -186,6 +186,18 @@ def generate_scad_monthly(
     return "\n".join(scad_lines)
 
 
+def generate_zero_month_annotations(
+    contributions: Dict[Tuple[int, int], int], months_per_row: int
+) -> list[str]:
+    """Return comment lines for months without contributions."""
+
+    return [
+        f"// {year}-{month:02} (0 contributions) reserved at [{x}, {y}]"
+        for year, month, count, x, y in _iter_month_slots(contributions, months_per_row)
+        if count <= 0
+    ]
+
+
 def generate_scad_monthly_levels(
     contributions: Dict[Tuple[int, int], int], months_per_row: int = 12
 ) -> Dict[int, str]:
