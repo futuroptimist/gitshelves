@@ -12,7 +12,8 @@ additional orders of magnitude share the fourth color).
 `baseplate_1x12.scad`) is copied when multi-color exports request a baseplate.
 `--gridfinity-layouts` writes `stl/<year>/gridfinity_plate.scad` so Gridfinity
 bins are stacked onto a parametric baseplate; adjust the footprint with
-`--gridfinity-columns`. When `--stl` is provided, the CLI also renders
+`--gridfinity-columns`. Supply a positive integer—values below one raise a
+parser error before any files are generated. When `--stl` is provided, the CLI also renders
 `stl/<year>/gridfinity_plate.stl` so baseplates are printable without manual
 conversion. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
 for every month with activity, and pass `--stl` to render matching `.stl`
@@ -27,8 +28,9 @@ cloning the OpenSCAD templates.
 For printer-specific guidance, see the [usage guide](usage.md) with slicer
 presets and AMS filament scripting examples.
 The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the
-requested range so folders exist even when a year has zero contributions. When
-`--gridfinity-layouts` or `--gridfinity-cubes` are enabled, the summary gains a **Gridfinity**
+requested range and copies the bundled `baseplate_2x6.scad` into each folder (rendering
+`baseplate_2x6.stl` when `--stl` is provided) so folders exist even when a year has zero contributions.
+When `--gridfinity-layouts` or `--gridfinity-cubes` are enabled, the summary gains a **Gridfinity**
 section that lists the generated layout and cube outputs for quick reference.
 Monthly day-level calendars live in `stl/<year>/monthly-5x6/`. Each SCAD arranges up to five days per
 row (with a partial row for 31-day months) so the footprint fits within a 256 mm square build area.
@@ -42,6 +44,8 @@ positions even when no cubes are rendered.
 automatically infers how many color groups are present from the filenames,
 displays the detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected total for quick confirmation.
+Select a smaller count to temporarily hide higher-order color stacks while you review the
+model; the baseplate stays visible so the footprint remains anchored.
 
 ## Prompts
 

@@ -76,6 +76,7 @@ automation snippets—see [docs/usage.md](docs/usage.md).
 Pass `--gridfinity-layouts` to emit a parametric `stl/<year>/gridfinity_plate.scad` that builds a
 Gridfinity baseplate and arranges monthly contribution cubes on top of it. The layout defaults to six
 columns (a 2×6 plate); adjust the footprint with `--gridfinity-columns` to match your storage grid.
+The column count must be a positive integer—values below one are rejected before any files are written.
 When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl` so the baseplate is
 ready to print alongside the contribution cubes. Pair it with `--gridfinity-cubes` to generate
 `contrib_cube_MM.scad` and `.stl` stacks for every month that recorded contributions so cube prints are
@@ -90,6 +91,8 @@ Use the file picker to load your baseplate and `_colorN` (or legacy `levelN`)
 STLs—the viewer automatically maps these names back to the color groups that the CLI
 generates, shows a detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected files, making manual selection optional.
+Choose a lower value to hide higher-order color stacks while you inspect the layout; the
+baseplate always remains visible so its footprint stays aligned.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 
@@ -138,8 +141,10 @@ and attaches the rendered STL files as downloadable artifacts. Navigate to the
 workflow run and download `stl-<year>` to obtain the converted models.
 To avoid bloating the repository, pre-generated baseplate models are no longer stored in the repo. Download the `stl-<year>` artifact or generate them locally.
 Each `stl/<year>` directory includes a generated `README.md` summarizing the baseplate and monthly
-cube counts. The CLI writes these summaries for every year in the requested range, even when a year
-has no contributions, so your shelf layout stays predictable.
+cube counts plus a fresh copy of the bundled `baseplate_2x6.scad`. When `--stl` is supplied, the CLI
+also renders `baseplate_2x6.stl` alongside the summary so the standard Gridfinity plate is ready to
+print without extra commands. The CLI writes these summaries and baseplates for every year in the
+requested range, even when a year has no contributions, so your shelf layout stays predictable.
 Day-level views are also written to `stl/<year>/monthly-5x6/` as OpenSCAD files. Each calendar lays
 out the month's days in rows of five to stay within a 256 mm square build area, adding a partial row
 for 31-day months.

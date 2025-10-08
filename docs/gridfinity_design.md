@@ -101,9 +101,13 @@ bin(
 `stl/<year>/gridfinity_plate.scad` files that size a baseplate to the requested
 column count (default six) and stack Gridfinity bins for each month on top of
 it. Adjust `--gridfinity-columns` to generate other footprints without editing
-OpenSCAD manually. Use `--baseplate-template` to pick the bundled baseplate that
+OpenSCAD manually; values below one are rejected before any layout files are
+written so configuration mistakes fail fast. Use `--baseplate-template` to pick the bundled baseplate that
 multi-color exports copy (the packaged `baseplate_1x12.scad` ships alongside the
 default 2×6 plate).
+Every run also copies `baseplate_2x6.scad` into `stl/<year>/` and renders
+`baseplate_2x6.stl` when `--stl` is supplied so the reference plate is always
+available with the yearly README summaries.
 Pair the flag with `--gridfinity-cubes` to emit
 `contrib_cube_MM.scad` stacks so monthly prints are pre-scaled to each month's
 contribution magnitude, and add `--stl` to render matching `.stl` files.

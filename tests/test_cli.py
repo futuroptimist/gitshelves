@@ -49,11 +49,11 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
         argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
     )
     monkeypatch.setattr(cli, "fetch_user_contributions", fake_fetch)
-    called = {}
+    stl_calls: list[tuple[Path, Path]] = []
     monkeypatch.setattr(cli, "generate_scad_monthly", fake_generate)
 
     def fake_stl(src, dest):
-        called["stl"] = (src, dest)
+        stl_calls.append((Path(src), Path(dest)))
 
     monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
 
@@ -61,9 +61,14 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
 
     assert output.read_text() == "SCAD"
     assert fetched_args["params"] == ("user", "tok", 2021, 2021)
-    assert called["stl"][0] == str(output)
+    baseplate_scad = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
+    assert baseplate_scad.exists()
+    assert len(stl_calls) == 2
+    assert stl_calls[0][0].resolve() == baseplate_scad.resolve()
+    assert stl_calls[1][0].resolve() == output.resolve()
     captured = capsys.readouterr()
     assert f"Wrote {output}" in captured.out
+    assert "baseplate_2x6.scad" in captured.out
     calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
     files = sorted(calendar_dir.glob("*.scad"))
     assert len(files) == 12
@@ -101,17 +106,21 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "DATA"
     )
-    called = {}
+    stl_calls: list[tuple[Path, Path]] = []
 
     def fake_stl(src, dest):
-        called["stl"] = (src, dest)
+        stl_calls.append((Path(src), Path(dest)))
 
     monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
 
     cli.main()
 
     assert output.read_text() == "DATA"
-    assert called["stl"][0] == str(output)
+    baseplate_scad = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
+    assert baseplate_scad.exists()
+    assert len(stl_calls) == 2
+    assert stl_calls[0][0].resolve() == baseplate_scad.resolve()
+    assert stl_calls[1][0].resolve() == output.resolve()
     assert (tmp_path / "nested" / "dir").is_dir()
     calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
     assert calendar_dir.is_dir()
@@ -313,10 +322,10 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
     )
-    called = []
+    stl_calls: list[tuple[Path, Path]] = []
 
     def fake_stl(src, dest):
-        called.append((src, dest))
+        stl_calls.append((Path(src), Path(dest)))
 
     monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
 
@@ -324,6 +333,7 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
 
     scad1 = tmp_path / "c_color1.scad"
     scad2 = tmp_path / "c_color2.scad"
+    per_year_baseplate = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
     baseplate_scad = tmp_path / "c_baseplate.scad"
     stl1 = tmp_path / "c_color1.stl"
     stl2 = tmp_path / "c_color2.stl"
@@ -336,11 +346,12 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
     assert reserved in scad1_text
     assert reserved in scad2_text
     assert baseplate_scad.read_text() == "// Baseplate"
-    assert called == [
-        (str(baseplate_scad), str(baseplate_stl)),
-        (str(scad1), str(stl1)),
-        (str(scad2), str(stl2)),
-    ]
+    assert per_year_baseplate.exists()
+    assert len(stl_calls) == 4
+    assert stl_calls[0][0].resolve() == per_year_baseplate.resolve()
+    assert stl_calls[1][0].resolve() == baseplate_scad.resolve()
+    assert stl_calls[2][0].resolve() == scad1.resolve()
+    assert stl_calls[3][0].resolve() == scad2.resolve()
     calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
     assert len(list(calendar_dir.glob("*.scad"))) == 12
     captured = capsys.readouterr()
@@ -379,7 +390,9 @@ def test_cli_color_outputs_include_zero_month_annotations(tmp_path, monkeypatch)
         "generate_monthly_calendar_scads",
         lambda daily, year: {m: "//" for m in range(1, 13)},
     )
-    monkeypatch.setattr(cli, "load_baseplate_scad", lambda: "// Baseplate")
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
+    )
     monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
 
     cli.main()
@@ -437,10 +450,10 @@ def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
 
     monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
 
-    stl_calls: list[tuple[str, str]] = []
+    stl_calls: list[tuple[Path, Path]] = []
 
     def fake_stl(src, dest):
-        stl_calls.append((src, dest))
+        stl_calls.append((Path(src), Path(dest)))
 
     monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
 
@@ -478,7 +491,10 @@ def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
         path = tmp_path / f"multi_color{idx}.scad"
         assert path.read_text().startswith("// Generated by gitshelves")
 
-    assert len(stl_calls) == 5
+    per_year_baseplate = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
+    assert per_year_baseplate.exists()
+    assert len(stl_calls) == 6
+    assert stl_calls[0][0].resolve() == per_year_baseplate.resolve()
     captured = capsys.readouterr().out
     assert f"Wrote {baseplate_scad}" in captured
 
@@ -531,7 +547,7 @@ def test_cli_multiple_colors_custom_baseplate_template(tmp_path, monkeypatch):
 
 
 def test_cli_multiple_colors_baseplate_typeerror_falls_back(tmp_path, monkeypatch):
-    """If the baseplate loader rejects template args retry without them."""
+    """Gracefully fall back when ``load_baseplate_scad`` rejects template args."""
 
     base = tmp_path / "fallback.scad"
     args = argparse.Namespace(
@@ -566,6 +582,26 @@ def test_cli_multiple_colors_baseplate_typeerror_falls_back(tmp_path, monkeypatc
         "generate_scad_monthly_levels",
         lambda counts, months_per_row=12: {1: "// Generated by gitshelves"},
     )
+    monkeypatch.setattr(
+        cli,
+        "group_scad_levels",
+        lambda levels, groups: {1: "// Generated by gitshelves\nG1"},
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_zero_month_annotations",
+        lambda counts, months_per_row=12: [],
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+    monkeypatch.setattr(cli, "_write_year_baseplate", lambda *a, **k: None)
+
+    def fake_write_year_readme(year, counts, extras=None):
+        path = tmp_path / "stl" / str(year) / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# placeholder")
+        return path
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
 
     calls: list[tuple[tuple, dict]] = []
 
@@ -576,16 +612,17 @@ def test_cli_multiple_colors_baseplate_typeerror_falls_back(tmp_path, monkeypatc
         return "// fallback"
 
     monkeypatch.setattr(cli, "load_baseplate_scad", flaky_load)
-    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
 
     cli.main()
 
-    assert calls[0] == (("baseplate_2x6.scad",), {})
-    assert calls[1] == ((), {})
     baseplate_scad = tmp_path / "fallback_baseplate.scad"
+    color_scad = tmp_path / "fallback_color1.scad"
+
+    # Verify fallback behavior
     assert baseplate_scad.read_text() == "// fallback"
-    color_path = tmp_path / "fallback_color1.scad"
-    assert color_path.read_text().startswith("// Generated by gitshelves")
+    assert color_scad.read_text().startswith("// Generated by gitshelves")
+    assert calls[0][0] == ("baseplate_2x6.scad",)
+    assert calls[1][0] == ()
 
 
 def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
@@ -788,6 +825,106 @@ def test_cli_writes_readmes_for_full_range(tmp_path, monkeypatch):
         assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
+def test_cli_writes_yearly_baseplate_scad(tmp_path, monkeypatch):
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(tmp_path / "chart.scad"),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+
+    def fail_stl(*_args, **_kwargs):  # pragma: no cover - sanity guard
+        raise AssertionError("scad_to_stl should not run without --stl")
+
+    monkeypatch.setattr(cli, "scad_to_stl", fail_stl)
+
+    cli.main()
+
+    baseplate = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
+    assert baseplate.exists()
+    text = baseplate.read_text()
+    assert "gridfinity_baseplate" in text
+
+
+def test_cli_writes_yearly_baseplate_stl(tmp_path, monkeypatch):
+    output = tmp_path / "chart.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=str(tmp_path / "chart.stl"),
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+
+    stl_calls: list[tuple[Path, Path]] = []
+
+    def fake_stl(src, dest):
+        stl_calls.append((Path(src), Path(dest)))
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
+
+    cli.main()
+
+    baseplate = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
+    baseplate_stl = baseplate.with_suffix(".stl")
+    assert baseplate.exists()
+    assert any(
+        src.resolve() == baseplate.resolve()
+        and dest.resolve() == baseplate_stl.resolve()
+        for src, dest in stl_calls
+    )
+    assert any(
+        src.resolve() == output.resolve()
+        and dest.resolve() == (tmp_path / "chart.stl").resolve()
+        for src, dest in stl_calls
+    )
+
+
 def test_cli_preserves_empty_year_rows(tmp_path, monkeypatch):
     output = tmp_path / "layout.scad"
     args = argparse.Namespace(
@@ -975,6 +1112,34 @@ def test_cli_generates_gridfinity_layout_stl(
     assert f"Wrote {layout_stl.relative_to(tmp_path)}" in captured
 
 
+def test_cli_rejects_non_positive_gridfinity_columns(tmp_path, monkeypatch, capsys):
+    """`--gridfinity-columns` should reject non-positive values before running."""
+
+    monkeypatch.chdir(tmp_path)
+
+    def should_not_run(*_args, **_kwargs):
+        raise AssertionError("gridfinity helpers should not run when columns <= 0")
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", should_not_run)
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", should_not_run)
+    monkeypatch.setattr(cli, "generate_scad_monthly", should_not_run)
+    monkeypatch.setattr(cli, "generate_gridfinity_plate_scad", should_not_run)
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(
+            [
+                "user",
+                "--gridfinity-layouts",
+                "--gridfinity-columns",
+                "0",
+            ]
+        )
+
+    assert excinfo.value.code == 2
+    captured = capsys.readouterr()
+    assert "--gridfinity-columns must be positive" in captured.err
+
+
 def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_library):
     """`--gridfinity-cubes` alone should only emit SCAD stacks (docs promise)."""
     base = tmp_path / "grid.scad"
@@ -1095,8 +1260,10 @@ def test_cli_generates_gridfinity_cube_stls_when_requested(
     apr_scad = year_dir / "contrib_cube_04.scad"
     assert feb_scad.read_text() == "// cubes 2"
     assert apr_scad.read_text() == "// cubes 1"
+    assert ("baseplate_2x6.scad", "baseplate_2x6.stl") in stl_calls
     assert ("contrib_cube_02.scad", "contrib_cube_02.stl") in stl_calls
     assert ("contrib_cube_04.scad", "contrib_cube_04.stl") in stl_calls
+    assert (Path(base).name, Path(base).with_suffix(".stl").name) in stl_calls
 
 
 def test_cli_readme_mentions_gridfinity_outputs(
