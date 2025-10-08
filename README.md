@@ -65,9 +65,10 @@ Lower magnitudes stay in the earliest `color` files, and any surplus levels beyo
 groups are appended to the final `color` output so accent-colored cubes repeat for larger orders of
 magnitude. `group_scad_levels` enforces this by keeping the first three levels in their own groups and
 funneling all higher orders into the fourth group whenever five colors are requested, so the accent
-color consistently represents the highest magnitudes.
-Every color-group SCAD repeats the zero-contribution annotations, so layouts stay traceable even when
-you only open a subset of the color files.
+color consistently represents the highest magnitudes. Pass `--baseplate-template baseplate_1x12.scad`
+to copy the bundled tall single-row Gridfinity baseplate when generating multi-color outputs; the
+default template remains `baseplate_2x6.scad`. Every color-group SCAD repeats the zero-contribution
+annotations, so layouts stay traceable even when you only open a subset of the color files.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).

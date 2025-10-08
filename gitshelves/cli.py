@@ -68,6 +68,12 @@ def main(argv: list[str] | None = None):
         action="store_true",
         help="Generate monthly Gridfinity cube stacks (SCAD; add --stl for STLs)",
     )
+    parser.add_argument(
+        "--baseplate-template",
+        choices=["baseplate_2x6.scad", "baseplate_1x12.scad"],
+        default="baseplate_2x6.scad",
+        help="Bundled baseplate template to copy when generating multi-color outputs",
+    )
     try:  # pragma: no cover - metadata lookup
         pkg_version = metadata.version("gitshelves")
     except metadata.PackageNotFoundError:  # pragma: no cover
@@ -79,6 +85,9 @@ def main(argv: list[str] | None = None):
         args = parser.parse_args()
     else:
         args = parser.parse_args(argv)
+
+    if not hasattr(args, "baseplate_template"):
+        args.baseplate_template = "baseplate_2x6.scad"
 
     token = args.token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     contribs = fetch_user_contributions(
@@ -172,7 +181,11 @@ def main(argv: list[str] | None = None):
             if base_stl.suffix:
                 base_stl = base_stl.with_suffix("")
         baseplate_path = base_output.with_name(f"{base_output.name}_baseplate.scad")
-        baseplate_path.write_text(load_baseplate_scad())
+        try:
+            baseplate_source = load_baseplate_scad(args.baseplate_template)
+        except TypeError:
+            baseplate_source = load_baseplate_scad()
+        baseplate_path.write_text(baseplate_source)
         print(f"Wrote {baseplate_path}")
         if base_stl:
             baseplate_stl = base_stl.with_name(f"{base_stl.name}_baseplate.stl")
