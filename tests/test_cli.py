@@ -705,7 +705,9 @@ def test_write_year_baseplate_runtime_error(tmp_path, monkeypatch, capsys):
     """RuntimeError from ``scad_to_stl`` is reported and stops rendering."""
 
     monkeypatch.setattr(cli, "gridfinity_baseplate_library_available", lambda: True)
-    monkeypatch.setattr(cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// base")
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// base"
+    )
 
     def boom(*_args, **_kwargs):
         raise RuntimeError("xvfb missing")
@@ -724,7 +726,9 @@ def test_write_year_baseplate_called_process_error(tmp_path, monkeypatch, capsys
     """CalledProcessError surfaces OpenSCAD's exit code."""
 
     monkeypatch.setattr(cli, "gridfinity_baseplate_library_available", lambda: True)
-    monkeypatch.setattr(cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// base")
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// base"
+    )
 
     def fail(*_args, **_kwargs):
         raise subprocess.CalledProcessError(returncode=42, cmd=["openscad"])
