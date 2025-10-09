@@ -72,6 +72,9 @@ color consistently represents the highest magnitudes. Pass `--baseplate-template
 to copy the bundled tall single-row Gridfinity baseplate when generating multi-color outputs; the
 default template remains `baseplate_2x6.scad`. Every color-group SCAD repeats the zero-contribution
 annotations, so layouts stay traceable even when you only open a subset of the color files.
+When a run produces no blocks at all, the CLI still emits `_colorN.scad` placeholders populated with
+the zero-contribution annotations so downstream workflows keep the expected file set; STL rendering is
+skipped for those empty groups.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).
