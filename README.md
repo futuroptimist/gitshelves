@@ -54,6 +54,9 @@ Jan Feb Mar Apr May Jun Jul Aug
 Sep Oct Nov Dec
 ```
 
+Values below one trigger a parser error before any files are written, keeping invalid
+`--months-per-row` settings from generating partial outputs.
+
 Print the current version with:
 
 ```bash

@@ -8,6 +8,8 @@ Use `--output` to change the `.scad` filename, `--months-per-row` to control the
 grid width, `--stl` to specify an STL output path, and `--colors` to split
 blocks into up to four color groups (pass `--colors 5` to unlock all four;
 additional orders of magnitude share the fourth color).
+`--months-per-row` values below one exit with a parser error before any files are
+generated so invalid layouts never produce partial outputs.
 `--baseplate-template` selects which bundled Gridfinity baseplate (such as
 `baseplate_1x12.scad`) is copied when multi-color exports request a baseplate.
 `--gridfinity-layouts` writes `stl/<year>/gridfinity_plate.scad` so Gridfinity

@@ -100,6 +100,9 @@ def main(argv: list[str] | None = None):
     else:
         args = parser.parse_args(argv)
 
+    if args.months_per_row <= 0:
+        parser.error("--months-per-row must be positive")
+
     if args.gridfinity_columns <= 0:
         parser.error("--gridfinity-columns must be positive")
 
