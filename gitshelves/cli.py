@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 from calendar import month_name, month_abbr
 from pathlib import Path
 from datetime import datetime
@@ -17,6 +18,7 @@ from .scad import (
     generate_zero_month_annotations,
     group_scad_levels,
     scad_to_stl,
+    gridfinity_baseplate_library_available,
 )
 from .readme import write_year_readme
 
@@ -33,7 +35,28 @@ def _write_year_baseplate(year_dir: Path, render_stl: bool = True) -> None:
     baseplate_path.write_text(baseplate_text)
     print(f"Wrote {baseplate_path}")
     baseplate_stl = baseplate_path.with_suffix(".stl")
-    scad_to_stl(str(baseplate_path), str(baseplate_stl))
+    if not gridfinity_baseplate_library_available():
+        print(
+            "Skipped"
+            f" {baseplate_stl}"
+            " (Gridfinity baseplate library not found; see README for setup)"
+        )
+        return
+    try:
+        scad_to_stl(str(baseplate_path), str(baseplate_stl))
+    except FileNotFoundError as exc:
+        print(f"Skipped {baseplate_stl} ({exc})")
+        return
+    except RuntimeError as exc:
+        print(f"Skipped {baseplate_stl} ({exc})")
+        return
+    except subprocess.CalledProcessError as exc:
+        print(
+            "Skipped"
+            f" {baseplate_stl}"
+            f" (OpenSCAD exited with status {exc.returncode})"
+        )
+        return
     print(f"Wrote {baseplate_stl}")
 
 

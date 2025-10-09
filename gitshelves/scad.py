@@ -21,6 +21,12 @@ GRIDFINITY_BASEPLATE_SCAD = (
 GRIDFINITY_BIN_SCAD = GRIDFINITY_LIBRARY_ROOT / "gridfinity-rebuilt-bin.scad"
 
 
+def gridfinity_baseplate_library_available() -> bool:
+    """Return ``True`` when the bundled Gridfinity baseplate dependency exists."""
+
+    return GRIDFINITY_BASEPLATE_SCAD.exists()
+
+
 def blocks_for_contributions(count: int) -> int:
     """Return the number of stacked blocks for a contribution count.
 
