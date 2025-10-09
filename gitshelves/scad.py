@@ -113,14 +113,20 @@ def generate_month_calendar_scad(
     lines = [HEADER]
     for day in range(1, days_in_month + 1):
         count = daily_contributions.get((year, month, day), 0)
-        if count <= 0:
-            continue
         idx = day - 1
         col = idx % days_per_row
         row = idx // days_per_row
+        x = col * SPACING
+        y = row * SPACING
+        if count <= 0:
+            lines.append(
+                (
+                    f"// {year}-{month:02}-{day:02} (0 contributions) "
+                    f"reserved at [{x}, {y}]"
+                )
+            )
+            continue
         for level in range(blocks_for_contributions(count)):
-            x = col * SPACING
-            y = row * SPACING
             z = level * BLOCK_SIZE
             lines.append(
                 (
