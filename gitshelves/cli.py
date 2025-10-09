@@ -21,18 +21,17 @@ from .scad import (
 from .readme import write_year_readme
 
 
-def _write_year_baseplate(year_dir: Path, render_stl: bool) -> None:
-    """Copy the bundled 2×6 baseplate into ``year_dir`` and optionally render an STL."""
+def _write_year_baseplate(year_dir: Path) -> None:
+    """Copy the bundled 2×6 baseplate into ``year_dir`` and render an STL."""
 
     year_dir.mkdir(parents=True, exist_ok=True)
     baseplate_path = year_dir / "baseplate_2x6.scad"
     baseplate_text = load_baseplate_scad("baseplate_2x6.scad")
     baseplate_path.write_text(baseplate_text)
     print(f"Wrote {baseplate_path}")
-    if render_stl:
-        baseplate_stl = baseplate_path.with_suffix(".stl")
-        scad_to_stl(str(baseplate_path), str(baseplate_stl))
-        print(f"Wrote {baseplate_stl}")
+    baseplate_stl = baseplate_path.with_suffix(".stl")
+    scad_to_stl(str(baseplate_path), str(baseplate_stl))
+    print(f"Wrote {baseplate_stl}")
 
 
 def main(argv: list[str] | None = None):
@@ -134,7 +133,6 @@ def main(argv: list[str] | None = None):
         for month in range(1, 13)
     }
 
-    render_yearly_stl = bool(args.stl)
     for year in range(start_year, end_year + 1):
         extras: list[str] = []
         if args.gridfinity_layouts:
@@ -157,7 +155,7 @@ def main(argv: list[str] | None = None):
                 extras.append("- Gridfinity cubes: none generated (no contributions)")
         readme_path = write_year_readme(year, counts, extras=extras or None)
         year_dir = readme_path.parent
-        _write_year_baseplate(year_dir, render_yearly_stl)
+        _write_year_baseplate(year_dir)
         calendars = generate_monthly_calendar_scads(daily_counts, year)
         calendar_dir = year_dir / "monthly-5x6"
         calendar_dir.mkdir(parents=True, exist_ok=True)
