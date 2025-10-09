@@ -269,6 +269,7 @@ def test_cli_runpy(tmp_path, monkeypatch):
     )
     scad_mod.blocks_for_contributions = lambda count: 1 if count else 0
     scad_mod.generate_contrib_cube_stack_scad = lambda levels: "// cubes"
+    scad_mod.gridfinity_baseplate_library_available = lambda: True
 
     sys.modules["gitshelves.fetch"] = fetch_mod
     sys.modules["gitshelves.scad"] = scad_mod
@@ -939,6 +940,106 @@ def test_cli_writes_yearly_baseplate_stl(tmp_path, monkeypatch):
         and dest.resolve() == (tmp_path / "chart.stl").resolve()
         for src, dest in stl_calls
     )
+
+
+def test_cli_skips_yearly_baseplate_stl_when_library_missing(
+    tmp_path, monkeypatch, capsys
+):
+    output = tmp_path / "chart.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(cli, "gridfinity_baseplate_library_available", lambda: False)
+    monkeypatch.setattr(
+        cli,
+        "scad_to_stl",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("should skip render")),
+    )
+
+    cli.main()
+
+    baseplate = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
+    baseplate_stl = baseplate.with_suffix(".stl")
+    assert baseplate.exists()
+    assert not baseplate_stl.exists()
+    captured = capsys.readouterr()
+    assert "Gridfinity baseplate library not found" in captured.out
+
+
+def test_cli_skips_yearly_baseplate_stl_when_openscad_missing(
+    tmp_path, monkeypatch, capsys
+):
+    output = tmp_path / "chart.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(cli, "gridfinity_baseplate_library_available", lambda: True)
+
+    def missing_openscad(*_a, **_k):
+        raise FileNotFoundError("openscad not found")
+
+    monkeypatch.setattr(cli, "scad_to_stl", missing_openscad)
+
+    cli.main()
+
+    baseplate = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
+    baseplate_stl = baseplate.with_suffix(".stl")
+    assert baseplate.exists()
+    assert not baseplate_stl.exists()
+    captured = capsys.readouterr()
+    assert "openscad not found" in captured.out
 
 
 def test_cli_preserves_empty_year_rows(tmp_path, monkeypatch):

@@ -3,7 +3,7 @@ import pytest
 from gitshelves import scad as scad_module
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def gridfinity_library(monkeypatch, tmp_path):
     """Provide temporary Gridfinity library files for tests."""
 
