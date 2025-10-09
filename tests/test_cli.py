@@ -1062,6 +1062,53 @@ def test_cli_generates_gridfinity_layout(
     assert f"Wrote {layout_path.relative_to(tmp_path)}" in captured
 
 
+def test_cli_gridfinity_readme_lists_footprint(
+    tmp_path, monkeypatch, gridfinity_library
+):
+    """README extras should note the Gridfinity footprint (docs highlight columns)."""
+
+    base = tmp_path / "grid.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=True,
+        gridfinity_columns=4,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    readme_path = tmp_path / "stl" / "2021" / "README.md"
+    text = readme_path.read_text()
+    assert "Gridfinity layout" in text
+    assert "4×3 grid" in text
+    assert "gridfinity_plate.scad" in text
+
+
 def test_cli_generates_gridfinity_layout_stl(
     tmp_path, monkeypatch, capsys, gridfinity_library
 ):

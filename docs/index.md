@@ -33,7 +33,10 @@ The CLI always writes yearly summaries in `stl/<year>/README.md` for every year 
 requested range and copies the bundled `baseplate_2x6.scad` into each folder (rendering
 `baseplate_2x6.stl` when `--stl` is provided) so folders exist even when a year has zero contributions.
 When `--gridfinity-layouts` or `--gridfinity-cubes` are enabled, the summary gains a **Gridfinity**
-section that lists the generated layout and cube outputs for quick reference. Monthly day-level
+section that lists the generated layout and cube outputs for quick reference. The layout entry also
+records the detected footprint (for example `6×2 grid`) so you can confirm the selected column
+count.
+Monthly day-level
 calendars live in `stl/<year>/monthly-5x6/`. Each SCAD arranges up to five days per row (with a
 partial row for 31-day months) so the footprint fits within a 256 mm square build area. Days with no
 activity add reserved-slot comments (for example `// 2024-02-05 (0 contributions) reserved at [48, 0]`)

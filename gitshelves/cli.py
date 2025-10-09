@@ -138,7 +138,14 @@ def main(argv: list[str] | None = None):
     for year in range(start_year, end_year + 1):
         extras: list[str] = []
         if args.gridfinity_layouts:
-            layout_note = "- Gridfinity layout: `gridfinity_plate.scad`"
+            months_in_year = 12
+            rows = (
+                months_in_year + args.gridfinity_columns - 1
+            ) // args.gridfinity_columns
+            footprint = f"{args.gridfinity_columns}\u00d7{rows} grid"
+            layout_note = (
+                f"- Gridfinity layout: {footprint} via `gridfinity_plate.scad`"
+            )
             if args.stl:
                 layout_note += " and `gridfinity_plate.stl`"
             layout_note += " (auto-generated)"
