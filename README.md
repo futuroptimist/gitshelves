@@ -72,6 +72,9 @@ color consistently represents the highest magnitudes. Pass `--baseplate-template
 to copy the bundled tall single-row Gridfinity baseplate when generating multi-color outputs; the
 default template remains `baseplate_2x6.scad`. Every color-group SCAD repeats the zero-contribution
 annotations, so layouts stay traceable even when you only open a subset of the color files.
+When a run produces no blocks at all, the CLI still emits `_colorN.scad` placeholders populated with
+the zero-contribution annotations so downstream workflows keep the expected file set; STL rendering is
+skipped for those empty groups.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).
@@ -86,7 +89,8 @@ ready to print alongside the contribution cubes. Pair it with `--gridfinity-cube
 ready without extra modeling work. Empty months are still annotated in the Gridfinity layout as reserved
 grid cells, keeping the placement map intact even when a month renders zero cubes.
 Yearly `stl/<year>/README.md` summaries add a **Gridfinity** section whenever these flags are used, listing
-the generated layout and cube outputs so printable files are easy to locate.
+the generated layout and cube outputs so printable files are easy to locate. The layout entry notes
+the detected footprint (for example `6×2 grid`) to confirm the chosen column count.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with
 [Three.js](https://threejs.org/) and experiment with different color counts.
