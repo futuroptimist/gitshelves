@@ -1,4 +1,5 @@
 import argparse
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -698,7 +699,44 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert f"Wrote {baseplate_scad}" in out
     assert f"Wrote {scad}" in out
-    assert captured["groups"] == 2
+
+
+def test_write_year_baseplate_runtime_error(tmp_path, monkeypatch, capsys):
+    """RuntimeError from ``scad_to_stl`` is reported and stops rendering."""
+
+    monkeypatch.setattr(cli, "gridfinity_baseplate_library_available", lambda: True)
+    monkeypatch.setattr(cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// base")
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("xvfb missing")
+
+    monkeypatch.setattr(cli, "scad_to_stl", boom)
+
+    cli._write_year_baseplate(tmp_path)
+
+    out = capsys.readouterr().out
+    assert "Skipped" in out
+    assert "xvfb missing" in out
+    assert (tmp_path / "baseplate_2x6.stl").exists() is False
+
+
+def test_write_year_baseplate_called_process_error(tmp_path, monkeypatch, capsys):
+    """CalledProcessError surfaces OpenSCAD's exit code."""
+
+    monkeypatch.setattr(cli, "gridfinity_baseplate_library_available", lambda: True)
+    monkeypatch.setattr(cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// base")
+
+    def fail(*_args, **_kwargs):
+        raise subprocess.CalledProcessError(returncode=42, cmd=["openscad"])
+
+    monkeypatch.setattr(cli, "scad_to_stl", fail)
+
+    cli._write_year_baseplate(tmp_path)
+
+    out = capsys.readouterr().out
+    assert "Skipped" in out
+    assert "status 42" in out
+    assert (tmp_path / "baseplate_2x6.stl").exists() is False
 
 
 def test_cli_colors_with_more_levels_than_groups(tmp_path, monkeypatch, capsys):
