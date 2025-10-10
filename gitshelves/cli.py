@@ -196,14 +196,18 @@ def main(argv: list[str] | None = None):
             year_dir = readme_path.parent
             for month in range(1, 13):
                 levels = blocks_for_contributions(counts.get((year, month), 0))
+                cube_scad_path = year_dir / f"contrib_cube_{month:02d}.scad"
+                cube_stl_path = cube_scad_path.with_suffix(".stl")
                 if levels <= 0:
+                    if cube_scad_path.exists():
+                        cube_scad_path.unlink()
+                    if cube_stl_path.exists():
+                        cube_stl_path.unlink()
                     continue
                 cube_scad = generate_contrib_cube_stack_scad(levels)
-                cube_scad_path = year_dir / f"contrib_cube_{month:02d}.scad"
                 cube_scad_path.write_text(cube_scad)
                 print(f"Wrote {cube_scad_path}")
                 if args.stl:
-                    cube_stl_path = cube_scad_path.with_suffix(".stl")
                     scad_to_stl(str(cube_scad_path), str(cube_stl_path))
                     print(f"Wrote {cube_stl_path}")
 

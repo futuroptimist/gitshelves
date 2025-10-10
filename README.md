@@ -96,8 +96,10 @@ The column count must be a positive integer—values below one are rejected befo
 When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl` so the baseplate is
 ready to print alongside the contribution cubes. Pair it with `--gridfinity-cubes` to generate
 `contrib_cube_MM.scad` and `.stl` stacks for every month that recorded contributions so cube prints are
-ready without extra modeling work. Empty months are still annotated in the Gridfinity layout as reserved
-grid cells, keeping the placement map intact even when a month renders zero cubes.
+ready without extra modeling work. Months that no longer record activity remove any existing
+`contrib_cube_MM` exports so folders only contain stacks for active months. Empty months are still
+annotated in the Gridfinity layout as reserved grid cells, keeping the placement map intact even when a
+month renders zero cubes.
 Yearly `stl/<year>/README.md` summaries add a **Gridfinity** section whenever these flags are used, listing
 the generated layout and cube outputs so printable files are easy to locate. The layout entry notes
 the detected footprint (for example `6×2 grid`) to confirm the chosen column count.
