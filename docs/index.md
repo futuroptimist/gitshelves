@@ -27,11 +27,12 @@ files. By default, the current year's contributions are fetched unless
 `--start-year` and `--end-year` specify a range.
 Color-specific outputs also repeat the zero-contribution annotations so each
 file documents the full monthly layout even when opened in isolation.
-When no month produces any blocks, the CLI still writes `_colorN.scad`
-placeholders containing those annotations so downstream automation continues to
-receive the expected files; STL conversion is skipped for these empty color
-groups and any existing `_colorN.stl` meshes are removed so stale geometry is not
-left behind.
+Whether no month produces any blocks or only some of the requested color groups
+contain geometry, the CLI still writes `_colorN.scad` placeholders containing
+those annotations so downstream automation continues to receive the expected
+files; STL conversion is skipped for these empty color groups and any existing
+`_colorN.stl` meshes are removed so unused slots do not leave stale geometry
+behind.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates.
