@@ -466,6 +466,66 @@ def test_cli_multicolor_writes_placeholders_for_empty_data(tmp_path, monkeypatch
         assert "translate([" not in text, "Placeholder should not include geometry"
 
 
+def test_cli_multicolor_removes_stale_color_stls(tmp_path, monkeypatch):
+    """Empty multi-color runs should clean up stale color STLs (docs promise)."""
+
+    base = tmp_path / "empty.scad"
+    stl_target = tmp_path / "empty.stl"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2024,
+        end_year=2024,
+        output=str(base),
+        months_per_row=12,
+        stl=str(stl_target),
+        colors=4,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
+    )
+
+    # Pretend a previous run generated color STLs that should now be removed.
+    stale_paths = [
+        tmp_path / "empty_color1.stl",
+        tmp_path / "empty_color2.stl",
+        tmp_path / "empty_color3.stl",
+    ]
+    for path in stale_paths:
+        path.write_text("// stale")
+
+    stl_calls: list[tuple[Path, Path]] = []
+
+    def fake_scad_to_stl(src, dest):
+        stl_calls.append((Path(src), Path(dest)))
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_scad_to_stl)
+
+    cli.main()
+
+    for path in stale_paths:
+        assert not path.exists(), "Stale color STLs should be removed"
+
+    # Only baseplates should be rendered when no color geometry exists.
+    rendered_names = {dest.name for _, dest in stl_calls}
+    assert "empty_baseplate.stl" in rendered_names
+    assert any(name.endswith("baseplate_2x6.stl") for name in rendered_names)
+    assert all("color" not in name for name in rendered_names)
+
+
 def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
     base = tmp_path / "multi.scad"
     stl = tmp_path / "multi.stl"

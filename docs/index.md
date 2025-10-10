@@ -30,7 +30,8 @@ file documents the full monthly layout even when opened in isolation.
 When no month produces any blocks, the CLI still writes `_colorN.scad`
 placeholders containing those annotations so downstream automation continues to
 receive the expected files; STL conversion is skipped for these empty color
-groups.
+groups and any existing `_colorN.stl` meshes are removed so stale geometry is not
+left behind.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates.
