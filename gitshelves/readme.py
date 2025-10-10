@@ -11,12 +11,16 @@ def write_year_readme(
     counts: Dict[Tuple[int, int], int],
     outdir: Path | str = Path("stl"),
     extras: Sequence[str] | None = None,
+    *,
+    include_baseplate_stl: bool = False,
 ) -> Path:
     """Write a README detailing materials for ``year``.
 
     A summary of the baseplate STL and monthly cube counts is written to
     ``stl/<year>/README.md``. Optional ``extras`` entries append additional
-    bullet points (for example Gridfinity outputs). The function returns the
+    bullet points (for example Gridfinity outputs). Set
+    ``include_baseplate_stl`` to ``True`` when a rendered baseplate STL is
+    available so the README links to both artifacts. The function returns the
     path to the created file.
     """
     path = Path(outdir) / str(year)
@@ -26,7 +30,12 @@ def write_year_readme(
         f"# {year} Materials",
         "",
         "## Baseplate",
-        "- [`baseplate_2x6.stl`](baseplate_2x6.stl)",
+        "- [`baseplate_2x6.scad`](baseplate_2x6.scad)",
+    ]
+    if include_baseplate_stl:
+        lines.append("- [`baseplate_2x6.stl`](baseplate_2x6.stl)")
+
+    lines += [
         "",
         "## Monthly Cubes",
     ]

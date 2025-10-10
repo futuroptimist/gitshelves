@@ -165,7 +165,12 @@ def main(argv: list[str] | None = None):
                 extras.append(f"- Gridfinity cubes: {labels} ({format_label})")
             else:
                 extras.append("- Gridfinity cubes: none generated (no contributions)")
-        readme_path = write_year_readme(year, counts, extras=extras or None)
+        readme_path = write_year_readme(
+            year,
+            counts,
+            extras=extras or None,
+            include_baseplate_stl=render_yearly_stl,
+        )
         year_dir = readme_path.parent
         _write_year_baseplate(year_dir, render_yearly_stl)
         calendars = generate_monthly_calendar_scads(daily_counts, year)

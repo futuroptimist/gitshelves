@@ -63,6 +63,10 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     assert fetched_args["params"] == ("user", "tok", 2021, 2021)
     baseplate_scad = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
     assert baseplate_scad.exists()
+    readme_path = tmp_path / "stl" / "2021" / "README.md"
+    readme_text = readme_path.read_text()
+    assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in readme_text
+    assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" in readme_text
     assert len(stl_calls) == 2
     assert stl_calls[0][0].resolve() == baseplate_scad.resolve()
     assert stl_calls[1][0].resolve() == output.resolve()
@@ -166,6 +170,9 @@ def test_cli_env_token(tmp_path, monkeypatch):
 
     assert output.read_text() == "S"
     assert captured["token"] == "envtok"
+    readme_text = (tmp_path / "stl" / "2021" / "README.md").read_text()
+    assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in readme_text
+    assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" not in readme_text
     calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
@@ -210,6 +217,9 @@ def test_cli_github_token_env(tmp_path, monkeypatch):
 
     assert output.read_text() == "S"
     assert captured["token"] == "envtok2"
+    readme_text = (tmp_path / "stl" / "2021" / "README.md").read_text()
+    assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in readme_text
+    assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" not in readme_text
     calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
@@ -490,7 +500,7 @@ def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
         lambda daily, year: {m: "//" for m in range(1, 13)},
     )
 
-    def fake_write_year_readme(year, counts, extras=None):
+    def fake_write_year_readme(year, counts, extras=None, include_baseplate_stl=False):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# placeholder")
@@ -643,7 +653,7 @@ def test_cli_multiple_colors_baseplate_typeerror_falls_back(tmp_path, monkeypatc
     monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
     monkeypatch.setattr(cli, "_write_year_baseplate", lambda *a, **k: None)
 
-    def fake_write_year_readme(year, counts, extras=None):
+    def fake_write_year_readme(year, counts, extras=None, include_baseplate_stl=False):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# placeholder")
@@ -721,7 +731,9 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
     called = []
     monkeypatch.setattr(cli, "scad_to_stl", lambda s, d: called.append((s, d)))
     monkeypatch.setattr(
-        cli, "write_year_readme", lambda y, c, extras=None: tmp_path / "dummy"
+        cli,
+        "write_year_readme",
+        lambda y, c, extras=None, include_baseplate_stl=False: tmp_path / "dummy",
     )
 
     cli.main()
@@ -785,7 +797,7 @@ def test_cli_colors_with_more_levels_than_groups(tmp_path, monkeypatch, capsys):
         cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
     )
 
-    def fake_write_year_readme(year, counts, extras=None):
+    def fake_write_year_readme(year, counts, extras=None, include_baseplate_stl=False):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# materials")
@@ -857,7 +869,7 @@ def test_cli_writes_readmes_for_full_range(tmp_path, monkeypatch):
 
     called_years: list[int] = []
 
-    def fake_write(year, counts, extras=None):
+    def fake_write(year, counts, extras=None, include_baseplate_stl=False):
         called_years.append(year)
         return tmp_path / str(year) / "README.md"
 
@@ -1040,7 +1052,7 @@ def test_cli_writes_readme_when_no_contributions(tmp_path, monkeypatch):
 
     captured: list[tuple[int, dict]] = []
 
-    def fake_write(year, counts, extras=None):
+    def fake_write(year, counts, extras=None, include_baseplate_stl=False):
         captured.append((year, dict(counts)))
         return tmp_path / str(year) / "README.md"
 
