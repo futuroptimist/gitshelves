@@ -74,7 +74,8 @@ default template remains `baseplate_2x6.scad`. Every color-group SCAD repeats th
 annotations, so layouts stay traceable even when you only open a subset of the color files.
 When a run produces no blocks at all, the CLI still emits `_colorN.scad` placeholders populated with
 the zero-contribution annotations so downstream workflows keep the expected file set; STL rendering is
-skipped for those empty groups.
+skipped for those empty groups, and any existing `_colorN.stl` meshes are deleted so empty runs leave
+no stale geometry behind.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).

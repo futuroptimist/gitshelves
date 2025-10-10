@@ -258,10 +258,14 @@ def main(argv: list[str] | None = None):
             has_geometry = any(
                 line.strip() and not line.lstrip().startswith("//") for line in lines
             )
-            if base_stl and has_geometry:
+            stl_path = None
+            if base_stl:
                 stl_path = base_stl.with_name(f"{base_stl.name}_color{idx}.stl")
+            if base_stl and has_geometry:
                 scad_to_stl(str(scad_path), str(stl_path))
                 print(f"Wrote {stl_path}")
+            elif stl_path and stl_path.exists():
+                stl_path.unlink()
 
 
 if __name__ == "__main__":
