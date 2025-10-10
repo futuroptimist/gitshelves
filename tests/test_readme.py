@@ -5,6 +5,8 @@ def test_write_year_readme(tmp_path):
     counts = {(2023, 1): 5, (2023, 2): 20}
     readme = write_year_readme(2023, counts, outdir=tmp_path)
     text = readme.read_text()
+    assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in text
+    assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" not in text
     assert "January: 5 contributions" in text
     assert "February: 20 contributions" in text
     assert "`monthly-5x6`" in text
@@ -30,3 +32,16 @@ def test_write_year_readme_includes_gridfinity_extras(tmp_path):
     assert "## Gridfinity" in text
     for line in extras:
         assert line in text
+
+
+def test_write_year_readme_includes_baseplate_stl_when_requested(tmp_path):
+    counts = {(2026, 1): 3}
+    readme = write_year_readme(
+        2026,
+        counts,
+        outdir=tmp_path,
+        include_baseplate_stl=True,
+    )
+    text = readme.read_text()
+    assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in text
+    assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" in text
