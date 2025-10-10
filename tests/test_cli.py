@@ -1396,6 +1396,65 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
     assert recorded_levels == [2, 1]
 
 
+def test_cube_month_from_path_edge_cases():
+    """Helper should ignore filenames that are not valid month encodings."""
+
+    assert cli._cube_month_from_path(Path("contrib_cube_02.scad")) == 2
+    assert cli._cube_month_from_path(Path("contrib_cube_00.scad")) is None
+    assert cli._cube_month_from_path(Path("contrib_cube_13")) is None
+    assert cli._cube_month_from_path(Path("README")) is None
+
+
+def test_cube_month_from_path_value_error(monkeypatch):
+    """Defensive guard should handle unexpected integer conversion failures."""
+
+    class FakeMatch:
+        def group(
+            self, index: int
+        ) -> str:  # pragma: no cover - signature documentation
+            return "oops"
+
+    class FakePattern:
+        def match(self, _: str) -> FakeMatch:
+            return FakeMatch()
+
+    monkeypatch.setattr(cli, "_CUBE_FILE_PATTERN", FakePattern())
+
+    assert cli._cube_month_from_path(Path("contrib_cube_02.scad")) is None
+
+
+def test_cleanup_gridfinity_cube_outputs(tmp_path):
+    """Cleanup should drop stale months while respecting active ones."""
+
+    stale_scad = tmp_path / "contrib_cube_01.scad"
+    stale_scad.write_text("// old")
+    keep_scad = tmp_path / "contrib_cube_02.scad"
+    keep_scad.write_text("// new")
+    ignored_scad = tmp_path / "contrib_cube_extra.scad"
+    ignored_scad.write_text("// other")
+
+    stale_stl = tmp_path / "contrib_cube_03.stl"
+    stale_stl.write_text("stale")
+    keep_stl = tmp_path / "contrib_cube_02.stl"
+    keep_stl.write_text("fresh")
+    ignored_stl = tmp_path / "contrib_cube_misc.stl"
+    ignored_stl.write_text("misc")
+
+    cli._cleanup_gridfinity_cube_outputs(tmp_path, {2}, remove_stls=False)
+
+    assert not stale_scad.exists()
+    assert keep_scad.exists()
+    assert ignored_scad.exists(), "Non-matching filenames should be preserved"
+    assert not stale_stl.exists()
+    assert keep_stl.exists()
+    assert ignored_stl.exists()
+
+    # With ``remove_stls`` true even active month STLs are cleared.
+    keep_stl.write_text("fresh")
+    cli._cleanup_gridfinity_cube_outputs(tmp_path, {2}, remove_stls=True)
+    assert not keep_stl.exists()
+
+
 def test_cli_gridfinity_cubes_remove_stale_files(
     tmp_path, monkeypatch, gridfinity_library
 ):
