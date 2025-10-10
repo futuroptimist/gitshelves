@@ -111,7 +111,9 @@ STLs—the viewer automatically maps these names back to the color groups that t
 generates, shows a detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected files, making manual selection optional.
 Choose a lower value to hide higher-order color stacks while you inspect the layout; the
-baseplate always remains visible so its footprint stays aligned.
+baseplate always remains visible so its footprint stays aligned. Even when you only load
+later `_colorN` files, the dropdown still expands to the highest detected stack so those
+meshes remain visible by default.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 

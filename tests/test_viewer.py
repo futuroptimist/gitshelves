@@ -28,7 +28,7 @@ def test_viewer_dropdown_matches_detected_block_colors():
 
     html = Path("docs/viewer.html").read_text()
     assert (
-        "Math.max(blockColorCount, 1)" in html
+        "Math.max(maxColorIndex, 1)" in html
     ), "viewer should clamp to at least one color"
     assert (
         "totalGroups += 1" not in html
@@ -39,6 +39,9 @@ def test_viewer_dropdown_matches_detected_block_colors():
     assert (
         "Array.from({ length: detected }" in html
     ), "viewer should derive option values from detected color count"
+    assert (
+        "Detected ${blockColorCount} block color" in html
+    ), "viewer should still report the number of loaded color files"
 
 
 def test_viewer_dropdown_filters_block_colors():
@@ -52,3 +55,18 @@ def test_viewer_dropdown_filters_block_colors():
     assert (
         "mesh.visible = colorIndex === 0 || colorIndex <= maxColors" in html
     ), "visibility should clamp to the selected color count"
+
+
+def test_viewer_expands_dropdown_to_highest_color_index():
+    """Sparse color files should still surface their highest stack in the dropdown."""
+
+    html = Path("docs/viewer.html").read_text()
+    assert (
+        "const maxColorIndex = stls.reduce" in html
+    ), "viewer should derive the highest loaded color index"
+    assert (
+        "Math.max(maxColorIndex, 1)" in html
+    ), "dropdown size should respect the maximum detected index"
+    assert (
+        "maxColorIndex > 0 ? String(maxColorIndex) : '1'" in html
+    ), "default selection should reveal the highest detected color stack"
