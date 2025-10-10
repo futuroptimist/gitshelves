@@ -226,6 +226,9 @@ def main(argv: list[str] | None = None):
         grouped = group_scad_levels(level_scads, color_groups)
         if not grouped:
             grouped = {idx: SCAD_HEADER for idx in range(1, color_groups + 1)}
+        else:
+            for idx in range(1, color_groups + 1):
+                grouped.setdefault(idx, SCAD_HEADER)
         zero_comments = generate_zero_month_annotations(
             counts, months_per_row=args.months_per_row
         )
