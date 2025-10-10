@@ -62,7 +62,9 @@ automatically infers how many color groups are present from the filenames,
 displays the detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected total for quick confirmation.
 Select a smaller count to temporarily hide higher-order color stacks while you review the
-model; the baseplate stays visible so the footprint remains anchored.
+model; the baseplate stays visible so the footprint remains anchored. If you only import
+later `_colorN` files, the dropdown still stretches to the highest detected stack so those
+meshes remain visible without extra clicks.
 
 ## Prompts
 
