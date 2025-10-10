@@ -246,54 +246,44 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     ordered_levels = sorted(level_scads.items())
     total_groups = min(groups, len(ordered_levels))
 
-    # ``--colors 5`` exposes four block colors. When contributions introduce more than
-    # four logarithmic levels, documentation promises the accent color (group 4)
-    # gathers every remaining high-magnitude level. Ensure the last group collects
-    # level four and above so additional orders reuse the accent palette.
-    if total_groups == 4 and len(ordered_levels) > total_groups:
-        grouped_lines: Dict[int, list[str]] = {
-            idx: [] for idx in range(1, total_groups + 1)
-        }
-        for index, (_, text) in enumerate(ordered_levels):
-            if index < total_groups - 1:
-                target = index + 1
-            else:
-                target = total_groups
-            grouped_lines[target].extend(_body_lines(text))
-
-        return {
-            idx: HEADER + ("\n" + "\n".join(lines) if lines else "")
-            for idx, lines in grouped_lines.items()
-        }
-
-    grouped: Dict[int, list[str]] = {}
+    def _render(partitions: list[list[tuple[int, str]]]) -> Dict[int, str]:
+        grouped_output: Dict[int, str] = {}
+        for index, partition in enumerate(partitions, start=1):
+            lines: list[str] = []
+            for _, text in partition:
+                lines.extend(_body_lines(text))
+            grouped_output[index] = HEADER + ("\n" + "\n".join(lines) if lines else "")
+        return grouped_output
 
     if total_groups == 1:
-        lines: list[str] = []
-        for _, text in ordered_levels:
-            lines.extend(_body_lines(text))
-        grouped[1] = lines
-        return {
-            idx: HEADER + "\n" + "\n".join(lines) if lines else HEADER
-            for idx, lines in grouped.items()
-        }
+        return _render([ordered_levels])
 
-    # Preserve the earliest levels as individual color groups so the final
-    # accent color consistently absorbs every overflow block level, regardless
-    # of how many colors were requested.
-    for index in range(total_groups - 1):
-        _, text = ordered_levels[index]
-        grouped[index + 1] = _body_lines(text)
+    if total_groups >= 4 and len(ordered_levels) > total_groups:
+        # ``--colors 5`` exposes four block colors. When contributions introduce
+        # more than four logarithmic levels, documentation promises the accent
+        # color (group 4) gathers every remaining high-magnitude level. Ensure
+        # the last group collects level four and above so additional orders
+        # reuse the accent palette.
+        partitions: list[list[tuple[int, str]]] = [
+            ordered_levels[idx : idx + 1] for idx in range(total_groups - 1)
+        ]
+        partitions.append(ordered_levels[total_groups - 1 :])
+        return _render(partitions)
 
-    remaining: list[str] = []
-    for _, text in ordered_levels[total_groups - 1 :]:
-        remaining.extend(_body_lines(text))
-    grouped[total_groups] = remaining
+    # Distribute the remaining cases as evenly as possible while preserving
+    # order so lower magnitudes stay in the earliest color groups.
+    total_levels = len(ordered_levels)
+    base = total_levels // total_groups
+    remainder = total_levels % total_groups
+    partitions: list[list[tuple[int, str]]] = []
+    start = 0
+    for group_index in range(total_groups):
+        size = base + (1 if group_index < remainder else 0)
+        end = start + size
+        partitions.append(ordered_levels[start:end])
+        start = end
 
-    return {
-        idx: HEADER + "\n" + "\n".join(lines) if lines else HEADER
-        for idx, lines in grouped.items()
-    }
+    return _render(partitions)
 
 
 def generate_gridfinity_plate_scad(

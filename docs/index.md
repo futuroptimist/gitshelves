@@ -7,7 +7,11 @@ using binary output (`--export-format binstl`) to mirror the CI workflow.
 Use `--output` to change the `.scad` filename, `--months-per-row` to control the
 grid width, `--stl` to specify an STL output path, and `--colors` to split
 blocks into up to four color groups (pass `--colors 5` to unlock all four;
-additional orders of magnitude share the fourth color).
+additional orders of magnitude share the fourth color). Smaller palettes balance
+the logarithmic levels across the available groups while preserving their
+chronological order, so `--colors 2`, `--colors 3`, and `--colors 4`
+distribute stacks as evenly as possible before the accent color collects the
+overflow.
 `--months-per-row` values below one exit with a parser error before any files are
 generated so invalid layouts never produce partial outputs.
 `--baseplate-template` selects which bundled Gridfinity baseplate (such as
