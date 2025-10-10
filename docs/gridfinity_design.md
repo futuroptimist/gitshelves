@@ -111,6 +111,9 @@ available with the yearly README summaries.
 Pair the flag with `--gridfinity-cubes` to emit
 `contrib_cube_MM.scad` stacks so monthly prints are pre-scaled to each month's
 contribution magnitude, and add `--stl` to render matching `.stl` files.
+Runs scrub `contrib_cube_MM` outputs for months without contributions (and drop
+cube STLs when `--stl` isn't requested) so directories stay aligned with the
+current activity snapshot.
 
 ## 5  GitHub Actions Pipeline (.github/workflows/build-stl.yml)
 

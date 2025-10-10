@@ -98,6 +98,8 @@ ready to print alongside the contribution cubes. Pair it with `--gridfinity-cube
 `contrib_cube_MM.scad` and `.stl` stacks for every month that recorded contributions so cube prints are
 ready without extra modeling work. Empty months are still annotated in the Gridfinity layout as reserved
 grid cells, keeping the placement map intact even when a month renders zero cubes.
+Months that lose contributions have their previous `contrib_cube_MM` SCAD files (and any lingering STLs
+when `--stl` isn't used) removed automatically so the folder mirrors the current activity snapshot.
 Yearly `stl/<year>/README.md` summaries add a **Gridfinity** section whenever these flags are used, listing
 the generated layout and cube outputs so printable files are easy to locate. The layout entry notes
 the detected footprint (for example `6×2 grid`) to confirm the chosen column count.

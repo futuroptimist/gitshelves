@@ -1396,6 +1396,75 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
     assert recorded_levels == [2, 1]
 
 
+def test_cli_gridfinity_cubes_remove_stale_files(
+    tmp_path, monkeypatch, gridfinity_library
+):
+    """Old Gridfinity cube files should be removed when months lose activity."""
+
+    base = tmp_path / "stacks.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=True,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    year_dir = tmp_path / "stl" / "2021"
+    year_dir.mkdir(parents=True, exist_ok=True)
+    stale_scad = year_dir / "contrib_cube_01.scad"
+    stale_scad.write_text("// old january")
+    stale_stl = year_dir / "contrib_cube_01.stl"
+    stale_stl.write_text("old stl")
+    keep_scad = year_dir / "contrib_cube_02.scad"
+    keep_scad.write_text("// old february")
+    keep_stl = year_dir / "contrib_cube_02.stl"
+    keep_stl.write_text("old stl")
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-02-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_scad_monthly",
+        lambda counts, months_per_row=12: "// monthly",
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily_counts, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_contrib_cube_stack_scad",
+        lambda levels: f"// cubes {levels}",
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    assert not stale_scad.exists()
+    assert not stale_stl.exists()
+
+    new_scad = year_dir / "contrib_cube_02.scad"
+    assert "// cubes" in new_scad.read_text()
+
+    new_stl = year_dir / "contrib_cube_02.stl"
+    assert not new_stl.exists(), "STLs should be removed when --stl is omitted"
+
+
 def test_cli_generates_gridfinity_cube_stls_when_requested(
     tmp_path, monkeypatch, gridfinity_library
 ):

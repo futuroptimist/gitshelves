@@ -25,6 +25,9 @@ conversion. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
 for every month with activity, and pass `--stl` to render matching `.stl`
 files. By default, the current year's contributions are fetched unless
 `--start-year` and `--end-year` specify a range.
+Months that no longer have contributions remove their old `contrib_cube_MM`
+files (and any lingering STLs when `--stl` is omitted) so directories stay in
+sync with the latest activity snapshot.
 Color-specific outputs also repeat the zero-contribution annotations so each
 file documents the full monthly layout even when opened in isolation.
 When no month produces any blocks, the CLI still writes `_colorN.scad`

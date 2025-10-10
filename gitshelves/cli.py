@@ -4,6 +4,7 @@ from calendar import month_name, month_abbr
 from pathlib import Path
 from datetime import datetime
 from importlib import metadata
+import re
 
 from .baseplate import load_baseplate_scad
 from .fetch import fetch_user_contributions, _determine_year_range
@@ -36,6 +37,40 @@ def _write_year_baseplate(year_dir: Path, render_stl: bool) -> None:
         baseplate_stl = baseplate_path.with_suffix(".stl")
         scad_to_stl(str(baseplate_path), str(baseplate_stl))
         print(f"Wrote {baseplate_stl}")
+
+
+_CUBE_FILE_PATTERN = re.compile(r"contrib_cube_(\d{2})")
+
+
+def _cube_month_from_path(path: Path) -> int | None:
+    """Return the month encoded in a ``contrib_cube_MM`` filename."""
+
+    match = _CUBE_FILE_PATTERN.match(path.stem)
+    if not match:
+        return None
+    try:
+        month = int(match.group(1))
+    except ValueError:
+        return None
+    return month if 1 <= month <= 12 else None
+
+
+def _cleanup_gridfinity_cube_outputs(
+    year_dir: Path, active_months: set[int], *, remove_stls: bool
+) -> None:
+    """Delete stale Gridfinity cube files that no longer match current data."""
+
+    for scad_path in year_dir.glob("contrib_cube_*.scad"):
+        month = _cube_month_from_path(scad_path)
+        if month is None or month in active_months:
+            continue
+        scad_path.unlink(missing_ok=True)
+    for stl_path in year_dir.glob("contrib_cube_*.stl"):
+        month = _cube_month_from_path(stl_path)
+        if month is None:
+            continue
+        if remove_stls or month not in active_months:
+            stl_path.unlink(missing_ok=True)
 
 
 def main(argv: list[str] | None = None):
@@ -194,10 +229,12 @@ def main(argv: list[str] | None = None):
                 print(f"Wrote {layout_stl_path}")
         if args.gridfinity_cubes:
             year_dir = readme_path.parent
+            generated_cube_months: set[int] = set()
             for month in range(1, 13):
                 levels = blocks_for_contributions(counts.get((year, month), 0))
                 if levels <= 0:
                     continue
+                generated_cube_months.add(month)
                 cube_scad = generate_contrib_cube_stack_scad(levels)
                 cube_scad_path = year_dir / f"contrib_cube_{month:02d}.scad"
                 cube_scad_path.write_text(cube_scad)
@@ -206,6 +243,11 @@ def main(argv: list[str] | None = None):
                     cube_stl_path = cube_scad_path.with_suffix(".stl")
                     scad_to_stl(str(cube_scad_path), str(cube_stl_path))
                     print(f"Wrote {cube_stl_path}")
+            _cleanup_gridfinity_cube_outputs(
+                year_dir,
+                generated_cube_months,
+                remove_stls=not bool(args.stl),
+            )
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
