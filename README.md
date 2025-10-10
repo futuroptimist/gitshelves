@@ -81,10 +81,10 @@ Pass `--baseplate-template baseplate_1x12.scad`
 to copy the bundled tall single-row Gridfinity baseplate when generating multi-color outputs; the
 default template remains `baseplate_2x6.scad`. Every color-group SCAD repeats the zero-contribution
 annotations, so layouts stay traceable even when you only open a subset of the color files.
-When a run produces no blocks at all, the CLI still emits `_colorN.scad` placeholders populated with
-the zero-contribution annotations so downstream workflows keep the expected file set; STL rendering is
-skipped for those empty groups, and any existing `_colorN.stl` meshes are deleted so empty runs leave
-no stale geometry behind.
+Whether a run produces no blocks at all or only fills a subset of the requested color groups, the CLI
+still emits `_colorN.scad` placeholders populated with the zero-contribution annotations so downstream
+workflows keep the expected file set; STL rendering is skipped for those empty groups, and any existing
+`_colorN.stl` meshes are deleted so unused groups leave no stale geometry behind.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).
@@ -97,9 +97,9 @@ When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl`
 ready to print alongside the contribution cubes. Pair it with `--gridfinity-cubes` to generate
 `contrib_cube_MM.scad` and `.stl` stacks for every month that recorded contributions so cube prints are
 ready without extra modeling work. Empty months are still annotated in the Gridfinity layout as reserved
-grid cells, keeping the placement map intact even when a month renders zero cubes.
-Months that lose contributions have their previous `contrib_cube_MM` SCAD files (and any lingering STLs
-when `--stl` isn't used) removed automatically so the folder mirrors the current activity snapshot.
+grid cells, keeping the placement map intact even when a month renders zero cubes. Months that lose
+contributions have their previous `contrib_cube_MM` SCAD files (and any lingering STLs when `--stl`
+isn't used) removed automatically so the folder mirrors the current activity snapshot.
 Yearly `stl/<year>/README.md` summaries add a **Gridfinity** section whenever these flags are used, listing
 the generated layout and cube outputs so printable files are easy to locate. The layout entry notes
 the detected footprint (for example `6×2 grid`) to confirm the chosen column count.
@@ -111,7 +111,9 @@ STLs—the viewer automatically maps these names back to the color groups that t
 generates, shows a detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected files, making manual selection optional.
 Choose a lower value to hide higher-order color stacks while you inspect the layout; the
-baseplate always remains visible so its footprint stays aligned.
+baseplate always remains visible so its footprint stays aligned. Even when you only load
+later `_colorN` files, the dropdown still expands to the highest detected stack so those
+meshes remain visible by default.
 
 If you fork this repository, replace `futuroptimist` with your GitHub username in badge URLs to keep status badges working.
 

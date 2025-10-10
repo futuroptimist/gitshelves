@@ -96,7 +96,7 @@ bin(
 );
 ```
 
-### 4.3 CLI-generated layouts
+### 4.3 CLI-generated layouts
 `gitshelves.cli` now exposes `--gridfinity-layouts`, producing
 `stl/<year>/gridfinity_plate.scad` files that size a baseplate to the requested
 column count (default six) and stack Gridfinity bins for each month on top of

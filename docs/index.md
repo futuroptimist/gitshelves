@@ -23,18 +23,21 @@ parser error before any files are generated. When `--stl` is provided, the CLI a
 `stl/<year>/gridfinity_plate.stl` so baseplates are printable without manual
 conversion. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
 for every month with activity, and pass `--stl` to render matching `.stl`
-files. By default, the current year's contributions are fetched unless
+files. Months that no longer record activity remove any existing
+`contrib_cube_MM` exports so only active months keep cube stacks on disk.
+By default, the current year's contributions are fetched unless
 `--start-year` and `--end-year` specify a range.
 Months that no longer have contributions remove their old `contrib_cube_MM`
 files (and any lingering STLs when `--stl` is omitted) so directories stay in
 sync with the latest activity snapshot.
 Color-specific outputs also repeat the zero-contribution annotations so each
 file documents the full monthly layout even when opened in isolation.
-When no month produces any blocks, the CLI still writes `_colorN.scad`
-placeholders containing those annotations so downstream automation continues to
-receive the expected files; STL conversion is skipped for these empty color
-groups and any existing `_colorN.stl` meshes are removed so stale geometry is not
-left behind.
+Whether no month produces any blocks or only some of the requested color groups
+contain geometry, the CLI still writes `_colorN.scad` placeholders containing
+those annotations so downstream automation continues to receive the expected
+files; STL conversion is skipped for these empty color groups and any existing
+`_colorN.stl` meshes are removed so unused slots do not leave stale geometry
+behind.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates.
@@ -65,7 +68,9 @@ automatically infers how many color groups are present from the filenames,
 displays the detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected total for quick confirmation.
 Select a smaller count to temporarily hide higher-order color stacks while you review the
-model; the baseplate stays visible so the footprint remains anchored.
+model; the baseplate stays visible so the footprint remains anchored. If you only import
+later `_colorN` files, the dropdown still stretches to the highest detected stack so those
+meshes remain visible without extra clicks.
 
 ## Prompts
 
