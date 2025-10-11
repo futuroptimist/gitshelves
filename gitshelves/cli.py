@@ -216,17 +216,20 @@ def main(argv: list[str] | None = None):
             scad_path = calendar_dir / f"{month:02d}_{slug}.scad"
             scad_path.write_text(text)
             print(f"Wrote {scad_path}")
+        layout_path = readme_path.parent / "gridfinity_plate.scad"
+        layout_stl_path = layout_path.with_suffix(".stl")
         if args.gridfinity_layouts:
             layout_text = generate_gridfinity_plate_scad(
                 counts, year, columns=args.gridfinity_columns
             )
-            layout_path = readme_path.parent / "gridfinity_plate.scad"
             layout_path.write_text(layout_text)
             print(f"Wrote {layout_path}")
             if args.stl:
-                layout_stl_path = layout_path.with_suffix(".stl")
                 scad_to_stl(str(layout_path), str(layout_stl_path))
                 print(f"Wrote {layout_stl_path}")
+        else:
+            layout_path.unlink(missing_ok=True)
+            layout_stl_path.unlink(missing_ok=True)
         if args.gridfinity_cubes:
             year_dir = readme_path.parent
             generated_cube_months: set[int] = set()
@@ -252,6 +255,14 @@ def main(argv: list[str] | None = None):
                 generated_cube_months,
                 remove_stls=not bool(args.stl),
             )
+        else:
+            year_dir = readme_path.parent
+            for cube_scad_path in year_dir.glob("contrib_cube_*.scad"):
+                if _cube_month_from_path(cube_scad_path) is not None:
+                    cube_scad_path.unlink(missing_ok=True)
+            for cube_stl_path in year_dir.glob("contrib_cube_*.stl"):
+                if _cube_month_from_path(cube_stl_path) is not None:
+                    cube_stl_path.unlink(missing_ok=True)
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)

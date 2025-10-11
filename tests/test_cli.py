@@ -1736,6 +1736,118 @@ def test_cli_removes_stale_gridfinity_cube_exports(
     assert any(dest.name == "contrib_cube_02.stl" for _src, dest in stl_calls)
 
 
+def test_cli_cleans_up_gridfinity_layout_when_flag_disabled(
+    tmp_path, monkeypatch, gridfinity_library
+):
+    """Existing layout files should be removed when `--gridfinity-layouts` isn't used."""
+
+    output = tmp_path / "grid.scad"
+    stl_target = tmp_path / "grid.stl"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=str(stl_target),
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    entries = [{"created_at": "2021-01-01T00:00:00Z"}]
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: entries)
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
+    )
+
+    year_dir = tmp_path / "stl" / "2021"
+    year_dir.mkdir(parents=True, exist_ok=True)
+    layout_scad = year_dir / "gridfinity_plate.scad"
+    layout_stl = layout_scad.with_suffix(".stl")
+    layout_scad.write_text("// stale layout")
+    layout_stl.write_text("binary")
+
+    stl_calls: list[tuple[Path, Path]] = []
+
+    def fake_scad_to_stl(src, dest):
+        stl_calls.append((Path(src), Path(dest)))
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_scad_to_stl)
+
+    cli.main()
+
+    assert not layout_scad.exists(), "Old layout SCAD should be removed"
+    assert not layout_stl.exists(), "Old layout STL should be removed"
+    rendered = {dest.name for _, dest in stl_calls}
+    assert "gridfinity_plate.stl" not in rendered
+    assert (tmp_path / "grid.scad").exists()
+
+
+def test_cli_cleans_up_gridfinity_cubes_when_flag_disabled(
+    tmp_path, monkeypatch, gridfinity_library
+):
+    """Leftover cube stacks should disappear when `--gridfinity-cubes` is omitted."""
+
+    output = tmp_path / "grid.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    entries = [{"created_at": "2021-02-01T00:00:00Z"}]
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: entries)
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    year_dir = tmp_path / "stl" / "2021"
+    year_dir.mkdir(parents=True, exist_ok=True)
+    stale_scad = year_dir / "contrib_cube_02.scad"
+    stale_stl = stale_scad.with_suffix(".stl")
+    stale_scad.write_text("// stale cube")
+    stale_stl.write_text("binary")
+
+    cli.main()
+
+    assert not stale_scad.exists(), "Cube SCAD should be removed when flag is absent"
+    assert not stale_stl.exists(), "Cube STL should be removed when flag is absent"
+
+
 def test_cli_readme_mentions_gridfinity_outputs(
     tmp_path, monkeypatch, gridfinity_library
 ):

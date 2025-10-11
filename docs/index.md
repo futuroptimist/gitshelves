@@ -21,12 +21,15 @@ bins are stacked onto a parametric baseplate; adjust the footprint with
 `--gridfinity-columns`. Supply a positive integer—values below one raise a
 parser error before any files are generated. When `--stl` is provided, the CLI also renders
 `stl/<year>/gridfinity_plate.stl` so baseplates are printable without manual
-conversion. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
+conversion, and skipping `--gridfinity-layouts` on a later run removes any
+previous `gridfinity_plate.*` outputs so folders do not accumulate stale
+layouts. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
 for every month with activity, and pass `--stl` to render matching `.stl`
 files. Months that no longer record activity remove any existing
-`contrib_cube_MM` exports so only active months keep cube stacks on disk.
-By default, the current year's contributions are fetched unless
-`--start-year` and `--end-year` specify a range.
+`contrib_cube_MM` exports so only active months keep cube stacks on disk. Runs
+that omit `--gridfinity-cubes` also clear those cube files so directories always
+reflect the latest activity snapshot. By default, the current year's
+contributions are fetched unless `--start-year` and `--end-year` specify a range.
 Months that no longer have contributions remove their old `contrib_cube_MM`
 files (and any lingering STLs when `--stl` is omitted) so directories stay in
 sync with the latest activity snapshot.
