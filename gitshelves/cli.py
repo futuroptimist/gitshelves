@@ -112,6 +112,10 @@ def _cleanup_color_outputs(
             stl_path.unlink(missing_ok=True)
 
 
+# Backwards compatibility for callers still using the previous helper name.
+_cleanup_unused_color_outputs = _cleanup_color_outputs
+
+
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Generate 3D GitHub contribution charts"
@@ -371,9 +375,7 @@ def main(argv: list[str] | None = None):
             elif stl_path and stl_path.exists():
                 stl_path.unlink()
 
-        _cleanup_color_outputs(
-            base_output, color_groups, stl_requested=bool(base_stl)
-        )
+        _cleanup_color_outputs(base_output, color_groups, stl_requested=bool(base_stl))
 
 
 if __name__ == "__main__":
