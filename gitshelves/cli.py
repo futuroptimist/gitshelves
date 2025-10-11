@@ -73,6 +73,31 @@ def _cleanup_gridfinity_cube_outputs(
             stl_path.unlink(missing_ok=True)
 
 
+def _cleanup_unused_color_outputs(
+    base_output: Path, *, color_groups: int, base_stl: Path | None
+) -> None:
+    """Remove stale multi-color outputs beyond the requested palette size."""
+
+    expected_scads = {
+        base_output.with_name(f"{base_output.name}_color{idx}.scad")
+        for idx in range(1, color_groups + 1)
+    }
+    for scad_path in base_output.parent.glob(f"{base_output.name}_color*.scad"):
+        if scad_path not in expected_scads:
+            scad_path.unlink(missing_ok=True)
+
+    if base_stl is None:
+        return
+
+    expected_stls = {
+        base_stl.with_name(f"{base_stl.name}_color{idx}.stl")
+        for idx in range(1, color_groups + 1)
+    }
+    for stl_path in base_stl.parent.glob(f"{base_stl.name}_color*.stl"):
+        if stl_path not in expected_stls:
+            stl_path.unlink(missing_ok=True)
+
+
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Generate 3D GitHub contribution charts"
@@ -331,6 +356,10 @@ def main(argv: list[str] | None = None):
                 print(f"Wrote {stl_path}")
             elif stl_path and stl_path.exists():
                 stl_path.unlink()
+
+        _cleanup_unused_color_outputs(
+            base_output, color_groups=color_groups, base_stl=base_stl
+        )
 
 
 if __name__ == "__main__":
