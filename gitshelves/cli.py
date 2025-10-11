@@ -62,10 +62,7 @@ def _color_index_from_path(path: Path) -> int | None:
     match = _COLOR_FILE_PATTERN.match(path.stem)
     if not match:
         return None
-    try:
-        index = int(match.group(1))
-    except ValueError:
-        return None
+    index = int(match.group(1))
     return index if index > 0 else None
 
 
