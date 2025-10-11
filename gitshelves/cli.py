@@ -40,6 +40,7 @@ def _write_year_baseplate(year_dir: Path, render_stl: bool) -> None:
 
 
 _CUBE_FILE_PATTERN = re.compile(r"contrib_cube_(\d{2})")
+_COLOR_FILE_PATTERN = re.compile(r".*_color(\d+)$")
 
 
 def _cube_month_from_path(path: Path) -> int | None:
@@ -53,6 +54,16 @@ def _cube_month_from_path(path: Path) -> int | None:
     except ValueError:
         return None
     return month if 1 <= month <= 12 else None
+
+
+def _color_index_from_path(path: Path) -> int | None:
+    """Return the color index encoded in a ``*_colorN`` filename."""
+
+    match = _COLOR_FILE_PATTERN.match(path.stem)
+    if not match:
+        return None
+    index = int(match.group(1))
+    return index if index > 0 else None
 
 
 def _cleanup_gridfinity_cube_outputs(
@@ -73,29 +84,36 @@ def _cleanup_gridfinity_cube_outputs(
             stl_path.unlink(missing_ok=True)
 
 
-def _cleanup_unused_color_outputs(
-    base_output: Path, *, color_groups: int, base_stl: Path | None
+def _cleanup_color_outputs(
+    base_output: Path, color_groups: int, *, stl_requested: bool
 ) -> None:
-    """Remove stale multi-color outputs beyond the requested palette size."""
+    """Remove stale multi-color SCAD/STL files after rendering."""
 
-    expected_scads = {
-        base_output.with_name(f"{base_output.name}_color{idx}.scad")
-        for idx in range(1, color_groups + 1)
-    }
-    for scad_path in base_output.parent.glob(f"{base_output.name}_color*.scad"):
-        if scad_path not in expected_scads:
-            scad_path.unlink(missing_ok=True)
-
-    if base_stl is None:
+    if color_groups <= 0:
         return
 
-    expected_stls = {
-        base_stl.with_name(f"{base_stl.name}_color{idx}.stl")
-        for idx in range(1, color_groups + 1)
-    }
-    for stl_path in base_stl.parent.glob(f"{base_stl.name}_color*.stl"):
-        if stl_path not in expected_stls:
+    pattern = f"{base_output.name}_color*.scad"
+    for scad_path in base_output.parent.glob(pattern):
+        index = _color_index_from_path(scad_path)
+        if index is None:
+            continue
+        if index > color_groups:
+            scad_path.unlink(missing_ok=True)
+
+    stl_pattern = f"{base_output.name}_color*.stl"
+    for stl_path in base_output.parent.glob(stl_pattern):
+        if not stl_requested:
             stl_path.unlink(missing_ok=True)
+            continue
+        index = _color_index_from_path(stl_path)
+        if index is None:
+            continue
+        if index > color_groups:
+            stl_path.unlink(missing_ok=True)
+
+
+# Backwards compatibility for callers still using the previous helper name.
+_cleanup_unused_color_outputs = _cleanup_color_outputs
 
 
 def main(argv: list[str] | None = None):
@@ -357,9 +375,7 @@ def main(argv: list[str] | None = None):
             elif stl_path and stl_path.exists():
                 stl_path.unlink()
 
-        _cleanup_unused_color_outputs(
-            base_output, color_groups=color_groups, base_stl=base_stl
-        )
+        _cleanup_color_outputs(base_output, color_groups, stl_requested=bool(base_stl))
 
 
 if __name__ == "__main__":
