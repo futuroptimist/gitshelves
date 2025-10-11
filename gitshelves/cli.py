@@ -40,6 +40,7 @@ def _write_year_baseplate(year_dir: Path, render_stl: bool) -> None:
 
 
 _CUBE_FILE_PATTERN = re.compile(r"contrib_cube_(\d{2})")
+_COLOR_FILE_PATTERN = re.compile(r".*_color(\d+)$")
 
 
 def _cube_month_from_path(path: Path) -> int | None:
@@ -53,6 +54,19 @@ def _cube_month_from_path(path: Path) -> int | None:
     except ValueError:
         return None
     return month if 1 <= month <= 12 else None
+
+
+def _color_index_from_path(path: Path) -> int | None:
+    """Return the color index encoded in a ``*_colorN`` filename."""
+
+    match = _COLOR_FILE_PATTERN.match(path.stem)
+    if not match:
+        return None
+    try:
+        index = int(match.group(1))
+    except ValueError:
+        return None
+    return index if index > 0 else None
 
 
 def _cleanup_gridfinity_cube_outputs(
@@ -70,6 +84,29 @@ def _cleanup_gridfinity_cube_outputs(
         if month is None:
             continue
         if remove_stls or month not in active_months:
+            stl_path.unlink(missing_ok=True)
+
+
+def _cleanup_color_outputs(
+    base_output: Path, groups: int, *, stl_requested: bool
+) -> None:
+    """Remove stale multi-color SCAD/STL files beyond the requested palette."""
+
+    if groups <= 0:
+        return
+
+    parent = base_output.parent
+    for scad_path in parent.glob(f"{base_output.name}_color*.scad"):
+        index = _color_index_from_path(scad_path)
+        if index is None or index <= groups:
+            continue
+        scad_path.unlink(missing_ok=True)
+
+    for stl_path in parent.glob(f"{base_output.name}_color*.stl"):
+        index = _color_index_from_path(stl_path)
+        if index is None:
+            continue
+        if not stl_requested or index > groups:
             stl_path.unlink(missing_ok=True)
 
 
@@ -320,6 +357,8 @@ def main(argv: list[str] | None = None):
                 print(f"Wrote {stl_path}")
             elif stl_path and stl_path.exists():
                 stl_path.unlink()
+
+        _cleanup_color_outputs(base_output, color_groups, stl_requested=bool(base_stl))
 
 
 if __name__ == "__main__":

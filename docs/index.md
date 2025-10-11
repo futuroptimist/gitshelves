@@ -38,6 +38,9 @@ those annotations so downstream automation continues to receive the expected
 files; STL conversion is skipped for these empty color groups and any existing
 `_colorN.stl` meshes are removed so unused slots do not leave stale geometry
 behind.
+When you dial the palette down, `_colorN.scad` files beyond the active range are
+deleted alongside those `_colorN.stl` meshes (and every `_colorN.stl` is purged
+when `--stl` is omitted), keeping the folder limited to the current color set.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates.

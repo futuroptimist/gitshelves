@@ -85,6 +85,9 @@ Whether a run produces no blocks at all or only fills a subset of the requested 
 still emits `_colorN.scad` placeholders populated with the zero-contribution annotations so downstream
 workflows keep the expected file set; STL rendering is skipped for those empty groups, and any existing
 `_colorN.stl` meshes are deleted so unused groups leave no stale geometry behind.
+When you reduce the palette, stale `_colorN.scad` files above the requested range are removed alongside
+those `_colorN.stl` meshes (and every `_colorN.stl` is purged when `--stl` isn't requested) so follow-on
+jobs only see the current color set.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).
