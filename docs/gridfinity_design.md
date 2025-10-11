@@ -96,7 +96,7 @@ bin(
 );
 ```
 
-### 4.3 CLI-generated layouts
+### 4.3 CLI-generated layouts
 `gitshelves.cli` now exposes `--gridfinity-layouts`, producing
 `stl/<year>/gridfinity_plate.scad` files that size a baseplate to the requested
 column count (default six) and stack Gridfinity bins for each month on top of
@@ -111,9 +111,9 @@ available with the yearly README summaries.
 Pair the flag with `--gridfinity-cubes` to emit
 `contrib_cube_MM.scad` stacks so monthly prints are pre-scaled to each month's
 contribution magnitude, and add `--stl` to render matching `.stl` files.
-Months that no longer report contributions delete any existing
-`contrib_cube_MM` exports so directories only list the months that still need
-cube prints.
+Runs scrub `contrib_cube_MM` outputs for months without contributions (and drop
+cube STLs when `--stl` isn't requested) so directories stay aligned with the
+current activity snapshot.
 
 ## 5  GitHub Actions Pipeline (.github/workflows/build-stl.yml)
 
