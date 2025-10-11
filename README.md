@@ -97,12 +97,14 @@ Gridfinity baseplate and arranges monthly contribution cubes on top of it. The l
 columns (a 2×6 plate); adjust the footprint with `--gridfinity-columns` to match your storage grid.
 The column count must be a positive integer—values below one are rejected before any files are written.
 When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl` so the baseplate is
-ready to print alongside the contribution cubes. Pair it with `--gridfinity-cubes` to generate
-`contrib_cube_MM.scad` and `.stl` stacks for every month that recorded contributions so cube prints are
-ready without extra modeling work. Empty months are still annotated in the Gridfinity layout as reserved
-grid cells, keeping the placement map intact even when a month renders zero cubes. Months that lose
-contributions have their previous `contrib_cube_MM` SCAD files (and any lingering STLs when `--stl`
-isn't used) removed automatically so the folder mirrors the current activity snapshot.
+ready to print alongside the contribution cubes. Re-running without `--gridfinity-layouts` removes
+any previously generated `gridfinity_plate.scad`/`.stl` pairs so stale layouts do not linger. Pair it
+with `--gridfinity-cubes` to generate `contrib_cube_MM.scad` and `.stl` stacks for every month that
+recorded contributions so cube prints are ready without extra modeling work. Empty months are still
+annotated in the Gridfinity layout as reserved grid cells, keeping the placement map intact even when
+a month renders zero cubes. Months that lose contributions have their previous `contrib_cube_MM` SCAD
+files (and any lingering STLs when `--stl` isn't used) removed automatically so the folder mirrors the
+current activity snapshot—even if a later run omits the `--gridfinity-cubes` flag.
 Yearly `stl/<year>/README.md` summaries add a **Gridfinity** section whenever these flags are used, listing
 the generated layout and cube outputs so printable files are easy to locate. The layout entry notes
 the detected footprint (for example `6×2 grid`) to confirm the chosen column count.

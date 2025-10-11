@@ -84,26 +84,28 @@ def _cleanup_gridfinity_cube_outputs(
             stl_path.unlink(missing_ok=True)
 
 
-def _cleanup_color_outputs(
-    base_output: Path, groups: int, *, stl_requested: bool
+def _cleanup_unused_color_outputs(
+    base_output: Path, *, color_groups: int, base_stl: Path | None
 ) -> None:
-    """Remove stale multi-color SCAD/STL files beyond the requested palette."""
+    """Remove stale multi-color outputs beyond the requested palette size."""
 
-    if groups <= 0:
+    expected_scads = {
+        base_output.with_name(f"{base_output.name}_color{idx}.scad")
+        for idx in range(1, color_groups + 1)
+    }
+    for scad_path in base_output.parent.glob(f"{base_output.name}_color*.scad"):
+        if scad_path not in expected_scads:
+            scad_path.unlink(missing_ok=True)
+
+    if base_stl is None:
         return
 
-    parent = base_output.parent
-    for scad_path in parent.glob(f"{base_output.name}_color*.scad"):
-        index = _color_index_from_path(scad_path)
-        if index is None or index <= groups:
-            continue
-        scad_path.unlink(missing_ok=True)
-
-    for stl_path in parent.glob(f"{base_output.name}_color*.stl"):
-        index = _color_index_from_path(stl_path)
-        if index is None:
-            continue
-        if not stl_requested or index > groups:
+    expected_stls = {
+        base_stl.with_name(f"{base_stl.name}_color{idx}.stl")
+        for idx in range(1, color_groups + 1)
+    }
+    for stl_path in base_stl.parent.glob(f"{base_stl.name}_color*.stl"):
+        if stl_path not in expected_stls:
             stl_path.unlink(missing_ok=True)
 
 
@@ -250,17 +252,20 @@ def main(argv: list[str] | None = None):
             scad_path = calendar_dir / f"{month:02d}_{slug}.scad"
             scad_path.write_text(text)
             print(f"Wrote {scad_path}")
+        layout_path = readme_path.parent / "gridfinity_plate.scad"
+        layout_stl_path = layout_path.with_suffix(".stl")
         if args.gridfinity_layouts:
             layout_text = generate_gridfinity_plate_scad(
                 counts, year, columns=args.gridfinity_columns
             )
-            layout_path = readme_path.parent / "gridfinity_plate.scad"
             layout_path.write_text(layout_text)
             print(f"Wrote {layout_path}")
             if args.stl:
-                layout_stl_path = layout_path.with_suffix(".stl")
                 scad_to_stl(str(layout_path), str(layout_stl_path))
                 print(f"Wrote {layout_stl_path}")
+        else:
+            layout_path.unlink(missing_ok=True)
+            layout_stl_path.unlink(missing_ok=True)
         if args.gridfinity_cubes:
             year_dir = readme_path.parent
             generated_cube_months: set[int] = set()
@@ -286,6 +291,14 @@ def main(argv: list[str] | None = None):
                 generated_cube_months,
                 remove_stls=not bool(args.stl),
             )
+        else:
+            year_dir = readme_path.parent
+            for cube_scad_path in year_dir.glob("contrib_cube_*.scad"):
+                if _cube_month_from_path(cube_scad_path) is not None:
+                    cube_scad_path.unlink(missing_ok=True)
+            for cube_stl_path in year_dir.glob("contrib_cube_*.stl"):
+                if _cube_month_from_path(cube_stl_path) is not None:
+                    cube_stl_path.unlink(missing_ok=True)
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
@@ -355,7 +368,9 @@ def main(argv: list[str] | None = None):
             elif stl_path and stl_path.exists():
                 stl_path.unlink()
 
-        _cleanup_color_outputs(base_output, color_groups, stl_requested=bool(base_stl))
+        _cleanup_unused_color_outputs(
+            base_output, color_groups=color_groups, base_stl=base_stl
+        )
 
 
 if __name__ == "__main__":
