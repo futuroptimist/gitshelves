@@ -1996,6 +1996,64 @@ def test_cli_readme_notes_empty_gridfinity_cubes(tmp_path, monkeypatch):
     assert "- Gridfinity cubes: none generated (no contributions)" in text
 
 
+def test_color_index_from_path_handles_invalid_values(tmp_path):
+    valid = tmp_path / "example_color3.scad"
+    valid.touch()
+    assert cli._color_index_from_path(valid) == 3
+
+    missing_digits = tmp_path / "example_color.scad"
+    missing_digits.touch()
+    assert cli._color_index_from_path(missing_digits) is None
+
+    zero_index = tmp_path / "example_color0.scad"
+    zero_index.touch()
+    assert cli._color_index_from_path(zero_index) is None
+
+
+def test_cleanup_color_outputs_returns_early_for_non_positive_groups(tmp_path):
+    base_output = tmp_path / "palette"
+    stale_scad = tmp_path / "palette_color2.scad"
+    stale_stl = tmp_path / "palette_color2.stl"
+    stale_scad.touch()
+    stale_stl.touch()
+
+    cli._cleanup_color_outputs(base_output, 0, stl_requested=True)
+
+    assert stale_scad.exists()
+    assert stale_stl.exists()
+
+
+def test_cleanup_color_outputs_skips_invalid_indices(tmp_path):
+    base_output = tmp_path / "colors"
+    invalid_scad = tmp_path / "colors_color.scad"
+    invalid_stl = tmp_path / "colors_colorNaN.stl"
+    invalid_scad.touch()
+    invalid_stl.touch()
+
+    cli._cleanup_color_outputs(base_output, 2, stl_requested=True)
+
+    assert invalid_scad.exists()
+    assert invalid_stl.exists()
+
+
+def test_cleanup_color_outputs_respects_palette_and_stl_request(tmp_path):
+    base_output = tmp_path / "shades"
+    keep_scad = tmp_path / "shades_color1.scad"
+    remove_scad = tmp_path / "shades_color3.scad"
+    remove_stl_no_request = tmp_path / "shades_color1.stl"
+    remove_stl_extra_color = tmp_path / "shades_color4.stl"
+
+    for path in [keep_scad, remove_scad, remove_stl_no_request, remove_stl_extra_color]:
+        path.touch()
+
+    cli._cleanup_color_outputs(base_output, 2, stl_requested=False)
+
+    assert keep_scad.exists()
+    assert not remove_scad.exists()
+    assert not remove_stl_no_request.exists()
+    assert not remove_stl_extra_color.exists()
+
+
 def test_cli_version(capsys):
     with pytest.raises(SystemExit):
         cli.main(["--version"])
