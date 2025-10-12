@@ -6,3 +6,5 @@ def test_build_stl_upload_step():
     assert "actions/upload-artifact" in wf
     assert "path: stl/${{ matrix.year }}/baseplate_2x6.stl" in wf
     assert "xvfb-run" in wf
+    assert "container:" in wf
+    assert "image: openscad/openscad:latest" in wf

@@ -120,8 +120,8 @@ current activity snapshot.
 | Step | Action |
 |------|--------|
 | checkout | actions/checkout@v4 |
-| setup OpenSCAD | Use Docker image openscad/openscad:latest |
-| build | install openscad and xvfb via apt; run `xvfb-run openscad` per file |
+| setup OpenSCAD | Run job inside the `openscad/openscad:latest` container |
+| build | install `xvfb` via apt inside the container; run `xvfb-run openscad` per file |
 | matrix | Years = [2021…2025]; pass -Dyear=… if future parameterisation needed |
 | artifacts | Upload rendered STLs; optionally commit stl/YYYY/ via github-push-action@v0.8.0. |
 
@@ -138,6 +138,8 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
+    container:
+      image: openscad/openscad:latest
     strategy:
       matrix:
         year: [2021, 2022, 2023, 2024, 2025]
@@ -145,10 +147,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Install OpenSCAD + Xvfb
+    - name: Install Xvfb
       run: |
-        sudo apt-get update -qq
-        sudo apt-get install -y --no-install-recommends openscad xvfb
+        apt-get update -qq
+        apt-get install -y --no-install-recommends xvfb
     - name: Build STL
       run: |
         mkdir -p stl/${{ matrix.year }}
@@ -169,7 +171,7 @@ xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
 ## 6  Dependency Declaration
 Gridfinity-Rebuilt-OpenSCAD (submodule at openscad/lib/gridfinity-rebuilt) – provides parametric geometry
 OpenSCAD ≥ 2024.06 – required for FAST CSG and customizer options
-CI installs OpenSCAD with `apt` and runs the CLI directly
+CI runs inside the `openscad/openscad:latest` container, installs `xvfb` with `apt`, and runs the CLI directly
 
 The root README's *Dependencies* section now links to these libraries and highlights the
 `xvfb-run` helper for headless renders so documentation stays aligned with automated tests.
@@ -220,7 +222,7 @@ GitHub Action wrapper for OpenSCAD – GitHub
 > 3. Review `vector76/gridfinity_openscad` for design guidance; do not vendor its sources.
 > 4. Create `openscad/baseplate_2x6.scad` and `openscad/contrib_cube.scad` per the spec in `docs/gridfinity_design.md`.
 > 5. Generate folders `stl/{2021..2025}` (keep empty – CI will fill).
-> 6. Add `.github/workflows/build-stl.yml` implementing the matrix build using apt-installed OpenSCAD; output binary STLs.
+> 6. Add `.github/workflows/build-stl.yml` implementing the matrix build inside the `openscad/openscad:latest` container; output binary STLs.
 > 7. Update root `README.md` to include a *Dependencies* and *How to Build Locally* section.
 > 8. Commit, sign off (`git commit -s`), and open a pull-request titled “Gridfinity support & automated STL builds”.
 > **Assistant**: implement every step and show the diff.

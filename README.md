@@ -164,8 +164,10 @@ changes. Add project-specific terms to `dict/allow.txt`.
 ## STL Build Outputs
 
 The `build-stl` workflow runs on every push and pull request targeting `main`
-and attaches the rendered STL files as downloadable artifacts. Navigate to the
-workflow run and download `stl-<year>` to obtain the converted models.
+inside the `openscad/openscad:latest` container and attaches the rendered STL
+files as downloadable artifacts. It installs `xvfb` with `apt` before invoking
+`xvfb-run openscad` so container builds mirror local conversions. Navigate to
+the workflow run and download `stl-<year>` to obtain the converted models.
 To avoid bloating the repository, pre-generated baseplate models are no longer stored in the repo. Download the `stl-<year>` artifact or generate them locally.
 Each `stl/<year>` directory includes a generated `README.md` summarizing the baseplate and monthly
 cube counts. The README links to the bundled `baseplate_2x6.scad`, and when `--stl` is supplied the
