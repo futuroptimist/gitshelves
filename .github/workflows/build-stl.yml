@@ -10,6 +10,8 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
+    container:
+      image: openscad/openscad:latest
     strategy:
       matrix:
         year: [2021, 2022, 2023, 2024, 2025]
@@ -23,10 +25,10 @@ jobs:
       run: |
         rm -rf openscad/lib/gridfinity-rebuilt
         git clone --depth 1 https://github.com/kennetek/gridfinity-rebuilt-openscad openscad/lib/gridfinity-rebuilt
-    - name: Install OpenSCAD + Xvfb
+    - name: Install Xvfb
       run: |
-        sudo apt-get update -qq
-        sudo apt-get install -y --no-install-recommends openscad xvfb
+        apt-get update -qq
+        apt-get install -y --no-install-recommends xvfb
     - name: Build STL
       run: |
         mkdir -p stl/${{ matrix.year }}
