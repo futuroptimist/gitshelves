@@ -87,9 +87,13 @@ def _cleanup_gridfinity_cube_outputs(
 def _cleanup_color_outputs(
     base_output: Path, color_groups: int, *, stl_requested: bool
 ) -> None:
-    """Remove stale multi-color SCAD/STL files after rendering."""
+    """Remove stale multi-color SCAD/STL files after rendering.
 
-    if color_groups <= 0:
+    When ``color_groups`` is ``0`` every ``*_colorN`` file is deleted so
+    single-color runs clear leftover multi-color artifacts.
+    """
+
+    if color_groups < 0:
         return
 
     pattern = f"{base_output.name}_color*.scad"
@@ -97,12 +101,12 @@ def _cleanup_color_outputs(
         index = _color_index_from_path(scad_path)
         if index is None:
             continue
-        if index > color_groups:
+        if color_groups == 0 or index > color_groups:
             scad_path.unlink(missing_ok=True)
 
     stl_pattern = f"{base_output.name}_color*.stl"
     for stl_path in base_output.parent.glob(stl_pattern):
-        if not stl_requested:
+        if not stl_requested or color_groups == 0:
             stl_path.unlink(missing_ok=True)
             continue
         index = _color_index_from_path(stl_path)
@@ -318,6 +322,10 @@ def main(argv: list[str] | None = None):
             stl_path.parent.mkdir(parents=True, exist_ok=True)
             scad_to_stl(str(output_path), str(stl_path))
             print(f"Wrote {stl_path}")
+        base_output = Path(args.output)
+        if base_output.suffix:
+            base_output = base_output.with_suffix("")
+        _cleanup_color_outputs(base_output, 0, stl_requested=bool(args.stl))
     else:
         level_scads = generate_scad_monthly_levels(
             counts, months_per_row=args.months_per_row
