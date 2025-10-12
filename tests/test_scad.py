@@ -361,11 +361,10 @@ def test_scad_to_stl_uses_xvfb(monkeypatch, tmp_path):
     scad.write_text("cube(1);")
 
     def which(binary):
-        if binary == "openscad":
-            return "/usr/bin/openscad"
-        if binary == "xvfb-run":
-            return "/usr/bin/xvfb-run"
-        return None
+        return {
+            "openscad": "/usr/bin/openscad",
+            "xvfb-run": "/usr/bin/xvfb-run",
+        }.get(binary)
 
     monkeypatch.setattr("shutil.which", which)
     monkeypatch.delenv("DISPLAY", raising=False)
@@ -396,11 +395,10 @@ def test_scad_to_stl_empty_display(monkeypatch, tmp_path):
     scad.write_text("cube(1);")
 
     def which(binary):
-        if binary == "openscad":
-            return "/usr/bin/openscad"
-        if binary == "xvfb-run":
-            return "/usr/bin/xvfb-run"
-        return None
+        return {
+            "openscad": "/usr/bin/openscad",
+            "xvfb-run": "/usr/bin/xvfb-run",
+        }.get(binary)
 
     monkeypatch.setattr("shutil.which", which)
     monkeypatch.setenv("DISPLAY", "")

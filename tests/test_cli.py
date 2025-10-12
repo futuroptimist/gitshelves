@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -1604,12 +1605,13 @@ def test_cli_rejects_non_positive_months_per_row(tmp_path, monkeypatch, capsys):
 
     monkeypatch.chdir(tmp_path)
 
-    def should_not_run(*_args, **_kwargs):
-        raise AssertionError("monthly helpers should not run when months-per-row <= 0")
+    fetch_mock = Mock(name="fetch_user_contributions")
+    monthly_mock = Mock(name="generate_monthly_calendar_scads")
+    scad_mock = Mock(name="generate_scad_monthly")
 
-    monkeypatch.setattr(cli, "fetch_user_contributions", should_not_run)
-    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", should_not_run)
-    monkeypatch.setattr(cli, "generate_scad_monthly", should_not_run)
+    monkeypatch.setattr(cli, "fetch_user_contributions", fetch_mock)
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", monthly_mock)
+    monkeypatch.setattr(cli, "generate_scad_monthly", scad_mock)
 
     with pytest.raises(SystemExit) as excinfo:
         cli.main(
@@ -1624,19 +1626,25 @@ def test_cli_rejects_non_positive_months_per_row(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert "--months-per-row must be positive" in captured.err
 
+    fetch_mock.assert_not_called()
+    monthly_mock.assert_not_called()
+    scad_mock.assert_not_called()
+
 
 def test_cli_rejects_non_positive_gridfinity_columns(tmp_path, monkeypatch, capsys):
     """`--gridfinity-columns` should reject non-positive values before running."""
 
     monkeypatch.chdir(tmp_path)
 
-    def should_not_run(*_args, **_kwargs):
-        raise AssertionError("gridfinity helpers should not run when columns <= 0")
+    fetch_mock = Mock(name="fetch_user_contributions")
+    monthly_mock = Mock(name="generate_monthly_calendar_scads")
+    scad_mock = Mock(name="generate_scad_monthly")
+    gridfinity_mock = Mock(name="generate_gridfinity_plate_scad")
 
-    monkeypatch.setattr(cli, "fetch_user_contributions", should_not_run)
-    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", should_not_run)
-    monkeypatch.setattr(cli, "generate_scad_monthly", should_not_run)
-    monkeypatch.setattr(cli, "generate_gridfinity_plate_scad", should_not_run)
+    monkeypatch.setattr(cli, "fetch_user_contributions", fetch_mock)
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", monthly_mock)
+    monkeypatch.setattr(cli, "generate_scad_monthly", scad_mock)
+    monkeypatch.setattr(cli, "generate_gridfinity_plate_scad", gridfinity_mock)
 
     with pytest.raises(SystemExit) as excinfo:
         cli.main(
@@ -1651,6 +1659,11 @@ def test_cli_rejects_non_positive_gridfinity_columns(tmp_path, monkeypatch, caps
     assert excinfo.value.code == 2
     captured = capsys.readouterr()
     assert "--gridfinity-columns must be positive" in captured.err
+
+    fetch_mock.assert_not_called()
+    monthly_mock.assert_not_called()
+    scad_mock.assert_not_called()
+    gridfinity_mock.assert_not_called()
 
 
 def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_library):
@@ -2253,6 +2266,20 @@ def test_cleanup_color_outputs_removes_all_when_zero_groups(tmp_path):
 
     assert not stale_scad.exists()
     assert not stale_stl.exists()
+
+
+def test_cleanup_color_outputs_ignores_negative_groups(tmp_path):
+    base_output = tmp_path / "palette"
+    base_output.touch()
+    stale_scad = tmp_path / "palette_color2.scad"
+    stale_stl = tmp_path / "palette_color2.stl"
+    stale_scad.touch()
+    stale_stl.touch()
+
+    cli._cleanup_color_outputs(base_output, -1, stl_requested=True)
+
+    assert stale_scad.exists()
+    assert stale_stl.exists()
 
 
 def test_cleanup_color_outputs_skips_invalid_indices(tmp_path):
