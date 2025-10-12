@@ -16,6 +16,10 @@ jobs:
       matrix:
         year: [2021, 2022, 2023, 2024, 2025]
     steps:
+    - name: Install dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -y --no-install-recommends git xvfb
     - uses: actions/checkout@v4
       with:
         submodules: recursive
@@ -25,10 +29,6 @@ jobs:
       run: |
         rm -rf openscad/lib/gridfinity-rebuilt
         git clone --depth 1 https://github.com/kennetek/gridfinity-rebuilt-openscad openscad/lib/gridfinity-rebuilt
-    - name: Install Xvfb
-      run: |
-        apt-get update -qq
-        apt-get install -y --no-install-recommends xvfb
     - name: Build STL
       run: |
         mkdir -p stl/${{ matrix.year }}
