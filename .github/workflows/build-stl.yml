@@ -25,7 +25,8 @@ jobs:
         EOF
         echo 'Acquire::Check-Valid-Until "false";' >/etc/apt/apt.conf.d/99no-check-valid-until
         apt-get update -qq
-        apt-get install -y --no-install-recommends git xvfb
+        apt-get install -y --no-install-recommends ca-certificates git xvfb
+        update-ca-certificates
     - uses: actions/checkout@v4
       with:
         submodules: recursive
