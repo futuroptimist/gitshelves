@@ -37,6 +37,8 @@ def _write_year_baseplate(year_dir: Path, render_stl: bool) -> None:
         baseplate_stl = baseplate_path.with_suffix(".stl")
         scad_to_stl(str(baseplate_path), str(baseplate_stl))
         print(f"Wrote {baseplate_stl}")
+    else:
+        baseplate_path.with_suffix(".stl").unlink(missing_ok=True)
 
 
 _CUBE_FILE_PATTERN = re.compile(r"contrib_cube_(\d{2})")
@@ -373,6 +375,8 @@ def main(argv: list[str] | None = None):
             baseplate_stl = base_stl.with_name(f"{base_stl.name}_baseplate.stl")
             scad_to_stl(str(baseplate_path), str(baseplate_stl))
             print(f"Wrote {baseplate_stl}")
+        else:
+            baseplate_path.with_suffix(".stl").unlink(missing_ok=True)
         for idx in sorted(grouped):
             text = grouped[idx]
             scad_path = base_output.with_name(f"{base_output.name}_color{idx}.scad")

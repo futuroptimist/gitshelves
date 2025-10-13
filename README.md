@@ -181,7 +181,8 @@ To avoid bloating the repository, pre-generated baseplate models are no longer s
 Each `stl/<year>` directory includes a generated `README.md` summarizing the baseplate and monthly
 cube counts. The README links to the bundled `baseplate_2x6.scad`, and when `--stl` is supplied the
 CLI also renders `baseplate_2x6.stl` alongside the summary so the standard Gridfinity plate is ready
-to print without extra commands. The CLI writes these summaries and baseplates for every year in the
+to print without extra commands. Re-running without `--stl` removes any lingering
+`baseplate_2x6.stl` meshes so yearly folders only contain artifacts from the current run. The CLI writes these summaries and baseplates for every year in the
 requested range, even when a year has no contributions, so your shelf layout stays predictable.
 Day-level views are also written to `stl/<year>/monthly-5x6/` as OpenSCAD files. Each calendar lays
 out the month's days in rows of five to stay within a 256 mm square build area (use

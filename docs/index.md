@@ -60,6 +60,8 @@ presets and AMS filament scripting examples.
 The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the
 requested range and copies the bundled `baseplate_2x6.scad` into each folder (rendering
 `baseplate_2x6.stl` when `--stl` is provided) so folders exist even when a year has zero contributions.
+Running the CLI without `--stl` clears any leftover `baseplate_2x6.stl` meshes so yearly
+directories mirror the current run.
 The README links to both artifacts, making it clear when an STL was generated for the baseplate.
 When `--gridfinity-layouts` or `--gridfinity-cubes` are enabled, the summary gains a **Gridfinity**
 section that lists the generated layout and cube outputs for quick reference. The layout entry also
