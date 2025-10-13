@@ -295,6 +295,7 @@ def main(argv: list[str] | None = None):
         if args.gridfinity_cubes:
             year_dir = readme_path.parent
             generated_cube_months: set[int] = set()
+            cube_stls_requested = bool(args.stl)
             for month in range(1, 13):
                 levels = blocks_for_contributions(counts.get((year, month), 0))
                 cube_scad_path = year_dir / f"contrib_cube_{month:02d}.scad"
@@ -309,12 +310,15 @@ def main(argv: list[str] | None = None):
                 cube_scad = generate_contrib_cube_stack_scad(levels)
                 cube_scad_path.write_text(cube_scad)
                 print(f"Wrote {cube_scad_path}")
-                scad_to_stl(str(cube_scad_path), str(cube_stl_path))
-                print(f"Wrote {cube_stl_path}")
+                if cube_stls_requested:
+                    scad_to_stl(str(cube_scad_path), str(cube_stl_path))
+                    print(f"Wrote {cube_stl_path}")
+                else:
+                    cube_stl_path.unlink(missing_ok=True)
             _cleanup_gridfinity_cube_outputs(
                 year_dir,
                 generated_cube_months,
-                remove_stls=False,
+                remove_stls=not cube_stls_requested,
             )
         else:
             year_dir = readme_path.parent

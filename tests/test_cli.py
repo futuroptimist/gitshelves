@@ -1803,7 +1803,7 @@ def test_cli_rejects_non_positive_gridfinity_columns(tmp_path, monkeypatch, caps
 
 
 def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_library):
-    """`--gridfinity-cubes` should emit SCAD + STL stacks without `--stl`."""
+    """`--gridfinity-cubes` should emit SCAD stacks without rendering STLs."""
     base = tmp_path / "grid.scad"
     args = argparse.Namespace(
         username="user",
@@ -1847,11 +1847,10 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
 
     monkeypatch.setattr(cli, "generate_contrib_cube_stack_scad", fake_cube_stack)
 
-    stl_calls: list[tuple[str, str]] = []
+    scad_to_stl_calls: list[tuple[str, str]] = []
 
-    def fake_stl(src, dest):
-        stl_calls.append((Path(src).name, Path(dest).name))
-        Path(dest).write_text("STL")
+    def fake_stl(src, dest):  # pragma: no cover - should not be called
+        scad_to_stl_calls.append((Path(src).name, Path(dest).name))
 
     monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
 
@@ -1863,13 +1862,76 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
     apr_scad = year_dir / "contrib_cube_04.scad"
     assert feb_scad.read_text() == "// cubes 2"
     assert apr_scad.read_text() == "// cubes 1"
-    feb_stl = year_dir / "contrib_cube_02.stl"
-    apr_stl = year_dir / "contrib_cube_04.stl"
-    assert feb_stl.read_text() == "STL"
-    assert apr_stl.read_text() == "STL"
     assert recorded_levels == [2, 1]
-    assert ("contrib_cube_02.scad", "contrib_cube_02.stl") in stl_calls
-    assert ("contrib_cube_04.scad", "contrib_cube_04.stl") in stl_calls
+    assert not scad_to_stl_calls
+    assert not (year_dir / "contrib_cube_02.stl").exists()
+    assert not (year_dir / "contrib_cube_04.stl").exists()
+
+
+def test_cli_generates_gridfinity_cube_stls_when_requested(
+    tmp_path, monkeypatch, gridfinity_library
+):
+    """`--gridfinity-cubes` should render STLs when `--stl` is provided."""
+
+    base = tmp_path / "grid.scad"
+    stl_base = tmp_path / "grid.stl"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=str(stl_base),
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=True,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [
+            {"created_at": "2021-02-01T00:00:00Z"},
+            {"created_at": "2021-02-02T00:00:00Z"},
+        ],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+
+    monkeypatch.setattr(
+        cli,
+        "generate_contrib_cube_stack_scad",
+        lambda levels: f"// cubes {levels}",
+    )
+
+    stl_calls: list[tuple[str, str]] = []
+
+    def fake_scad_to_stl(src, dest):
+        stl_calls.append((Path(src), Path(dest)))
+        Path(dest).write_text("STL")
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_scad_to_stl)
+
+    cli.main()
+
+    year_dir = tmp_path / "stl" / "2021"
+    cube_scad = year_dir / "contrib_cube_02.scad"
+    cube_stl = year_dir / "contrib_cube_02.stl"
+    assert cube_scad.read_text() == "// cubes 1"
+    assert cube_stl.read_text() == "STL"
+    assert any("contrib_cube_02.scad" in str(src) for src, _ in stl_calls)
 
     readme_text = (tmp_path / "stl" / "2021" / "README.md").read_text()
     assert "- Gridfinity cubes: Feb, Apr (SCAD + STL)" in readme_text
@@ -1990,8 +2052,8 @@ def test_cli_gridfinity_cubes_remove_stale_files(
         lambda levels: f"// cubes {levels}",
     )
 
-    def fake_scad_to_stl(src, dest):
-        Path(dest).write_text("STL")
+    def fake_scad_to_stl(src, dest):  # pragma: no cover - should not run without --stl
+        raise AssertionError("scad_to_stl should not be called when --stl is omitted")
 
     monkeypatch.setattr(cli, "scad_to_stl", fake_scad_to_stl)
 
@@ -2004,7 +2066,7 @@ def test_cli_gridfinity_cubes_remove_stale_files(
     assert "// cubes" in new_scad.read_text()
 
     new_stl = year_dir / "contrib_cube_02.stl"
-    assert new_stl.read_text() == "STL"
+    assert not new_stl.exists()
 
 
 def test_cli_generates_gridfinity_cube_stls_when_requested(

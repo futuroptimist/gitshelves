@@ -107,9 +107,9 @@ The column count must be a positive integer—values below one are rejected befo
 When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl` so the baseplate is
 ready to print alongside the contribution cubes. Re-running without `--gridfinity-layouts` removes
 any previously generated `gridfinity_plate.scad`/`.stl` pairs so stale layouts do not linger. Pair it
-with `--gridfinity-cubes` to generate `contrib_cube_MM.scad` stacks and automatically render matching
-`.stl` files for every month that recorded contributions so cube prints are ready without extra
-modeling work—OpenSCAD must be available because STL conversion always runs for these cube exports.
+with `--gridfinity-cubes` to generate `contrib_cube_MM.scad` stacks for every month that recorded
+contributions. Add `--stl` when you want matching cube meshes rendered alongside the SCAD exports so
+printed stacks stay in sync—`openscad` is only required for cube runs when you request those STLs.
 Empty months are still annotated in the Gridfinity layout as reserved grid cells, keeping the
 placement map intact even when a month renders zero cubes. Months that lose contributions have their
 previous `contrib_cube_MM` SCAD files (and any lingering STLs when `--gridfinity-cubes` is disabled)
