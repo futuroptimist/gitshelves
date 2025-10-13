@@ -116,7 +116,8 @@ previous `contrib_cube_MM` SCAD files (and any lingering STLs when `--gridfinity
 removed automatically so the folder mirrors the current activity snapshot—even if a later run omits
 the `--gridfinity-cubes` flag.
 Yearly `stl/<year>/README.md` summaries add a **Gridfinity** section whenever these flags are used, listing
-the generated layout and cube outputs so printable files are easy to locate. The layout entry notes
+the generated layout and cube outputs so printable files are easy to locate. Cube entries always note
+`SCAD + STL`, even when you omit `--stl`, because the CLI renders those meshes automatically. The layout entry notes
 the detected footprint (for example `6×2 grid`) to confirm the chosen column count.
 
 Open [docs/viewer.html](docs/viewer.html) in a browser to preview generated STL files with

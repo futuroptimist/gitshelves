@@ -257,8 +257,7 @@ def main(argv: list[str] | None = None):
             ]
             if months_with_cubes:
                 labels = ", ".join(month_abbr[m] for m in months_with_cubes)
-                format_label = "SCAD + STL" if args.stl else "SCAD"
-                extras.append(f"- Gridfinity cubes: {labels} ({format_label})")
+                extras.append(f"- Gridfinity cubes: {labels} (SCAD + STL)")
             else:
                 extras.append("- Gridfinity cubes: none generated (no contributions)")
         readme_path = write_year_readme(

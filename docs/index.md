@@ -64,7 +64,8 @@ Running the CLI without `--stl` clears any leftover `baseplate_2x6.stl` meshes s
 directories mirror the current run.
 The README links to both artifacts, making it clear when an STL was generated for the baseplate.
 When `--gridfinity-layouts` or `--gridfinity-cubes` are enabled, the summary gains a **Gridfinity**
-section that lists the generated layout and cube outputs for quick reference. The layout entry also
+section that lists the generated layout and cube outputs for quick reference. Cube entries explicitly
+note `SCAD + STL`, even without `--stl`, because the CLI renders those meshes automatically. The layout entry also
 records the detected footprint (for example `6×2 grid`) so you can confirm the selected column
 count.
 Monthly day-level
