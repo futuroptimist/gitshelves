@@ -12,6 +12,8 @@ the logarithmic levels across the available groups while preserving their
 chronological order, so `--colors 2`, `--colors 3`, and `--colors 4`
 distribute stacks as evenly as possible before the accent color collects the
 overflow.
+Even when intermediate logarithmic levels are absent, `_color4` still gathers the remaining high
+orders so the accent file continues to highlight the peak contribution range.
 `--months-per-row` values below one exit with a parser error before any files are
 generated so invalid layouts never produce partial outputs.
 `--baseplate-template` selects which bundled Gridfinity baseplate (such as

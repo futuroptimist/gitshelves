@@ -77,6 +77,8 @@ groups are appended to the final `color` output so accent-colored cubes repeat f
 of magnitude. `group_scad_levels` enforces this by keeping the first three levels in their own
 groups and funneling all higher orders into the fourth group whenever five colors are requested,
 so the accent color consistently represents the highest magnitudes.
+Even when intermediate logarithmic levels are missing, `_color4` still gathers the remaining high
+orders so the accent file continues to flag the peak activity.
 Pass `--baseplate-template baseplate_1x12.scad`
 to copy the bundled tall single-row Gridfinity baseplate when generating multi-color outputs; the
 default template remains `baseplate_2x6.scad`. Every color-group SCAD repeats the zero-contribution
