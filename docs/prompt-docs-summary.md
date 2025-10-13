@@ -9,9 +9,10 @@ This index lists prompt documents for the Gitshelves repository.
 | [ci-fix.md](./prompts/codex/ci-fix.md) | Codex CI-Failure Fix Prompt |
 | [docs.md](./prompts/codex/docs.md) | Codex Docs Update Prompt |
 | [implement.md](./prompts/codex/implement.md) | Codex Implement Prompt |
+| [polish.md](./prompts/codex/polish.md) | Codex Polish Prompt |
 | [refactor.md](./prompts/codex/refactor.md) | Codex Refactor Prompt |
 | [spellcheck.md](./prompts/codex/spellcheck.md) | Codex Spellcheck Prompt |
 | [tests.md](./prompts/codex/tests.md) | Codex Test Prompt |
 | [repo-feature-summary.md](./prompts/codex/repo-feature-summary.md) | Repo Feature Summary Prompt |
 
-_Updated manually: 2025-09-30_
+_Updated manually: 2025-10-01_
