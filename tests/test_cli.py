@@ -10,6 +10,10 @@ import gitshelves
 import gitshelves.cli as cli
 
 
+def calendar_slug(days_per_row: int = 5) -> str:
+    return f"monthly-{days_per_row}x6"
+
+
 def test_cli_main(tmp_path, monkeypatch, capsys):
     output = tmp_path / "out.scad"
 
@@ -74,7 +78,7 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert f"Wrote {output}" in captured.out
     assert "baseplate_2x6.scad" in captured.out
-    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug()
     files = sorted(calendar_dir.glob("*.scad"))
     assert len(files) == 12
     february = calendar_dir / "02_february.scad"
@@ -128,7 +132,7 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
     assert stl_calls[0][0].resolve() == baseplate_scad.resolve()
     assert stl_calls[1][0].resolve() == output.resolve()
     assert (tmp_path / "nested" / "dir").is_dir()
-    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug()
     assert calendar_dir.is_dir()
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
@@ -176,7 +180,7 @@ def test_cli_env_token(tmp_path, monkeypatch):
     readme_text = (tmp_path / "stl" / "2021" / "README.md").read_text()
     assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in readme_text
     assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" not in readme_text
-    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug()
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
@@ -224,7 +228,7 @@ def test_cli_github_token_env(tmp_path, monkeypatch):
     readme_text = (tmp_path / "stl" / "2021" / "README.md").read_text()
     assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in readme_text
     assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" not in readme_text
-    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug()
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
@@ -272,6 +276,174 @@ def test_cli_forwards_calendar_days_per_row(tmp_path, monkeypatch):
     cli.main()
 
     assert seen["days_per_row"] == 7
+
+
+def test_cli_writes_calendars_to_dynamic_slug(tmp_path, monkeypatch):
+    base = tmp_path / "out.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=7,
+    )
+
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    year_dir = tmp_path / "stl" / "2021"
+    expected_slug = calendar_slug(args.calendar_days_per_row)
+    calendar_dir = year_dir / expected_slug
+    assert calendar_dir.exists(), "Expected calendars to live in slugged directory"
+    assert not (year_dir / calendar_slug()).exists(), "Default slug should not persist"
+
+    readme_text = (year_dir / "README.md").read_text()
+    assert expected_slug in readme_text
+
+
+def test_cli_removes_stale_calendar_directory(tmp_path, monkeypatch):
+    base = tmp_path / "out.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=4,
+    )
+
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.chdir(tmp_path)
+
+    year_dir = tmp_path / "stl" / "2021"
+    stale_dir = year_dir / calendar_slug()
+    stale_dir.mkdir(parents=True)
+    (stale_dir / "stale.scad").write_text("// stale")
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    assert not stale_dir.exists(), "Old calendar directory should be removed"
+    new_dir = year_dir / calendar_slug(args.calendar_days_per_row)
+    assert new_dir.exists(), "Expected new calendar directory to be created"
+
+
+def test_cli_removes_stale_calendar_file(tmp_path, monkeypatch):
+    base = tmp_path / "out.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=7,
+    )
+
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.chdir(tmp_path)
+
+    year_dir = tmp_path / "stl" / "2021"
+    stale_file = year_dir / calendar_slug()
+    stale_file.parent.mkdir(parents=True, exist_ok=True)
+    stale_file.write_text("// stale file")
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    assert not stale_file.exists(), "Old calendar file should be removed"
+    new_dir = year_dir / calendar_slug(args.calendar_days_per_row)
+    assert new_dir.exists(), "Expected new calendar directory to be created"
+
+
+def test_cleanup_calendar_directories_preserves_requested_slug(tmp_path):
+    keep = tmp_path / calendar_slug()
+    keep.mkdir()
+    (keep / "keep.txt").write_text("keep")
+
+    stale_dir = tmp_path / "monthly-4x6"
+    stale_dir.mkdir()
+    stale_file = tmp_path / "monthly-7x6"
+    stale_file.write_text("stale")
+
+    cli._cleanup_calendar_directories(tmp_path, keep.name)
+
+    assert keep.exists(), "Expected keep slug to remain"
+    assert (keep / "keep.txt").exists()
+    assert not stale_dir.exists()
+    assert not stale_file.exists()
 
 
 def test_cli_runpy(tmp_path, monkeypatch):
@@ -337,7 +509,7 @@ def test_cli_runpy(tmp_path, monkeypatch):
     runpy.run_module("gitshelves.cli", run_name="__main__")
 
     assert output.read_text() == "DATA"
-    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug()
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
@@ -412,7 +584,7 @@ def test_cli_multiple_colors(tmp_path, monkeypatch, capsys):
     assert stl_calls[1][0].resolve() == baseplate_scad.resolve()
     assert stl_calls[2][0].resolve() == scad1.resolve()
     assert stl_calls[3][0].resolve() == scad2.resolve()
-    calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug()
     assert len(list(calendar_dir.glob("*.scad"))) == 12
     captured = capsys.readouterr()
     assert f"Wrote {baseplate_scad}" in captured.out
@@ -771,7 +943,13 @@ def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
         lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
 
-    def fake_write_year_readme(year, counts, extras=None, include_baseplate_stl=False):
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        include_baseplate_stl=False,
+        calendar_slug="monthly-5x6",
+    ):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# placeholder")
@@ -924,7 +1102,13 @@ def test_cli_multiple_colors_baseplate_typeerror_falls_back(tmp_path, monkeypatc
     monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
     monkeypatch.setattr(cli, "_write_year_baseplate", lambda *a, **k: None)
 
-    def fake_write_year_readme(year, counts, extras=None, include_baseplate_stl=False):
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        include_baseplate_stl=False,
+        calendar_slug="monthly-5x6",
+    ):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# placeholder")
@@ -1004,7 +1188,8 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "write_year_readme",
-        lambda y, c, extras=None, include_baseplate_stl=False: tmp_path / "dummy",
+        lambda y, c, extras=None, include_baseplate_stl=False, calendar_slug="monthly-5x6": tmp_path
+        / "dummy",
     )
 
     cli.main()
@@ -1016,7 +1201,7 @@ def test_cli_multiple_colors_without_stl(tmp_path, monkeypatch, capsys):
     assert "// 2021-01 (0 contributions) reserved" in text
     assert baseplate_scad.read_text() == "// Baseplate"
     assert called == []
-    calendar_dir = tmp_path / "monthly-5x6"
+    calendar_dir = tmp_path / calendar_slug()
     assert len(list(calendar_dir.glob("*.scad"))) == 12
     out = capsys.readouterr().out
     assert f"Wrote {baseplate_scad}" in out
@@ -1087,7 +1272,13 @@ def test_cli_multi_color_removes_stale_color_files(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(cli, "_write_year_baseplate", lambda *a, **k: None)
 
-    def fake_write_year_readme(year, counts, extras=None, include_baseplate_stl=False):
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        include_baseplate_stl=False,
+        calendar_slug="monthly-5x6",
+    ):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# materials")
@@ -1176,7 +1367,7 @@ def test_cli_multi_color_without_stl_removes_lingering_color_meshes(
     monkeypatch.setattr(
         cli,
         "write_year_readme",
-        lambda year, counts, extras=None, include_baseplate_stl=False: tmp_path
+        lambda year, counts, extras=None, include_baseplate_stl=False, calendar_slug="monthly-5x6": tmp_path
         / "stl"
         / str(year)
         / "README.md",
@@ -1233,7 +1424,13 @@ def test_cli_colors_with_more_levels_than_groups(tmp_path, monkeypatch, capsys):
         cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
     )
 
-    def fake_write_year_readme(year, counts, extras=None, include_baseplate_stl=False):
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        include_baseplate_stl=False,
+        calendar_slug="monthly-5x6",
+    ):
         path = tmp_path / "stl" / str(year) / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("# materials")
@@ -1305,7 +1502,13 @@ def test_cli_writes_readmes_for_full_range(tmp_path, monkeypatch):
 
     called_years: list[int] = []
 
-    def fake_write(year, counts, extras=None, include_baseplate_stl=False):
+    def fake_write(
+        year,
+        counts,
+        extras=None,
+        include_baseplate_stl=False,
+        calendar_slug="monthly-5x6",
+    ):
         called_years.append(year)
         return tmp_path / str(year) / "README.md"
 
@@ -1316,7 +1519,7 @@ def test_cli_writes_readmes_for_full_range(tmp_path, monkeypatch):
     assert called_years == [2021, 2022, 2023]
     assert base.read_text() == "SCAD"
     for year in (2021, 2022, 2023):
-        calendar_dir = tmp_path / str(year) / "monthly-5x6"
+        calendar_dir = tmp_path / str(year) / calendar_slug()
         assert calendar_dir.is_dir()
         assert len(list(calendar_dir.glob("*.scad"))) == 12
 
@@ -1536,7 +1739,13 @@ def test_cli_writes_readme_when_no_contributions(tmp_path, monkeypatch):
 
     captured: list[tuple[int, dict]] = []
 
-    def fake_write(year, counts, extras=None, include_baseplate_stl=False):
+    def fake_write(
+        year,
+        counts,
+        extras=None,
+        include_baseplate_stl=False,
+        calendar_slug="monthly-5x6",
+    ):
         captured.append((year, dict(counts)))
         return tmp_path / str(year) / "README.md"
 
@@ -1550,7 +1759,7 @@ def test_cli_writes_readme_when_no_contributions(tmp_path, monkeypatch):
     assert set(recorded_counts) == {(2042, month) for month in range(1, 13)}
     assert all(value == 0 for value in recorded_counts.values())
     assert base.read_text() == "SCAD"
-    calendar_dir = tmp_path / "2042" / "monthly-5x6"
+    calendar_dir = tmp_path / "2042" / calendar_slug()
     assert len(list(calendar_dir.glob("*.scad"))) == 12
     january = calendar_dir / "01_january.scad"
     january_text = january.read_text()

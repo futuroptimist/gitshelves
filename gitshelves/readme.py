@@ -13,6 +13,7 @@ def write_year_readme(
     extras: Sequence[str] | None = None,
     *,
     include_baseplate_stl: bool = False,
+    calendar_slug: str = "monthly-5x6",
 ) -> Path:
     """Write a README detailing materials for ``year``.
 
@@ -20,8 +21,10 @@ def write_year_readme(
     ``stl/<year>/README.md``. Optional ``extras`` entries append additional
     bullet points (for example Gridfinity outputs). Set
     ``include_baseplate_stl`` to ``True`` when a rendered baseplate STL is
-    available so the README links to both artifacts. The function returns the
-    path to the created file.
+    available so the README links to both artifacts. ``calendar_slug`` names
+    the directory that stores the per-day calendar exports (for example
+    ``monthly-5x6`` when five days are packed per row). The function returns
+    the path to the created file.
     """
     path = Path(outdir) / str(year)
     path.mkdir(parents=True, exist_ok=True)
@@ -51,7 +54,7 @@ def write_year_readme(
         "",
         "## Versions",
         (
-            "- `monthly-5x6`: daily calendars in [`monthly-5x6/`](monthly-5x6) "
+            f"- `{calendar_slug}`: daily calendars in [`{calendar_slug}/`]({calendar_slug}) "
             "that fit a 256 mm square bed"
         ),
     ]
