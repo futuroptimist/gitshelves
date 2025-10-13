@@ -141,6 +141,12 @@ def main(argv: list[str] | None = None):
         help="Number of months displayed across each row",
     )
     parser.add_argument(
+        "--calendar-days-per-row",
+        type=int,
+        default=5,
+        help="Days per row in generated monthly calendars",
+    )
+    parser.add_argument(
         "--stl",
         help="Optional output STL file (requires openscad)",
     )
@@ -185,11 +191,17 @@ def main(argv: list[str] | None = None):
     else:
         args = parser.parse_args(argv)
 
+    if not hasattr(args, "calendar_days_per_row"):
+        args.calendar_days_per_row = 5
+
     if args.months_per_row <= 0:
         parser.error("--months-per-row must be positive")
 
     if args.gridfinity_columns <= 0:
         parser.error("--gridfinity-columns must be positive")
+
+    if args.calendar_days_per_row <= 0:
+        parser.error("--calendar-days-per-row must be positive")
 
     if not hasattr(args, "baseplate_template"):
         args.baseplate_template = "baseplate_2x6.scad"
@@ -255,7 +267,9 @@ def main(argv: list[str] | None = None):
         )
         year_dir = readme_path.parent
         _write_year_baseplate(year_dir, render_yearly_stl)
-        calendars = generate_monthly_calendar_scads(daily_counts, year)
+        calendars = generate_monthly_calendar_scads(
+            daily_counts, year, days_per_row=args.calendar_days_per_row
+        )
         calendar_dir = year_dir / "monthly-5x6"
         calendar_dir.mkdir(parents=True, exist_ok=True)
         for month, text in calendars.items():
