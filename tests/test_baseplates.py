@@ -65,3 +65,15 @@ def test_load_baseplate_scad_falls_back_to_repository_checkout(monkeypatch):
 
     expected = _read("openscad/baseplate_2x6.scad")
     assert load_baseplate_scad() == expected
+
+
+def test_load_baseplate_scad_handles_missing_package(monkeypatch):
+    """Fallback path should trigger when the data package is unavailable."""
+
+    def missing_package(package: str):
+        raise ModuleNotFoundError
+
+    monkeypatch.setattr("gitshelves.baseplate.resources.files", missing_package)
+
+    expected = _read("openscad/baseplate_2x6.scad")
+    assert load_baseplate_scad() == expected
