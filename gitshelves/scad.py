@@ -244,7 +244,7 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
         raise ValueError("level keys must be >= 1")
 
     ordered_levels = sorted(level_scads.items())
-    total_groups = min(groups, len(ordered_levels))
+    total_groups = min(groups, len(ordered_levels)) if ordered_levels else 0
 
     def _render(partitions: list[list[tuple[int, str]]]) -> Dict[int, str]:
         grouped_output: Dict[int, str] = {}
@@ -255,15 +255,26 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
             grouped_output[index] = HEADER + ("\n" + "\n".join(lines) if lines else "")
         return grouped_output
 
+    if groups == 4:
+        # ``--colors 5`` exposes four block colors. Documentation promises the
+        # accent color (group 4) gathers the highest magnitudes even when the
+        # lower levels are sparse. Reserve the first three groups for levels 1–3
+        # when present and funnel every remaining level into the final group so
+        # the accent color consistently reflects the tallest stacks.
+        partitions: list[list[tuple[int, str]]] = [[] for _ in range(groups)]
+        remaining = ordered_levels.copy()
+        for target_level in range(1, 4):
+            for idx, (level, text) in enumerate(remaining):
+                if level == target_level:
+                    partitions[target_level - 1].append(remaining.pop(idx))
+                    break
+        partitions[-1].extend(remaining)
+        return _render(partitions)
+
     if total_groups == 1:
         return _render([ordered_levels])
 
     if total_groups >= 4 and len(ordered_levels) > total_groups:
-        # ``--colors 5`` exposes four block colors. When contributions introduce
-        # more than four logarithmic levels, documentation promises the accent
-        # color (group 4) gathers every remaining high-magnitude level. Ensure
-        # the last group collects level four and above so additional orders
-        # reuse the accent palette.
         partitions: list[list[tuple[int, str]]] = [
             ordered_levels[idx : idx + 1] for idx in range(total_groups - 1)
         ]
