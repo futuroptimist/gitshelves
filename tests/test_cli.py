@@ -1817,6 +1817,9 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
     assert ("contrib_cube_02.scad", "contrib_cube_02.stl") in stl_calls
     assert ("contrib_cube_04.scad", "contrib_cube_04.stl") in stl_calls
 
+    readme_text = (tmp_path / "stl" / "2021" / "README.md").read_text()
+    assert "- Gridfinity cubes: Feb, Apr (SCAD + STL)" in readme_text
+
 
 def test_cube_month_from_path_edge_cases():
     """Helper should ignore filenames that are not valid month encodings."""
@@ -2247,6 +2250,7 @@ def test_cli_readme_mentions_gridfinity_outputs(
     assert "gridfinity_plate.stl" in text
     assert "Gridfinity cubes" in text
     assert "Feb" in text and "Apr" in text
+    assert "- Gridfinity cubes: Feb, Apr (SCAD + STL)" in text
 
 
 def test_cli_readme_notes_empty_gridfinity_cubes(tmp_path, monkeypatch):
