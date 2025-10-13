@@ -378,6 +378,74 @@ def test_cli_removes_stale_calendar_directory(tmp_path, monkeypatch):
     assert new_dir.exists(), "Expected new calendar directory to be created"
 
 
+def test_cli_removes_stale_calendar_file(tmp_path, monkeypatch):
+    base = tmp_path / "out.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=7,
+    )
+
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.chdir(tmp_path)
+
+    year_dir = tmp_path / "stl" / "2021"
+    stale_file = year_dir / calendar_slug()
+    stale_file.parent.mkdir(parents=True, exist_ok=True)
+    stale_file.write_text("// stale file")
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    assert not stale_file.exists(), "Old calendar file should be removed"
+    new_dir = year_dir / calendar_slug(args.calendar_days_per_row)
+    assert new_dir.exists(), "Expected new calendar directory to be created"
+
+
+def test_cleanup_calendar_directories_preserves_requested_slug(tmp_path):
+    keep = tmp_path / calendar_slug()
+    keep.mkdir()
+    (keep / "keep.txt").write_text("keep")
+
+    stale_dir = tmp_path / "monthly-4x6"
+    stale_dir.mkdir()
+    stale_file = tmp_path / "monthly-7x6"
+    stale_file.write_text("stale")
+
+    cli._cleanup_calendar_directories(tmp_path, keep.name)
+
+    assert keep.exists(), "Expected keep slug to remain"
+    assert (keep / "keep.txt").exists()
+    assert not stale_dir.exists()
+    assert not stale_file.exists()
+
+
 def test_cli_runpy(tmp_path, monkeypatch):
     output = tmp_path / "file.scad"
     args = argparse.Namespace(
