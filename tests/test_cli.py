@@ -98,6 +98,7 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
         gridfinity_columns=6,
         gridfinity_cubes=False,
         baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=5,
     )
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
@@ -147,6 +148,7 @@ def test_cli_env_token(tmp_path, monkeypatch):
         gridfinity_columns=6,
         gridfinity_cubes=False,
         baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=5,
     )
 
     monkeypatch.chdir(tmp_path)
@@ -193,6 +195,7 @@ def test_cli_github_token_env(tmp_path, monkeypatch):
         gridfinity_columns=6,
         gridfinity_cubes=False,
         baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=5,
     )
 
     monkeypatch.chdir(tmp_path)
@@ -223,6 +226,52 @@ def test_cli_github_token_env(tmp_path, monkeypatch):
     assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" not in readme_text
     calendar_dir = tmp_path / "stl" / "2021" / "monthly-5x6"
     assert len(list(calendar_dir.glob("*.scad"))) == 12
+
+
+def test_cli_forwards_calendar_days_per_row(tmp_path, monkeypatch):
+    base = tmp_path / "out.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=7,
+    )
+
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+
+    seen: dict[str, int] = {}
+
+    def fake_calendars(daily, year, *, days_per_row: int):
+        seen["days_per_row"] = days_per_row
+        return {m: "//" for m in range(1, 13)}
+
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", fake_calendars)
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    assert seen["days_per_row"] == 7
 
 
 def test_cli_runpy(tmp_path, monkeypatch):
@@ -399,7 +448,7 @@ def test_cli_color_outputs_include_zero_month_annotations(tmp_path, monkeypatch)
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
@@ -444,7 +493,7 @@ def test_cli_multicolor_writes_placeholders_for_empty_data(tmp_path, monkeypatch
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
@@ -493,7 +542,7 @@ def test_cli_multicolor_removes_stale_color_stls(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
@@ -557,7 +606,7 @@ def test_cli_multicolor_drops_stale_files_when_palette_shrinks(tmp_path, monkeyp
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
 
     def fake_levels(counts, months_per_row=12):
@@ -627,7 +676,9 @@ def test_cli_multicolor_writes_placeholders_for_unused_groups(tmp_path, monkeypa
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {month: "// calendar" for month in range(1, 13)},
+        lambda daily, year, days_per_row=5: {
+            month: "// calendar" for month in range(1, 13)
+        },
     )
     monkeypatch.setattr(
         cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
@@ -711,7 +762,7 @@ def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
 
     def fake_write_year_readme(year, counts, extras=None, include_baseplate_stl=False):
@@ -847,7 +898,7 @@ def test_cli_multiple_colors_baseplate_typeerror_falls_back(tmp_path, monkeypatc
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli,
@@ -1002,7 +1053,7 @@ def test_cli_multi_color_removes_stale_color_files(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli,
@@ -1089,7 +1140,7 @@ def test_cli_multi_color_without_stl_removes_lingering_color_meshes(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli,
@@ -1159,7 +1210,7 @@ def test_cli_colors_with_more_levels_than_groups(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
 
     def fake_levels(counts, months_per_row=12):
@@ -1292,7 +1343,7 @@ def test_cli_writes_yearly_baseplate_scad(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
 
     def fail_stl(*_args, **_kwargs):  # pragma: no cover - sanity guard
@@ -1337,7 +1388,7 @@ def test_cli_writes_yearly_baseplate_stl(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
 
     stl_calls: list[tuple[Path, Path]] = []
@@ -1391,7 +1442,7 @@ def test_cli_preserves_empty_year_rows(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
 
     cli.main()
@@ -1482,7 +1533,7 @@ def test_cli_generates_gridfinity_layout(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -1532,7 +1583,7 @@ def test_cli_gridfinity_readme_lists_footprint(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -1578,7 +1629,7 @@ def test_cli_generates_gridfinity_layout_stl(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -1625,6 +1676,37 @@ def test_cli_rejects_non_positive_months_per_row(tmp_path, monkeypatch, capsys):
     assert excinfo.value.code == 2
     captured = capsys.readouterr()
     assert "--months-per-row must be positive" in captured.err
+
+    fetch_mock.assert_not_called()
+    monthly_mock.assert_not_called()
+    scad_mock.assert_not_called()
+
+
+def test_cli_rejects_non_positive_calendar_days_per_row(tmp_path, monkeypatch, capsys):
+    """`--calendar-days-per-row` should reject non-positive values."""
+
+    monkeypatch.chdir(tmp_path)
+
+    fetch_mock = Mock(name="fetch_user_contributions")
+    monthly_mock = Mock(name="generate_monthly_calendar_scads")
+    scad_mock = Mock(name="generate_scad_monthly")
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", fetch_mock)
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", monthly_mock)
+    monkeypatch.setattr(cli, "generate_scad_monthly", scad_mock)
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(
+            [
+                "user",
+                "--calendar-days-per-row",
+                "0",
+            ]
+        )
+
+    assert excinfo.value.code == 2
+    captured = capsys.readouterr()
+    assert "--calendar-days-per-row must be positive" in captured.err
 
     fetch_mock.assert_not_called()
     monthly_mock.assert_not_called()
@@ -1697,7 +1779,7 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -1834,7 +1916,7 @@ def test_cli_gridfinity_cubes_remove_stale_files(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily_counts, year: {m: "//" for m in range(1, 13)},
+        lambda daily_counts, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli,
@@ -1888,7 +1970,7 @@ def test_cli_generates_gridfinity_cube_stls_when_requested(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -1948,7 +2030,7 @@ def test_cli_removes_stale_gridfinity_cube_exports(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -2012,7 +2094,7 @@ def test_cli_cleans_up_gridfinity_layout_when_flag_disabled(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -2072,7 +2154,7 @@ def test_cli_cleans_up_gridfinity_cubes_when_flag_disabled(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -2126,7 +2208,7 @@ def test_cli_readme_mentions_gridfinity_outputs(
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -2177,7 +2259,7 @@ def test_cli_readme_notes_empty_gridfinity_cubes(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
@@ -2218,7 +2300,7 @@ def test_cli_single_color_removes_stale_palette(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"

@@ -55,7 +55,10 @@ Sep Oct Nov Dec
 ```
 
 Values below one trigger a parser error before any files are written, keeping invalid
-`--months-per-row` settings from generating partial outputs.
+`--months-per-row` settings from generating partial outputs. Tune the daily calendar
+footprint with `--calendar-days-per-row` (default `5`) to change how many days each
+row in the generated `monthly-5x6` SCAD files holds while leaving the monthly summary
+grid untouched.
 
 Print the current version with:
 
@@ -175,7 +178,8 @@ CLI also renders `baseplate_2x6.stl` alongside the summary so the standard Gridf
 to print without extra commands. The CLI writes these summaries and baseplates for every year in the
 requested range, even when a year has no contributions, so your shelf layout stays predictable.
 Day-level views are also written to `stl/<year>/monthly-5x6/` as OpenSCAD files. Each calendar lays
-out the month's days in rows of five to stay within a 256 mm square build area, adding a partial row
+out the month's days in rows of five to stay within a 256 mm square build area (use
+`--calendar-days-per-row` to widen or narrow the rows), adding a partial row
 for 31-day months. Days without activity are annotated as reserved slots (for example
 `// 2024-02-05 (0 contributions) reserved at [48, 0]`) so you can confirm spacing even when a cube
 isn't generated.
