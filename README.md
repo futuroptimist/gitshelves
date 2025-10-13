@@ -11,8 +11,10 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 A simple wall shelf with drywall mounting holes lives in `openscad/shelf.scad`. Use the pre-rendered `stl/shelf.stl` to print a matching display shelf for your contribution charts.
 
 
-`load_baseplate_scad()` ships both the 2×6 Gridfinity plate and a packaged `baseplate_1x12.scad` for tall single-row layouts, so
-you can source narrow baseplates without cloning the OpenSCAD sources.
+`load_baseplate_scad()` ships both the 2×6 Gridfinity plate and a packaged `baseplate_1x12.scad`
+for tall single-row layouts, so you can source narrow baseplates without cloning the OpenSCAD
+sources. If the packaged data is unavailable, it automatically falls back to the matching templates
+in `openscad/` so source checkouts stay functional.
 
 ## Usage
 
