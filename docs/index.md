@@ -23,16 +23,17 @@ parser error before any files are generated. When `--stl` is provided, the CLI a
 `stl/<year>/gridfinity_plate.stl` so baseplates are printable without manual
 conversion, and skipping `--gridfinity-layouts` on a later run removes any
 previous `gridfinity_plate.*` outputs so folders do not accumulate stale
-layouts. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks
-for every month with activity, and pass `--stl` to render matching `.stl`
-files. Months that no longer record activity remove any existing
-`contrib_cube_MM` exports so only active months keep cube stacks on disk. Runs
-that omit `--gridfinity-cubes` also clear those cube files so directories always
-reflect the latest activity snapshot. By default, the current year's
-contributions are fetched unless `--start-year` and `--end-year` specify a range.
-Months that no longer have contributions remove their old `contrib_cube_MM`
-files (and any lingering STLs when `--stl` is omitted) so directories stay in
-sync with the latest activity snapshot.
+layouts. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks for
+every month with activity—the CLI now always renders matching `.stl` files for
+those stacks, so ensure OpenSCAD is installed when using this flag. Months that
+no longer record activity remove any existing `contrib_cube_MM` exports so only
+active months keep cube stacks on disk. Runs that omit `--gridfinity-cubes` also
+clear those cube files so directories always reflect the latest activity
+snapshot. By default, the current year's contributions are fetched unless
+`--start-year` and `--end-year` specify a range. Months that no longer have
+contributions remove their old `contrib_cube_MM` files (and any lingering STLs
+when `--gridfinity-cubes` is omitted) so directories stay in sync with the
+latest activity snapshot.
 Color-specific outputs also repeat the zero-contribution annotations so each
 file documents the full monthly layout even when opened in isolation.
 Whether no month produces any blocks or only some of the requested color groups
