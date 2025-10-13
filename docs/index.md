@@ -65,9 +65,10 @@ When `--gridfinity-layouts` or `--gridfinity-cubes` are enabled, the summary gai
 section that lists the generated layout and cube outputs for quick reference. The layout entry also
 records the detected footprint (for example `6×2 grid`) so you can confirm the selected column
 count.
-Monthly day-level
-calendars live in `stl/<year>/monthly-5x6/`. Each SCAD arranges up to five days per row (adjust the width with
-`--calendar-days-per-row`) so the footprint fits within a 256 mm square build area. Days with no
+Monthly day-level calendars live in `stl/<year>/<calendar-slug>/`. Each SCAD arranges up to
+five days per row (adjust the width with `--calendar-days-per-row`) so the footprint fits within a
+256 mm square build area. The directory slug mirrors the configured width (for example
+`monthly-7x6` when seven days share a row) and defaults to `monthly-5x6`. Days with no
 activity add reserved-slot comments (for example `// 2024-02-05 (0 contributions) reserved at [48, 0]`)
 so you can confirm spacing even when a cube is absent. Monthly contribution `.scad` exports reserve
 every month in the requested range too, keeping the layout stable for years that currently have zero

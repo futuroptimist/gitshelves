@@ -12,6 +12,16 @@ def test_write_year_readme(tmp_path):
     assert "`monthly-5x6`" in text
 
 
+def test_write_year_readme_custom_calendar_slug(tmp_path):
+    counts = {(2022, 1): 0}
+    readme = write_year_readme(
+        2022, counts, outdir=tmp_path, calendar_slug="monthly-7x6"
+    )
+    text = readme.read_text()
+    assert "`monthly-7x6`" in text
+    assert "[`monthly-7x6/`](monthly-7x6)" in text
+
+
 def test_write_year_readme_zero_and_plural(tmp_path):
     counts = {(2024, 1): 1, (2024, 2): 10}
     readme = write_year_readme(2024, counts, outdir=tmp_path)
