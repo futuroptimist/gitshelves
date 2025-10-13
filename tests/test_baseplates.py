@@ -77,3 +77,23 @@ def test_load_baseplate_scad_handles_missing_package(monkeypatch):
 
     expected = _read("openscad/baseplate_2x6.scad")
     assert load_baseplate_scad() == expected
+
+
+def test_load_baseplate_scad_falls_back_when_packaged_file_missing(monkeypatch):
+    """Gracefully fall back when the package exists but the file does not."""
+
+    class MissingFileResource:
+        def joinpath(self, name: str):
+            assert name == "baseplate_2x6.scad"
+            return self
+
+        def read_text(self, encoding: str = "utf-8") -> str:
+            raise FileNotFoundError
+
+    monkeypatch.setattr(
+        "gitshelves.baseplate.resources.files",
+        lambda package: MissingFileResource(),
+    )
+
+    expected = _read("openscad/baseplate_2x6.scad")
+    assert load_baseplate_scad() == expected
