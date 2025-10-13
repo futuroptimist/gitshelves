@@ -455,6 +455,9 @@ def test_cli_color_outputs_include_zero_month_annotations(tmp_path, monkeypatch)
     )
     monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
 
+    stale_baseplate_stl = tmp_path / "annotated_baseplate.stl"
+    stale_baseplate_stl.write_text("old mesh")
+
     cli.main()
 
     color_files = sorted(tmp_path.glob("annotated_color*.scad"))
@@ -466,6 +469,9 @@ def test_cli_color_outputs_include_zero_month_annotations(tmp_path, monkeypatch)
         assert (
             expected_comment in text
         ), f"Missing zero-contribution annotation in {path.name}"
+    assert (
+        not stale_baseplate_stl.exists()
+    ), "Multi-color baseplate STL should be removed"
 
 
 def test_cli_multicolor_writes_placeholders_for_empty_data(tmp_path, monkeypatch):
@@ -1413,6 +1419,54 @@ def test_cli_writes_yearly_baseplate_stl(tmp_path, monkeypatch):
         and dest.resolve() == (tmp_path / "chart.stl").resolve()
         for src, dest in stl_calls
     )
+
+
+def test_cli_removes_stale_baseplate_stl(tmp_path, monkeypatch):
+    """Stale baseplate meshes should disappear when --stl is omitted."""
+
+    output = tmp_path / "chart.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
+    )
+
+    def forbidden_scad_to_stl(*_args, **_kwargs):  # pragma: no cover - guard
+        raise AssertionError("scad_to_stl should not run without --stl")
+
+    monkeypatch.setattr(cli, "scad_to_stl", forbidden_scad_to_stl)
+
+    year_dir = tmp_path / "stl" / "2021"
+    year_dir.mkdir(parents=True, exist_ok=True)
+    stale_stl = year_dir / "baseplate_2x6.stl"
+    stale_stl.write_text("old mesh")
+
+    cli.main()
+
+    baseplate_scad = year_dir / "baseplate_2x6.scad"
+    assert baseplate_scad.exists(), "Baseplate SCAD should be regenerated"
+    assert not stale_stl.exists(), "Stale baseplate STL should be removed"
 
 
 def test_cli_preserves_empty_year_rows(tmp_path, monkeypatch):
