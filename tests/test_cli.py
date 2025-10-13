@@ -1667,7 +1667,7 @@ def test_cli_rejects_non_positive_gridfinity_columns(tmp_path, monkeypatch, caps
 
 
 def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_library):
-    """`--gridfinity-cubes` alone should only emit SCAD stacks (docs promise)."""
+    """`--gridfinity-cubes` should emit SCAD + STL stacks without `--stl`."""
     base = tmp_path / "grid.scad"
     args = argparse.Namespace(
         username="user",
@@ -1711,8 +1711,11 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
 
     monkeypatch.setattr(cli, "generate_contrib_cube_stack_scad", fake_cube_stack)
 
-    def fake_stl(*_args):  # pragma: no cover - should not be called
-        raise AssertionError("scad_to_stl should not run without --stl")
+    stl_calls: list[tuple[str, str]] = []
+
+    def fake_stl(src, dest):
+        stl_calls.append((Path(src).name, Path(dest).name))
+        Path(dest).write_text("STL")
 
     monkeypatch.setattr(cli, "scad_to_stl", fake_stl)
 
@@ -1724,7 +1727,13 @@ def test_cli_generates_gridfinity_cubes(tmp_path, monkeypatch, gridfinity_librar
     apr_scad = year_dir / "contrib_cube_04.scad"
     assert feb_scad.read_text() == "// cubes 2"
     assert apr_scad.read_text() == "// cubes 1"
+    feb_stl = year_dir / "contrib_cube_02.stl"
+    apr_stl = year_dir / "contrib_cube_04.stl"
+    assert feb_stl.read_text() == "STL"
+    assert apr_stl.read_text() == "STL"
     assert recorded_levels == [2, 1]
+    assert ("contrib_cube_02.scad", "contrib_cube_02.stl") in stl_calls
+    assert ("contrib_cube_04.scad", "contrib_cube_04.stl") in stl_calls
 
 
 def test_cube_month_from_path_edge_cases():
@@ -1841,7 +1850,11 @@ def test_cli_gridfinity_cubes_remove_stale_files(
         "generate_contrib_cube_stack_scad",
         lambda levels: f"// cubes {levels}",
     )
-    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    def fake_scad_to_stl(src, dest):
+        Path(dest).write_text("STL")
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_scad_to_stl)
 
     cli.main()
 
@@ -1852,7 +1865,7 @@ def test_cli_gridfinity_cubes_remove_stale_files(
     assert "// cubes" in new_scad.read_text()
 
     new_stl = year_dir / "contrib_cube_02.stl"
-    assert not new_stl.exists(), "STLs should be removed when --stl is omitted"
+    assert new_stl.read_text() == "STL"
 
 
 def test_cli_generates_gridfinity_cube_stls_when_requested(

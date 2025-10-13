@@ -294,13 +294,12 @@ def main(argv: list[str] | None = None):
                 cube_scad = generate_contrib_cube_stack_scad(levels)
                 cube_scad_path.write_text(cube_scad)
                 print(f"Wrote {cube_scad_path}")
-                if args.stl:
-                    scad_to_stl(str(cube_scad_path), str(cube_stl_path))
-                    print(f"Wrote {cube_stl_path}")
+                scad_to_stl(str(cube_scad_path), str(cube_stl_path))
+                print(f"Wrote {cube_stl_path}")
             _cleanup_gridfinity_cube_outputs(
                 year_dir,
                 generated_cube_months,
-                remove_stls=not bool(args.stl),
+                remove_stls=False,
             )
         else:
             year_dir = readme_path.parent
