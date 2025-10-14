@@ -191,3 +191,14 @@ def test_fetch_user_contributions_caches_responses(monkeypatch):
     fetch.fetch_user_contributions("me", start_year=2022, end_year=2022)
 
     assert calls == 1
+
+
+def test_fetch_shim_allows_github_rebinding():
+    original = fetch._github
+    replacement = object()
+
+    try:
+        fetch._github = replacement
+        assert fetch._github is replacement
+    finally:
+        fetch._github = original

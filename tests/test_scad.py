@@ -16,6 +16,17 @@ from gitshelves.scad import (
 )
 
 
+def test_scad_shim_allows_module_rebinding():
+    original = scad_module._scad
+    replacement = object()
+
+    try:
+        scad_module._scad = replacement
+        assert scad_module._scad is replacement
+    finally:
+        scad_module._scad = original
+
+
 def test_blocks_for_contributions():
     assert blocks_for_contributions(0) == 0
     assert blocks_for_contributions(1) == 1
