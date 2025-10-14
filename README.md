@@ -21,9 +21,10 @@ in `openscad/` so source checkouts stay functional.
 1. Install the package in editable mode.
 2. Generate a [personal access token][token-doc] with `public_repo` scope. Export
    it as `GH_TOKEN` for local use or rely on `GITHUB_TOKEN` in CI.
-3. Run the CLI to generate a `.scad` file. If `--token` is omitted, the CLI reads
-   `GH_TOKEN` then `GITHUB_TOKEN`. `fetch_user_contributions` uses the same
-   fallback order when no token argument is supplied.
+3. Run the CLI to generate a `.scad` file. Authentication tokens resolve in the
+   following order: explicit `--token` argument, `GH_TOKEN`, then `GITHUB_TOKEN`.
+   `fetch_user_contributions` uses the same fallback order when no token
+   argument is supplied.
    Without `--start-year` and `--end-year`, only the current year's
    contributions are included.
 
@@ -170,6 +171,19 @@ openscad -o stl/2024/baseplate_2x6.stl \
 
 Run `black --check .`, `pytest -q`, and `codespell docs README.md` before submitting
 changes. Add project-specific terms to `dict/allow.txt`.
+
+## Import migration helpers
+
+The package layout now splits fetch/transform helpers under `gitshelves.core`
+and rendering utilities under `gitshelves.render`. Use
+`scripts/migrate_package_layout.py` to update downstream imports:
+
+```bash
+python scripts/migrate_package_layout.py path/to/file.py --write
+```
+
+The script performs string replacements for the legacy module names so
+automation and local projects stay in sync with the refactor.
 
 ## STL Build Outputs
 

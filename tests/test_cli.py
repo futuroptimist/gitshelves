@@ -1,4 +1,7 @@
 import argparse
+import runpy
+import sys
+import types
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -12,6 +15,33 @@ import gitshelves.cli as cli
 
 def calendar_slug(days_per_row: int = 5) -> str:
     return f"monthly-{days_per_row}x6"
+
+
+def test_cli_generate_contrib_cube_stack_scad_delegates(monkeypatch):
+    stub = types.SimpleNamespace(
+        generate_contrib_cube_stack_scad=lambda levels: f"stub-{levels}"
+    )
+    monkeypatch.setitem(sys.modules, "gitshelves.scad", stub)
+
+    assert cli.generate_contrib_cube_stack_scad(2) == "stub-2"
+
+
+def test_cli_scad_to_stl_delegates(monkeypatch):
+    calls: list[tuple[tuple, dict]] = []
+
+    def fake_scad_to_stl(*args, **kwargs):
+        calls.append((args, kwargs))
+
+    monkeypatch.setattr(cli._scad_module(), "scad_to_stl", fake_scad_to_stl)
+
+    cli.scad_to_stl("in.scad", "out.stl")
+
+    assert calls == [(("in.scad", "out.stl"), {})]
+
+
+def test_cli_module_main_guard_invokes_main():
+    with pytest.raises(SystemExit):
+        runpy.run_module("gitshelves.cli.__init__", run_name="__main__", alter_sys=True)
 
 
 def test_cli_main(tmp_path, monkeypatch, capsys):

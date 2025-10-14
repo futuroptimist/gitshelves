@@ -8,7 +8,13 @@ version = "0.1.0"
 dependencies = ["requests"]
 
 [tool.setuptools]
-packages = ["gitshelves", "gitshelves.data"]
+packages = [
+    "gitshelves",
+    "gitshelves.core",
+    "gitshelves.render",
+    "gitshelves.cli",
+    "gitshelves.data",
+]
 
 [tool.setuptools.package-data]
 gitshelves = ["data/*.scad"]

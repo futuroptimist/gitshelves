@@ -1,6 +1,15 @@
 from datetime import UTC, datetime, timezone
 import pytest
+
 import gitshelves.fetch as fetch
+from gitshelves.core import github
+
+
+@pytest.fixture(autouse=True)
+def clear_fetch_cache():
+    github._cached_fetch.cache_clear()
+    yield
+    github._cached_fetch.cache_clear()
 
 
 def test_fetch_single_page(monkeypatch):
@@ -154,3 +163,42 @@ def test_determine_year_range_uses_timezone(monkeypatch):
 
     assert start == end == 2021
     assert called["tz"] is UTC
+
+
+def test_fetch_user_contributions_caches_responses(monkeypatch):
+    calls = 0
+
+    def fake_get(url, headers=None, params=None, timeout=10):
+        nonlocal calls
+        calls += 1
+
+        class Resp:
+            links = {}
+
+            @staticmethod
+            def raise_for_status():
+                pass
+
+            @staticmethod
+            def json():
+                return {"items": [{"id": 1}]}
+
+        return Resp()
+
+    monkeypatch.setattr(fetch.requests, "get", fake_get)
+
+    fetch.fetch_user_contributions("me", start_year=2022, end_year=2022)
+    fetch.fetch_user_contributions("me", start_year=2022, end_year=2022)
+
+    assert calls == 1
+
+
+def test_fetch_shim_allows_github_rebinding():
+    original = fetch._github
+    replacement = object()
+
+    try:
+        fetch._github = replacement
+        assert fetch._github is replacement
+    finally:
+        fetch._github = original
