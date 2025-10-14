@@ -1,59 +1,46 @@
-import os
-from datetime import UTC, datetime
-from typing import Dict, Iterable, List
+"""Compatibility layer for legacy imports."""
 
-import requests
+from __future__ import annotations
 
-GITHUB_API = "https://api.github.com/search/issues"
+import sys
+import types
 
+from .core import github as _github
 
-def _determine_year_range(
-    start_year: int | None, end_year: int | None
-) -> tuple[int, int]:
-    """Return inclusive start and end years, validating user input."""
-    end = datetime.now(UTC).year if end_year is None else end_year
-    start = end if start_year is None else start_year
-    if start > end:
-        raise ValueError("start_year cannot be after end_year")
-    return start, end
+GITHUB_API = _github.GITHUB_API
+TOKEN_FALLBACK_ORDER = _github.TOKEN_FALLBACK_ORDER
+determine_year_range = _github.determine_year_range
+fetch_user_contributions = _github.fetch_user_contributions
+resolve_token = _github.resolve_token
+requests = _github.requests
+datetime = _github.datetime
 
-
-def _search_api(url: str, headers: dict, params: dict) -> Iterable[Dict]:
-    """Yield items across paginated GitHub search API responses."""
-    page = 1
-    while True:
-        resp = requests.get(
-            url, headers=headers, params={**params, "page": page}, timeout=10
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        yield from data.get("items", [])
-        if "next" not in resp.links:
-            break
-        page += 1
+__all__ = [
+    "GITHUB_API",
+    "TOKEN_FALLBACK_ORDER",
+    "determine_year_range",
+    "fetch_user_contributions",
+    "resolve_token",
+    "requests",
+    "datetime",
+    "_determine_year_range",
+]
 
 
-def fetch_user_contributions(
-    username: str,
-    token: str | None = None,
-    start_year: int | None = None,
-    end_year: int | None = None,
-) -> List[Dict]:
-    """Fetch contribution data for a user using GitHub's Search API.
+# ``_determine_year_range`` used to be private in this module.
+_determine_year_range = determine_year_range
 
-    Parameters can specify a range of years to query. If no range is
-    provided, only the current year is fetched. When ``token`` is omitted,
-    ``GH_TOKEN`` or ``GITHUB_TOKEN`` environment variables are used if set.
-    """
-    start, end = _determine_year_range(start_year, end_year)
-    start_date = datetime(start, 1, 1)
-    end_date = datetime(end, 12, 31)
 
-    query = (
-        f"author:{username} "
-        f"created:{start_date.strftime('%Y-%m-%d')}..{end_date.strftime('%Y-%m-%d')}"
-    )
-    token = token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
-    headers = {"Authorization": f"token {token}"} if token else {}
-    params = {"q": query, "per_page": 100}
-    return list(_search_api(GITHUB_API, headers, params))
+class _Shim(types.ModuleType):
+    def __getattr__(self, name: str):
+        return getattr(_github, name)
+
+    def __setattr__(self, name: str, value):
+        if name in {"_github"}:
+            super().__setattr__(name, value)
+            return
+        setattr(_github, name, value)
+        super().__setattr__(name, value)
+
+
+sys.modules[__name__].__class__ = _Shim
