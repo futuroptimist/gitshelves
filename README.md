@@ -109,8 +109,9 @@ When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl`
 ready to print alongside the contribution cubes. Re-running without `--gridfinity-layouts` removes
 any previously generated `gridfinity_plate.scad`/`.stl` pairs so stale layouts do not linger. Pair it
 with `--gridfinity-cubes` to generate `contrib_cube_MM.scad` stacks for every month that recorded
-contributions. Add `--stl` when you want matching cube meshes rendered alongside the SCAD exports so
-printed stacks stay in sync—`openscad` is only required for cube runs when you request those STLs.
+contributions. The CLI always renders matching `contrib_cube_MM.stl` meshes when this flag is enabled,
+even if you omit `--stl`, so install `openscad` on systems that generate cube stacks. Printed sets stay
+in sync automatically because each stack's SCAD and STL export are produced together on every run.
 Empty months are still annotated in the Gridfinity layout as reserved grid cells, keeping the
 placement map intact even when a month renders zero cubes. Months that lose contributions have their
 previous `contrib_cube_MM` SCAD files (and any lingering STLs when `--gridfinity-cubes` is disabled)
