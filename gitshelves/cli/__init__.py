@@ -203,7 +203,9 @@ def main(argv: list[str] | None = None):
     parser.add_argument("username", help="GitHub username")
     parser.add_argument(
         "--token",
-        help="GitHub API token (defaults to GH_TOKEN or GITHUB_TOKEN env vars)",
+        help=(
+            "GitHub API token (fallback order: --token value, GH_TOKEN, then GITHUB_TOKEN)"
+        ),
     )
     parser.add_argument("--start-year", type=int, help="First year of contributions")
     parser.add_argument("--end-year", type=int, help="Last year of contributions")
