@@ -58,6 +58,10 @@ cloning the OpenSCAD templates.
 
 For printer-specific guidance, see the [usage guide](usage.md) with slicer
 presets and AMS filament scripting examples.
+
+Consult the [CLI output matrix](cli_matrix.md) for visual summaries of how
+`--colors`, `--months-per-row`, and the `--gridfinity-*` flags combine to produce
+specific SCAD/STL files.
 The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the
 requested range and copies the bundled `baseplate_2x6.scad` into each folder (rendering
 `baseplate_2x6.stl` when `--stl` is provided) so folders exist even when a year has zero contributions.
