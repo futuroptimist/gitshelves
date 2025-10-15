@@ -20,6 +20,7 @@ from .scad import (
     generate_scad_monthly_levels,
     generate_zero_month_annotations,
     group_scad_levels,
+    group_scad_levels_with_mapping,
     scad_to_stl,
 )
 
@@ -40,6 +41,7 @@ __all__ = [
     "generate_scad_monthly_levels",
     "generate_zero_month_annotations",
     "group_scad_levels",
+    "group_scad_levels_with_mapping",
     "load_baseplate_scad",
     "scad_to_stl",
 ]

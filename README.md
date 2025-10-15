@@ -57,6 +57,18 @@ Jan Feb Mar Apr May Jun Jul Aug
 Sep Oct Nov Dec
 ```
 
+### Metadata exports
+
+Every generated `.scad` file now ships with a sibling `.json` metadata document. The
+JSON records the CLI arguments that influence geometry (color count, Gridfinity
+flags, baseplate template, calendar spacing), the resolved year range, and the
+output paths for the SCAD/STL pair. Monthly and daily contribution counts are
+embedded so downstream tooling can render previews or perform comparisons without
+re-parsing the SCAD source, and runs that omit STLs explicitly note their absence.
+The metadata uses the same naming scheme as the SCAD source—`contributions.scad`
+emits `contributions.json`, `gridfinity_plate.scad` writes `gridfinity_plate.json`,
+and so on.
+
 Values below one trigger a parser error before any files are written, keeping invalid
 `--months-per-row` settings from generating partial outputs. Tune the daily calendar
 footprint with `--calendar-days-per-row` (default `5`) to change how many days each
