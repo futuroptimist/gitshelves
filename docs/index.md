@@ -2,6 +2,11 @@
 
 For setup and usage details, see the [README](../README.md).
 
+Authentication tokens resolve in the documented fallback order: an explicit
+`--token` argument takes precedence, followed by the `GH_TOKEN` environment
+variable and then `GITHUB_TOKEN`. The CLI and underlying fetch helpers share
+this priority chain so local runs and CI jobs behave the same way.
+
 The CLI can export OpenSCAD scripts and, if `openscad` is installed, STL meshes
 using binary output (`--export-format binstl`) to mirror the CI workflow.
 Use `--output` to change the `.scad` filename, `--months-per-row` to control the
