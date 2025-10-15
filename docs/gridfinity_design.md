@@ -110,9 +110,11 @@ Every run also copies `baseplate_2x6.scad` into `stl/<year>/` and renders
 available with the yearly README summaries.
 Pair the flag with `--gridfinity-cubes` to emit
 `contrib_cube_MM.scad` stacks so monthly prints are pre-scaled to each month's
-contribution magnitude, and add `--stl` to render matching `.stl` files.
-Runs scrub `contrib_cube_MM` outputs for months without contributions (and drop
-cube STLs when `--stl` isn't requested) so directories stay aligned with the
+contribution magnitude. Matching `contrib_cube_MM.stl` meshes are rendered
+automatically whenever this flag is enabled—even without `--stl`—so make sure
+`openscad` is available on systems that generate cube stacks. Runs scrub
+`contrib_cube_MM` outputs for months without contributions (and drop
+cube STLs when `--gridfinity-cubes` is disabled) so directories stay aligned with the
 current activity snapshot.
 
 ## 5  GitHub Actions Pipeline (.github/workflows/build-stl.yml)
