@@ -2,6 +2,11 @@
 
 For setup and usage details, see the [README](../README.md).
 
+Authentication tokens resolve in the documented fallback order: an explicit
+`--token` argument takes precedence, followed by the `GH_TOKEN` environment
+variable and then `GITHUB_TOKEN`. The CLI and underlying fetch helpers share
+this priority chain so local runs and CI jobs behave the same way.
+
 The CLI can export OpenSCAD scripts and, if `openscad` is installed, STL meshes
 using binary output (`--export-format binstl`) to mirror the CI workflow.
 Use `--output` to change the `.scad` filename, `--months-per-row` to control the
@@ -28,16 +33,16 @@ parser error before any files are generated. When `--stl` is provided, the CLI a
 conversion, and skipping `--gridfinity-layouts` on a later run removes any
 previous `gridfinity_plate.*` outputs so folders do not accumulate stale
 layouts. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks for
-every month with activity. Add `--stl` to render matching `.stl` files alongside
-those stacks so prints are ready without extra tooling; otherwise the CLI keeps
-the SCAD exports and removes any lingering cube STLs. Months that no longer
+every month with activity. Matching `contrib_cube_MM.stl` meshes are rendered
+automatically whenever this flag is enabled—even without `--stl`—so install
+`openscad` on systems that generate cube stacks. Months that no longer
 record activity remove any existing `contrib_cube_MM` exports so only active
 months keep cube stacks on disk. Runs that omit `--gridfinity-cubes` also clear
 those cube files so directories always reflect the latest activity
 snapshot. By default, the current year's contributions are fetched unless
 `--start-year` and `--end-year` specify a range. Months that no longer have
 contributions remove their old `contrib_cube_MM` files (and any lingering STLs
-when cube meshes are not requested) so directories stay in sync with the
+when cube meshes are not requested elsewhere) so directories stay in sync with the
 latest activity snapshot.
 Color-specific outputs also repeat the zero-contribution annotations so each
 file documents the full monthly layout even when opened in isolation.
@@ -58,6 +63,10 @@ cloning the OpenSCAD templates.
 
 For printer-specific guidance, see the [usage guide](usage.md) with slicer
 presets and AMS filament scripting examples.
+
+Consult the [CLI output matrix](cli_matrix.md) for visual summaries of how
+`--colors`, `--months-per-row`, and the `--gridfinity-*` flags combine to produce
+specific SCAD/STL files.
 The CLI always writes yearly summaries in `stl/<year>/README.md` for every year in the
 requested range and copies the bundled `baseplate_2x6.scad` into each folder (rendering
 `baseplate_2x6.stl` when `--stl` is provided) so folders exist even when a year has zero contributions.

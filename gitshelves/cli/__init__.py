@@ -221,12 +221,15 @@ def _cleanup_calendar_directories(year_dir: Path, keep_slug: str) -> None:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description="Generate 3D GitHub contribution charts"
+        description="Generate 3D GitHub contribution charts",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument("username", help="GitHub username")
     parser.add_argument(
         "--token",
-        help="GitHub API token (defaults to GH_TOKEN or GITHUB_TOKEN env vars)",
+        help=(
+            "GitHub API token (fallback order: --token value, GH_TOKEN, then GITHUB_TOKEN)"
+        ),
     )
     parser.add_argument("--start-year", type=int, help="First year of contributions")
     parser.add_argument("--end-year", type=int, help="Last year of contributions")
@@ -420,7 +423,6 @@ def main(argv: list[str] | None = None):
         if args.gridfinity_cubes:
             year_dir = readme_path.parent
             generated_cube_months: set[int] = set()
-            cube_stls_requested = bool(args.stl)
             for month in range(1, 13):
                 levels = blocks_for_contributions(counts.get((year, month), 0))
                 cube_scad_path = year_dir / f"contrib_cube_{month:02d}.scad"
@@ -436,7 +438,7 @@ def main(argv: list[str] | None = None):
                 cube_scad = generate_contrib_cube_stack_scad(levels)
                 cube_scad_path.write_text(cube_scad)
                 print(f"Wrote {cube_scad_path}")
-                if cube_stls_requested:
+                if args.stl:
                     scad_to_stl(str(cube_scad_path), str(cube_stl_path))
                     print(f"Wrote {cube_stl_path}")
                 else:
@@ -444,7 +446,7 @@ def main(argv: list[str] | None = None):
                 metadata_writer.write_scad(
                     cube_scad_path,
                     kind="gridfinity-cube",
-                    stl_path=cube_stl_path if cube_stls_requested else None,
+                    stl_path=cube_stl_path if args.stl else None,
                     year=year,
                     month=month,
                     monthly_contributions=metadata_writer.monthly_contributions(
@@ -455,7 +457,7 @@ def main(argv: list[str] | None = None):
             _cleanup_gridfinity_cube_outputs(
                 year_dir,
                 generated_cube_months,
-                remove_stls=not cube_stls_requested,
+                remove_stls=False,
             )
         else:
             year_dir = readme_path.parent
