@@ -438,15 +438,12 @@ def main(argv: list[str] | None = None):
                 cube_scad = generate_contrib_cube_stack_scad(levels)
                 cube_scad_path.write_text(cube_scad)
                 print(f"Wrote {cube_scad_path}")
-                if args.stl:
-                    scad_to_stl(str(cube_scad_path), str(cube_stl_path))
-                    print(f"Wrote {cube_stl_path}")
-                else:
-                    cube_stl_path.unlink(missing_ok=True)
+                scad_to_stl(str(cube_scad_path), str(cube_stl_path))
+                print(f"Wrote {cube_stl_path}")
                 metadata_writer.write_scad(
                     cube_scad_path,
                     kind="gridfinity-cube",
-                    stl_path=cube_stl_path if args.stl else None,
+                    stl_path=cube_stl_path,
                     year=year,
                     month=month,
                     monthly_contributions=metadata_writer.monthly_contributions(
