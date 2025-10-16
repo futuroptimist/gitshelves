@@ -10,6 +10,7 @@ from .. import fetch as _fetch
 from .. import scad as _scad
 from ..baseplate import load_baseplate_scad
 from ..core.contributions import build_contribution_maps
+from ..core.metadata import MetadataWriter
 from ..readme import write_year_readme
 
 
@@ -81,6 +82,16 @@ def group_scad_levels(*args, **kwargs) -> dict:
     return _scad_module().group_scad_levels(*args, **kwargs)
 
 
+def group_scad_levels_with_mapping(*args, **kwargs) -> tuple[dict, dict]:
+    scad_mod = _scad_module()
+    func = getattr(scad_mod, "group_scad_levels_with_mapping", None)
+    if func is None:
+        grouped = scad_mod.group_scad_levels(*args, **kwargs)
+        mapping = {idx: [] for idx in grouped}
+        return grouped, mapping
+    return func(*args, **kwargs)
+
+
 def scad_to_stl(*args, **kwargs) -> None:
     return _scad_module().scad_to_stl(*args, **kwargs)
 
@@ -89,7 +100,9 @@ def _calendar_slug(days_per_row: int) -> str:
     return f"monthly-{days_per_row}x6"
 
 
-def _write_year_baseplate(year_dir: Path, render_stl: bool) -> None:
+def _write_year_baseplate(
+    year_dir: Path, render_stl: bool, metadata_writer: MetadataWriter, year: int
+) -> None:
     """Copy the bundled 2×6 baseplate into ``year_dir`` and optionally render an STL."""
 
     year_dir.mkdir(parents=True, exist_ok=True)
@@ -103,6 +116,14 @@ def _write_year_baseplate(year_dir: Path, render_stl: bool) -> None:
         print(f"Wrote {baseplate_stl}")
     else:
         baseplate_path.with_suffix(".stl").unlink(missing_ok=True)
+        baseplate_stl = None
+    metadata_writer.write_scad(
+        baseplate_path,
+        kind="year-baseplate",
+        stl_path=baseplate_stl,
+        year=year,
+        monthly_contributions=metadata_writer.monthly_contributions(year=year),
+    )
 
 
 _CUBE_FILE_PATTERN = re.compile(r"contrib_cube_(\d{2})")
@@ -142,6 +163,7 @@ def _cleanup_gridfinity_cube_outputs(
         if month is None or month in active_months:
             continue
         scad_path.unlink(missing_ok=True)
+        MetadataWriter.unlink_for(scad_path)
     for stl_path in year_dir.glob("contrib_cube_*.stl"):
         month = _cube_month_from_path(stl_path)
         if month is None:
@@ -169,6 +191,7 @@ def _cleanup_color_outputs(
             continue
         if color_groups == 0 or index > color_groups:
             scad_path.unlink(missing_ok=True)
+            MetadataWriter.unlink_for(scad_path)
 
     stl_pattern = f"{base_output.name}_color*.stl"
     for stl_path in base_output.parent.glob(stl_pattern):
@@ -299,6 +322,21 @@ def main(argv: list[str] | None = None):
         determine_range=_determine_year_range,
     )
 
+    metadata_writer = MetadataWriter(
+        username=args.username,
+        start_year=start_year,
+        end_year=end_year,
+        monthly_counts=counts,
+        daily_counts=daily_counts,
+        months_per_row=args.months_per_row,
+        calendar_days_per_row=args.calendar_days_per_row,
+        colors=args.colors,
+        gridfinity_layouts=args.gridfinity_layouts,
+        gridfinity_columns=args.gridfinity_columns,
+        gridfinity_cubes=args.gridfinity_cubes,
+        baseplate_template=args.baseplate_template,
+    )
+
     render_yearly_stl = bool(args.stl)
     for year in range(start_year, end_year + 1):
         extras: list[str] = []
@@ -335,7 +373,7 @@ def main(argv: list[str] | None = None):
             calendar_slug=calendar_slug,
         )
         year_dir = readme_path.parent
-        _write_year_baseplate(year_dir, render_yearly_stl)
+        _write_year_baseplate(year_dir, render_yearly_stl, metadata_writer, year)
         calendars = generate_monthly_calendar_scads(
             daily_counts, year, days_per_row=args.calendar_days_per_row
         )
@@ -347,6 +385,18 @@ def main(argv: list[str] | None = None):
             scad_path = calendar_dir / f"{month:02d}_{slug}.scad"
             scad_path.write_text(text)
             print(f"Wrote {scad_path}")
+            metadata_writer.write_scad(
+                scad_path,
+                kind="monthly-calendar",
+                year=year,
+                month=month,
+                monthly_contributions=metadata_writer.monthly_contributions(
+                    year=year, month=month
+                ),
+                daily_contributions=metadata_writer.daily_contributions(
+                    year=year, month=month
+                ),
+            )
         layout_path = readme_path.parent / "gridfinity_plate.scad"
         layout_stl_path = layout_path.with_suffix(".stl")
         if args.gridfinity_layouts:
@@ -358,9 +408,18 @@ def main(argv: list[str] | None = None):
             if args.stl:
                 scad_to_stl(str(layout_path), str(layout_stl_path))
                 print(f"Wrote {layout_stl_path}")
+            metadata_writer.write_scad(
+                layout_path,
+                kind="gridfinity-layout",
+                stl_path=layout_stl_path if args.stl else None,
+                year=year,
+                monthly_contributions=metadata_writer.monthly_contributions(year=year),
+                details={"columns": args.gridfinity_columns},
+            )
         else:
             layout_path.unlink(missing_ok=True)
             layout_stl_path.unlink(missing_ok=True)
+            MetadataWriter.unlink_for(layout_path)
         if args.gridfinity_cubes:
             year_dir = readme_path.parent
             generated_cube_months: set[int] = set()
@@ -371,6 +430,7 @@ def main(argv: list[str] | None = None):
                 if levels <= 0:
                     if cube_scad_path.exists():
                         cube_scad_path.unlink()
+                        MetadataWriter.unlink_for(cube_scad_path)
                     if cube_stl_path.exists():
                         cube_stl_path.unlink()
                     continue
@@ -380,6 +440,17 @@ def main(argv: list[str] | None = None):
                 print(f"Wrote {cube_scad_path}")
                 scad_to_stl(str(cube_scad_path), str(cube_stl_path))
                 print(f"Wrote {cube_stl_path}")
+                metadata_writer.write_scad(
+                    cube_scad_path,
+                    kind="gridfinity-cube",
+                    stl_path=cube_stl_path,
+                    year=year,
+                    month=month,
+                    monthly_contributions=metadata_writer.monthly_contributions(
+                        year=year, month=month
+                    ),
+                    details={"levels": levels},
+                )
             _cleanup_gridfinity_cube_outputs(
                 year_dir,
                 generated_cube_months,
@@ -390,6 +461,7 @@ def main(argv: list[str] | None = None):
             for cube_scad_path in year_dir.glob("contrib_cube_*.scad"):
                 if _cube_month_from_path(cube_scad_path) is not None:
                     cube_scad_path.unlink(missing_ok=True)
+                    MetadataWriter.unlink_for(cube_scad_path)
             for cube_stl_path in year_dir.glob("contrib_cube_*.stl"):
                 if _cube_month_from_path(cube_stl_path) is not None:
                     cube_stl_path.unlink(missing_ok=True)
@@ -400,11 +472,18 @@ def main(argv: list[str] | None = None):
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(scad_text)
         print(f"Wrote {output_path}")
+        stl_path = None
         if args.stl:
             stl_path = Path(args.stl)
             stl_path.parent.mkdir(parents=True, exist_ok=True)
             scad_to_stl(str(output_path), str(stl_path))
             print(f"Wrote {stl_path}")
+        metadata_writer.write_scad(
+            output_path,
+            kind="monthly",
+            stl_path=stl_path,
+            monthly_contributions=metadata_writer.monthly_contributions(),
+        )
         base_output = Path(args.output)
         if base_output.suffix:
             base_output = base_output.with_suffix("")
@@ -414,12 +493,16 @@ def main(argv: list[str] | None = None):
             counts, months_per_row=args.months_per_row
         )
         color_groups = args.colors - 1 if args.colors > 1 else 1
-        grouped = group_scad_levels(level_scads, color_groups)
+        grouped, level_mapping = group_scad_levels_with_mapping(
+            level_scads, color_groups
+        )
         if not grouped:
             grouped = {idx: SCAD_HEADER for idx in range(1, color_groups + 1)}
+            level_mapping = {idx: [] for idx in range(1, color_groups + 1)}
         else:
             for idx in range(1, color_groups + 1):
                 grouped.setdefault(idx, SCAD_HEADER)
+                level_mapping.setdefault(idx, [])
         zero_comments = generate_zero_month_annotations(
             counts, months_per_row=args.months_per_row
         )
@@ -439,12 +522,20 @@ def main(argv: list[str] | None = None):
             baseplate_source = load_baseplate_scad()
         baseplate_path.write_text(baseplate_source)
         print(f"Wrote {baseplate_path}")
+        baseplate_stl = None
         if base_stl:
             baseplate_stl = base_stl.with_name(f"{base_stl.name}_baseplate.stl")
             scad_to_stl(str(baseplate_path), str(baseplate_stl))
             print(f"Wrote {baseplate_stl}")
         else:
             baseplate_path.with_suffix(".stl").unlink(missing_ok=True)
+        metadata_writer.write_scad(
+            baseplate_path,
+            kind="baseplate-template",
+            stl_path=baseplate_stl,
+            monthly_contributions=metadata_writer.monthly_contributions(),
+            details={"template": args.baseplate_template},
+        )
         for idx in sorted(grouped):
             text = grouped[idx]
             scad_path = base_output.with_name(f"{base_output.name}_color{idx}.scad")
@@ -467,6 +558,18 @@ def main(argv: list[str] | None = None):
                 print(f"Wrote {stl_path}")
             elif stl_path and stl_path.exists():
                 stl_path.unlink()
+            metadata_writer.write_scad(
+                scad_path,
+                kind="monthly-color",
+                stl_path=stl_path if base_stl and has_geometry else None,
+                color_index=idx,
+                levels=level_mapping.get(idx, []),
+                monthly_contributions=metadata_writer.monthly_contributions(),
+                details={
+                    "has_geometry": has_geometry,
+                    "zero_month_annotations": bool(zero_comments),
+                },
+            )
 
         _cleanup_color_outputs(base_output, color_groups, stl_requested=bool(base_stl))
 

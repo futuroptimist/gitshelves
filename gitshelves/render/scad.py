@@ -224,21 +224,14 @@ def _body_lines(scad_text: str) -> list[str]:
     return scad_text.splitlines()[1:]
 
 
-def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str]:
-    """Combine level-specific SCAD snippets into ``groups`` color groups.
-
-    ``groups`` is the number of distinct block colors and must be at least ``1``.
-    Levels are distributed evenly across groups except when four or more block
-    colors are requested and contribution levels exceed the number of colors.
-    In that case the highest magnitudes are appended to the final group so the
-    accent color collects every level beyond the third, mirroring the
-    documentation for ``--colors 5``. Each output retains the standard header.
-    """
+def _partition_levels(
+    level_scads: Dict[int, str], groups: int
+) -> list[list[tuple[int, str]]]:
     if groups < 1:
         raise ValueError("groups must be >= 1")
 
     if not level_scads:
-        return {}
+        return []
 
     if min(level_scads) < 1:
         raise ValueError("level keys must be >= 1")
@@ -246,43 +239,26 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
     ordered_levels = sorted(level_scads.items())
     total_groups = min(groups, len(ordered_levels)) if ordered_levels else 0
 
-    def _render(partitions: list[list[tuple[int, str]]]) -> Dict[int, str]:
-        grouped_output: Dict[int, str] = {}
-        for index, partition in enumerate(partitions, start=1):
-            lines: list[str] = []
-            for _, text in partition:
-                lines.extend(_body_lines(text))
-            grouped_output[index] = HEADER + ("\n" + "\n".join(lines) if lines else "")
-        return grouped_output
-
     if groups == 4:
-        # ``--colors 5`` exposes four block colors. Documentation promises the
-        # accent color (group 4) gathers the highest magnitudes even when the
-        # lower levels are sparse. Reserve the first three groups for levels 1–3
-        # when present and funnel every remaining level into the final group so
-        # the accent color consistently reflects the tallest stacks.
         partitions: list[list[tuple[int, str]]] = [[] for _ in range(groups)]
         remaining = ordered_levels.copy()
         for target_level in range(1, 4):
-            for idx, (level, text) in enumerate(remaining):
+            for idx, entry in enumerate(remaining):
+                level, _ = entry
                 if level == target_level:
                     partitions[target_level - 1].append(remaining.pop(idx))
                     break
         partitions[-1].extend(remaining)
-        return _render(partitions)
+        return partitions
 
     if total_groups == 1:
-        return _render([ordered_levels])
+        return [ordered_levels]
 
     if total_groups >= 4 and len(ordered_levels) > total_groups:
-        partitions: list[list[tuple[int, str]]] = [
-            ordered_levels[idx : idx + 1] for idx in range(total_groups - 1)
-        ]
+        partitions = [ordered_levels[idx : idx + 1] for idx in range(total_groups - 1)]
         partitions.append(ordered_levels[total_groups - 1 :])
-        return _render(partitions)
+        return partitions
 
-    # Distribute the remaining cases as evenly as possible while preserving
-    # order so lower magnitudes stay in the earliest color groups.
     total_levels = len(ordered_levels)
     base = total_levels // total_groups
     remainder = total_levels % total_groups
@@ -294,7 +270,42 @@ def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str
         partitions.append(ordered_levels[start:end])
         start = end
 
-    return _render(partitions)
+    return partitions
+
+
+def _render_partitions(partitions: list[list[tuple[int, str]]]) -> Dict[int, str]:
+    grouped_output: Dict[int, str] = {}
+    for index, partition in enumerate(partitions, start=1):
+        lines: list[str] = []
+        for _, text in partition:
+            lines.extend(_body_lines(text))
+        grouped_output[index] = HEADER + ("\n" + "\n".join(lines) if lines else "")
+    return grouped_output
+
+
+def group_scad_levels(level_scads: Dict[int, str], groups: int) -> Dict[int, str]:
+    """Combine level-specific SCAD snippets into ``groups`` color groups."""
+
+    partitions = _partition_levels(level_scads, groups)
+    if not partitions:
+        return {}
+    return _render_partitions(partitions)
+
+
+def group_scad_levels_with_mapping(
+    level_scads: Dict[int, str], groups: int
+) -> tuple[Dict[int, str], Dict[int, list[int]]]:
+    """Return grouped SCAD snippets and the level indices assigned to each."""
+
+    partitions = _partition_levels(level_scads, groups)
+    if not partitions:
+        return {}, {}
+    grouped = _render_partitions(partitions)
+    mapping = {
+        index: [level for level, _ in partition]
+        for index, partition in enumerate(partitions, start=1)
+    }
+    return grouped, mapping
 
 
 def generate_gridfinity_plate_scad(
