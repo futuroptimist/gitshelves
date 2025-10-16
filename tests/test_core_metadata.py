@@ -54,6 +54,20 @@ def test_metadata_writer_writes_json(tmp_path, writer: MetadataWriter, capsys):
     assert f"Wrote {metadata_path}" in captured
 
 
+def test_metadata_writer_notes_missing_stl(tmp_path, writer: MetadataWriter):
+    scad_path = tmp_path / "no_stl.scad"
+    scad_path.write_text("// none")
+
+    writer.write_scad(
+        scad_path,
+        kind="monthly",
+        monthly_contributions=writer.monthly_contributions(),
+    )
+
+    payload = json.loads(scad_path.with_suffix(".json").read_text())
+    assert payload["stl"] is None, "Metadata should record when STLs are omitted"
+
+
 def test_metadata_writer_unlink(tmp_path):
     scad_path = tmp_path / "sample.scad"
     json_path = scad_path.with_suffix(".json")

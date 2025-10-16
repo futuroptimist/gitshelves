@@ -17,6 +17,10 @@ the logarithmic levels across the available groups while preserving their
 chronological order, so `--colors 2`, `--colors 3`, and `--colors 4`
 distribute stacks as evenly as possible before the accent color collects the
 overflow.
+Every SCAD export is accompanied by a JSON metadata file that captures these CLI
+arguments, the resolved year range, monthly and daily contribution counts, and an
+`stl` field that either points to the rendered mesh or records `null` when STL
+conversion is skipped so downstream tooling can detect the omission.
 Even when intermediate logarithmic levels are absent, `_color4` still gathers the remaining high
 orders so the accent file continues to highlight the peak contribution range.
 `--months-per-row` values below one exit with a parser error before any files are

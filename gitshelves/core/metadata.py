@@ -143,8 +143,7 @@ class MetadataWriter:
             "scad": str(scad_path),
             "kind": kind,
         }
-        if stl_path is not None:
-            payload["stl"] = str(stl_path)
+        payload["stl"] = str(stl_path) if stl_path is not None else None
         payload.update(
             _filter_none(
                 {

@@ -1893,7 +1893,9 @@ def test_cli_generates_gridfinity_layout(
     layout_metadata = json.loads(layout_path.with_suffix(".json").read_text())
     assert layout_metadata["kind"] == "gridfinity-layout"
     assert layout_metadata["details"]["columns"] == 4
-    assert "stl" not in layout_metadata
+    assert (
+        layout_metadata["stl"] is None
+    ), "Metadata should note when the Gridfinity STL is skipped"
     captured = capsys.readouterr().out
     assert f"Wrote {layout_path.relative_to(tmp_path)}" in captured
 

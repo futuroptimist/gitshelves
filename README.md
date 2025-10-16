@@ -64,7 +64,9 @@ JSON records the CLI arguments that influence geometry (color count, Gridfinity
 flags, baseplate template, calendar spacing), the resolved year range, and the
 output paths for the SCAD/STL pair. Monthly and daily contribution counts are
 embedded so downstream tooling can render previews or perform comparisons without
-re-parsing the SCAD source, and runs that omit STLs explicitly note their absence.
+re-parsing the SCAD source, and the `stl` field records either the rendered mesh
+path or `null` when STLs are skipped so downstream tooling can detect the absence
+explicitly.
 The metadata uses the same naming scheme as the SCAD source—`contributions.scad`
 emits `contributions.json`, `gridfinity_plate.scad` writes `gridfinity_plate.json`,
 and so on.
