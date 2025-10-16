@@ -40,6 +40,39 @@ def test_cli_scad_to_stl_delegates(monkeypatch):
     assert calls == [(("in.scad", "out.stl"), {})]
 
 
+def test_cli_group_scad_levels_delegates(monkeypatch):
+    calls: list[tuple[tuple, dict]] = []
+
+    class Stub:
+        def group_scad_levels(self, *args, **kwargs):
+            calls.append((args, kwargs))
+            return {1: ["A"]}
+
+    monkeypatch.setitem(sys.modules, "gitshelves.scad", Stub())
+
+    result = cli.group_scad_levels("levels", groups=3)
+
+    assert result == {1: ["A"]}
+    assert calls == [(("levels",), {"groups": 3})]
+
+
+def test_cli_group_scad_levels_with_mapping_fallback(monkeypatch):
+    calls: list[tuple[tuple, dict]] = []
+
+    class Stub:
+        def group_scad_levels(self, *args, **kwargs):
+            calls.append((args, kwargs))
+            return {0: ["base"], 1: ["accent"]}
+
+    monkeypatch.setitem(sys.modules, "gitshelves.scad", Stub())
+
+    grouped, mapping = cli.group_scad_levels_with_mapping("levels", groups=2)
+
+    assert grouped == {0: ["base"], 1: ["accent"]}
+    assert mapping == {0: [], 1: []}
+    assert calls == [(("levels",), {"groups": 2})]
+
+
 def test_cli_module_main_guard_invokes_main():
     with pytest.raises(SystemExit):
         runpy.run_module("gitshelves.cli.__init__", run_name="__main__", alter_sys=True)
