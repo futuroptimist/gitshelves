@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from gitshelves import scad as scad_module
@@ -15,6 +17,24 @@ from gitshelves.scad import (
     group_scad_levels_with_mapping,
     scad_to_stl,
 )
+
+SNAPSHOT_DIR = Path(__file__).parent / "snapshots"
+
+
+def _load_snapshot(name: str) -> str:
+    return (SNAPSHOT_DIR / name).read_text(encoding="utf-8").rstrip()
+
+
+def _assert_snapshot(scad_text: str, name: str) -> None:
+    assert scad_text.rstrip() == _load_snapshot(name)
+
+
+def _normalise_gridfinity_paths(scad_text: str) -> str:
+    baseplate = scad_module.GRIDFINITY_BASEPLATE_SCAD.as_posix()
+    bin_path = scad_module.GRIDFINITY_BIN_SCAD.as_posix()
+    return scad_text.replace(baseplate, "<GRIDFINITY_BASEPLATE>").replace(
+        bin_path, "<GRIDFINITY_BIN>"
+    )
 
 
 def test_scad_shim_allows_module_rebinding():
@@ -67,6 +87,23 @@ def test_generate_scad_monthly_marks_zero_contribution_months():
     scad = generate_scad_monthly(counts)
     assert "// 2024-01 (0 contributions) reserved at [0, 0]" in scad
     assert "translate([12, 0, 0]) cube(10); // 2024-02" in scad
+
+
+def test_generate_scad_monthly_matches_snapshot():
+    """Monthly SCAD output should stay stable for documented layouts."""
+
+    counts = {
+        (2024, 1): 0,
+        (2024, 2): 1,
+        (2024, 3): 10,
+        (2024, 4): 120,
+        (2024, 5): 0,
+        (2024, 6): 300,
+        (2024, 7): 45,
+    }
+
+    scad = generate_scad_monthly(counts, months_per_row=4)
+    _assert_snapshot(scad, "monthly_summary_2024_row4.scad")
 
 
 def test_generate_scad_monthly_empty():
@@ -566,6 +603,29 @@ def test_generate_gridfinity_plate_scad_includes_absolute_library_paths(
     assert f"use <{bin_include}>;" in scad
 
 
+def test_generate_gridfinity_plate_scad_matches_snapshot(gridfinity_library):
+    """Gridfinity layout SCAD should remain stable for documented examples."""
+
+    counts = {
+        (2024, 1): 12,
+        (2024, 2): 0,
+        (2024, 3): 98,
+        (2024, 4): 125,
+        (2024, 5): 7,
+        (2024, 6): 0,
+        (2024, 7): 234,
+        (2024, 8): 0,
+        (2024, 9): 5,
+        (2024, 10): 0,
+        (2024, 11): 0,
+        (2024, 12): 67,
+    }
+
+    scad = generate_gridfinity_plate_scad(counts, 2024, columns=4)
+    normalised = _normalise_gridfinity_paths(scad)
+    _assert_snapshot(normalised, "gridfinity_plate_2024_columns4.scad")
+
+
 def test_generate_gridfinity_plate_scad_missing_library(monkeypatch):
     counts = {(2025, 1): 1}
     missing_baseplate = scad_module.GRIDFINITY_BASEPLATE_SCAD.with_name(
@@ -594,6 +654,15 @@ def test_generate_contrib_cube_stack_scad_zero_levels(gridfinity_library):
     scad = generate_contrib_cube_stack_scad(0)
     assert "contribution_stack(0);" in scad
     assert "// No contributions" in scad
+
+
+def test_generate_contrib_cube_stack_scad_matches_snapshot(gridfinity_library):
+    """Gridfinity cube stack helper should produce stable SCAD."""
+
+    scad = generate_contrib_cube_stack_scad(3)
+    bin_path = scad_module.GRIDFINITY_BIN_SCAD.as_posix()
+    normalised = scad.replace(bin_path, "<GRIDFINITY_BIN>")
+    _assert_snapshot(normalised, "contrib_cube_levels3.scad")
 
 
 def test_generate_contrib_cube_stack_scad_requires_non_negative_levels():
