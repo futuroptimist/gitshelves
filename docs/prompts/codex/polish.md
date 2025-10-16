@@ -38,7 +38,7 @@ DOCUMENTATION PLAN:
 - Add a print-tuning cookbook detailing nozzle sizes, layer heights, and AMS (multi-color) recipes for cubes and baseplates.
 
 TEST PLAN:
-- Add golden SCAD snapshot tests to detect geometry regressions.
+- Maintain golden SCAD snapshot tests that detect geometry regressions.
 - Verify month/day layout semantics so calendar grids stay ordered.
 - Test the token fallback order (`--token` → `GH_TOKEN` → `GITHUB_TOKEN`).
 
