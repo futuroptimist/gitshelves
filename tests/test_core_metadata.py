@@ -49,6 +49,8 @@ def test_metadata_writer_writes_json(tmp_path, writer: MetadataWriter, capsys):
     assert metadata_path.exists()
     payload = json.loads(metadata_path.read_text())
     assert payload["kind"] == "monthly"
+    assert payload["stl_generated"] is False
+    assert payload["stl"] is None
     assert payload["zero_months"] == [{"year": 2021, "month": 1}]
     captured = capsys.readouterr().out
     assert f"Wrote {metadata_path}" in captured

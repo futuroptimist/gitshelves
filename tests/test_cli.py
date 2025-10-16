@@ -134,6 +134,7 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     metadata = json.loads(metadata_path.read_text())
     assert metadata["kind"] == "monthly"
     assert metadata["stl"] == str(tmp_path / "out.stl")
+    assert metadata["stl_generated"] is True
     assert metadata["monthly_contributions"]
     assert any(entry["month"] == 1 for entry in metadata["zero_months"])
     baseplate_scad = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
@@ -141,6 +142,11 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     baseplate_metadata = json.loads(baseplate_scad.with_suffix(".json").read_text())
     assert baseplate_metadata["kind"] == "year-baseplate"
     assert baseplate_metadata["year"] == 2021
+    assert baseplate_metadata["stl_generated"] is True
+    assert (
+        Path(baseplate_metadata["stl"]).resolve()
+        == baseplate_scad.with_suffix(".stl").resolve()
+    )
     readme_path = tmp_path / "stl" / "2021" / "README.md"
     readme_text = readme_path.read_text()
     assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in readme_text
@@ -160,6 +166,8 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     assert "2021-02-15" in text
     february_meta = json.loads(february.with_suffix(".json").read_text())
     assert february_meta["kind"] == "monthly-calendar"
+    assert february_meta["stl_generated"] is False
+    assert february_meta["stl"] is None
     assert any(day["day"] == 1 for day in february_meta["daily_contributions"])
 
 
@@ -1893,7 +1901,8 @@ def test_cli_generates_gridfinity_layout(
     layout_metadata = json.loads(layout_path.with_suffix(".json").read_text())
     assert layout_metadata["kind"] == "gridfinity-layout"
     assert layout_metadata["details"]["columns"] == 4
-    assert "stl" not in layout_metadata
+    assert layout_metadata["stl_generated"] is False
+    assert layout_metadata["stl"] is None
     captured = capsys.readouterr().out
     assert f"Wrote {layout_path.relative_to(tmp_path)}" in captured
 

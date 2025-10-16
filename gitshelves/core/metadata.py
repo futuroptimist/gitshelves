@@ -145,6 +145,10 @@ class MetadataWriter:
         }
         if stl_path is not None:
             payload["stl"] = str(stl_path)
+            payload["stl_generated"] = True
+        else:
+            payload["stl"] = None
+            payload["stl_generated"] = False
         payload.update(
             _filter_none(
                 {
