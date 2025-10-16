@@ -198,7 +198,8 @@ def _cleanup_calendar_directories(year_dir: Path, keep_slug: str) -> None:
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
-        description="Generate 3D GitHub contribution charts"
+        description="Generate 3D GitHub contribution charts",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument("username", help="GitHub username")
     parser.add_argument(
