@@ -283,6 +283,10 @@ def main(argv: list[str] | None = None):
         default="baseplate_2x6.scad",
         help="Bundled baseplate template to copy when generating multi-color outputs",
     )
+    parser.add_argument(
+        "--json",
+        help="Optional run-level metadata summary file",
+    )
     try:  # pragma: no cover - metadata lookup
         pkg_version = metadata.version("gitshelves")
     except metadata.PackageNotFoundError:  # pragma: no cover
@@ -582,6 +586,10 @@ def main(argv: list[str] | None = None):
             )
 
         _cleanup_color_outputs(base_output, color_groups, stl_requested=bool(base_stl))
+
+    summary_path = getattr(args, "json", None)
+    if summary_path:
+        metadata_writer.write_run_summary(summary_path)
 
     # Restore canonical modules so downstream imports see the default implementations.
     sys.modules["gitshelves.scad"] = _scad

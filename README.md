@@ -71,7 +71,12 @@ the configured column count and the derived row total, allowing automation to
 recover the plate dimensions without parsing README summaries.
 The metadata uses the same naming scheme as the SCAD source—`contributions.scad`
 emits `contributions.json`, `gridfinity_plate.scad` writes `gridfinity_plate.json`,
-and so on.
+ and so on.
+
+Pass `--json run-summary.json` to capture a run-level summary alongside the per-file
+metadata. The summary records every generated SCAD file, its STL counterpart
+(when present), and the path to the associated metadata document so downstream
+tooling can ingest a single JSON payload.
 
 Values below one trigger a parser error before any files are written, keeping invalid
 `--months-per-row` settings from generating partial outputs. When you omit

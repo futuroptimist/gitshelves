@@ -271,6 +271,72 @@ def test_cli_env_token(tmp_path, monkeypatch):
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
+def test_cli_writes_run_summary(tmp_path, monkeypatch, capsys):
+    output = tmp_path / "summary.scad"
+    summary = tmp_path / "run-summary.json"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=12,
+        json=str(summary),
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-02-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=12: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "//"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        *,
+        include_baseplate_stl=False,
+        calendar_slug=calendar_slug(),
+    ):
+        path = tmp_path / "stl" / str(year) / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# materials")
+        return path
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
+
+    cli.main()
+
+    assert summary.exists()
+    data = json.loads(summary.read_text())
+    assert data["outputs"]
+    monthly = next(entry for entry in data["outputs"] if entry["kind"] == "monthly")
+    assert monthly["scad"] == str(output)
+    assert monthly["metadata"].endswith("run-summary.json") is False
+    captured = capsys.readouterr().out
+    assert f"Wrote {summary}" in captured
+
+
 def test_cli_github_token_env(tmp_path, monkeypatch):
     output = tmp_path / "out.scad"
     args = argparse.Namespace(
