@@ -43,6 +43,9 @@ in the current directory. The example sets `--months-per-row 10`; omit this
 flag to keep the default of 12 months per row. Use `--output` to pick a
 different `.scad` filename.
 
+Re-running without `--stl` removes any existing `contributions.stl` so the
+generated meshes always reflect the current run.
+
 For instance, `--months-per-row 8` lays out eight months per row:
 
 ```bash

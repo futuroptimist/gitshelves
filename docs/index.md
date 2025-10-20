@@ -20,6 +20,9 @@ their chronological order, so `--colors 2`, `--colors 3`, and `--colors 4`
 distribute stacks as evenly as possible before the accent color collects the
 overflow.
 
+Subsequent runs that omit `--stl` remove any lingering `contributions.stl`
+files so optional meshes only appear when requested.
+
 Every SCAD export is paired with JSON metadata that records the geometry flags,
 resolved years, and output paths for the SCAD/STL pair. When no STL is
 generated the file sets `"stl_generated"` to `false` and stores `null` in

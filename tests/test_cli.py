@@ -73,6 +73,59 @@ def test_cli_group_scad_levels_with_mapping_fallback(monkeypatch):
     assert calls == [(("levels",), {"groups": 2})]
 
 
+def test_cli_single_color_without_stl_removes_stale_mesh(tmp_path, monkeypatch):
+    """Docs promise optional STLs stay absent when the flag is omitted."""
+
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output="contributions.scad",
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=None,
+    )
+
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=12: {month: "//" for month in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "// monthly"
+    )
+
+    default_stl = tmp_path / "contributions.stl"
+    default_stl.write_text("old", encoding="utf-8")
+    custom_stl = tmp_path / "custom-output.stl"
+    custom_stl.write_text("old", encoding="utf-8")
+    metadata_path = tmp_path / "contributions.json"
+    metadata_path.write_text(
+        json.dumps({"stl": str(custom_stl)}, indent=2), encoding="utf-8"
+    )
+
+    cli.main()
+
+    assert not default_stl.exists()
+    assert not custom_stl.exists()
+    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    assert payload["stl"] is None
+    assert payload["stl_generated"] is False
+
+
 def test_cli_module_main_guard_invokes_main():
     with pytest.raises(SystemExit):
         runpy.run_module("gitshelves.cli.__init__", run_name="__main__", alter_sys=True)

@@ -1,4 +1,5 @@
 import argparse
+import json
 import re
 import shutil
 import sys
@@ -203,6 +204,25 @@ def _cleanup_color_outputs(
             continue
         if index > color_groups:
             stl_path.unlink(missing_ok=True)
+
+
+def _remove_stale_primary_stl(output_path: Path) -> None:
+    """Delete stale single-color STL meshes when ``--stl`` is omitted."""
+
+    metadata_path = output_path.with_suffix(".json")
+    stale_targets: list[Path] = [output_path.with_suffix(".stl")]
+
+    if metadata_path.exists():
+        try:
+            payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            payload = {}
+        stl_entry = payload.get("stl")
+        if stl_entry:
+            stale_targets.append(Path(stl_entry))
+
+    for target in dict.fromkeys(stale_targets):
+        target.unlink(missing_ok=True)
 
 
 # Backwards compatibility for callers still using the previous helper name.
@@ -485,6 +505,8 @@ def main(argv: list[str] | None = None):
             stl_path.parent.mkdir(parents=True, exist_ok=True)
             scad_to_stl(str(output_path), str(stl_path))
             print(f"Wrote {stl_path}")
+        else:
+            _remove_stale_primary_stl(output_path)
         metadata_writer.write_scad(
             output_path,
             kind="monthly",
