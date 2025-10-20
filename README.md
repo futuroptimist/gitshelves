@@ -40,7 +40,8 @@ python -m gitshelves.cli <github-username> \
 
 The command creates `contributions.scad` (and optionally `contributions.stl`)
 in the current directory. Runs without `--stl` delete any lingering
-`contributions.stl` mesh so the directory mirrors the current invocation. The
+`contributions.stl` mesh so the directory mirrors the current invocation,
+even when older metadata has been removed. The
 example sets `--months-per-row 10`; omit this flag to keep the default of 12
 months per row. Use `--output` to pick a
 different `.scad` filename.
@@ -124,8 +125,9 @@ workflows keep the expected file set; STL rendering is skipped for those empty g
 `_colorN.stl` meshes are deleted so unused groups leave no stale geometry behind.
 When you reduce the palette, stale `_colorN.scad` files above the requested range are removed alongside
 those `_colorN.stl` meshes (and every `_colorN.stl` is purged when `--stl` isn't requested) so follow-on
-jobs only see the current color set. Returning to single-color runs with `--colors 1` clears any lingering
-`_colorN` SCAD/STL files, leaving only the combined contribution export.
+jobs only see the current color set. Switching to multi-color outputs removes the unified `<name>.scad`
+export and its metadata so only the `_colorN` files remain. Returning to single-color runs with `--colors 1`
+clears any lingering `_colorN` SCAD/STL files, leaving only the combined contribution export.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).

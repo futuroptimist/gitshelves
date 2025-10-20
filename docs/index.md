@@ -12,7 +12,8 @@ using binary output (`--export-format binstl`) to mirror the CI workflow.
 Use `--output` to change the `.scad` filename, `--months-per-row` to control the
 grid width, `--stl` to specify an STL output path, and `--colors` to split
 blocks into up to four color groups. Reruns without `--stl` delete any lingering
-monthly STL so the output directory reflects the latest invocation. `--colors 2`
+monthly STL so the output directory reflects the latest invocation, even when
+previous metadata is missing. `--colors 2`
 writes `*_color1.scad` and
 `*_color2.scad`, `--colors 3` and `--colors 4` add the matching `*_color3.scad`
 and `*_color4.scad`, and `--colors 5` keeps the same four block files while
@@ -71,6 +72,8 @@ behind.
 When you dial the palette down, `_colorN.scad` files beyond the active range are
 deleted alongside those `_colorN.stl` meshes (and every `_colorN.stl` is purged
 when `--stl` is omitted), keeping the folder limited to the current color set.
+Switching to multi-color exports removes the unified `<name>.scad` artifact and its
+metadata so only the `_colorN` files remain in the output directory.
 Switching back to single-color exports with `--colors 1` removes any lingering
 `_colorN` SCAD/STL outputs so only the unified contribution file remains.
 
