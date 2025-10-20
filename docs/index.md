@@ -69,6 +69,8 @@ behind.
 When you dial the palette down, `_colorN.scad` files beyond the active range are
 deleted alongside those `_colorN.stl` meshes (and every `_colorN.stl` is purged
 when `--stl` is omitted), keeping the folder limited to the current color set.
+Switching to multi-color exports removes the unified `<name>.scad` artifact and its
+metadata so only the `_colorN` files remain in the output directory.
 Switching back to single-color exports with `--colors 1` removes any lingering
 `_colorN` SCAD/STL outputs so only the unified contribution file remains.
 
