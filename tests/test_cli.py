@@ -126,6 +126,20 @@ def test_cli_single_color_without_stl_removes_stale_mesh(tmp_path, monkeypatch):
     assert payload["stl_generated"] is False
 
 
+def test_remove_stale_primary_stl_handles_invalid_metadata(tmp_path):
+    output_path = tmp_path / "contributions.scad"
+    default_stl = output_path.with_suffix(".stl")
+    default_stl.write_text("old")
+
+    metadata_path = output_path.with_suffix(".json")
+    metadata_path.write_text("not-json", encoding="utf-8")
+
+    cli._remove_stale_primary_stl(output_path)
+
+    assert not default_stl.exists()
+    assert metadata_path.read_text(encoding="utf-8") == "not-json"
+
+
 def test_cli_module_main_guard_invokes_main():
     with pytest.raises(SystemExit):
         runpy.run_module("gitshelves.cli.__init__", run_name="__main__", alter_sys=True)
