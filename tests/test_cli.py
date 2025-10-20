@@ -1686,6 +1686,14 @@ def test_cli_without_stl_removes_previous_monthly_mesh(tmp_path, monkeypatch):
     assert metadata["stl"] is None
 
 
+def test_previous_monthly_stl_path_ignores_empty_metadata(tmp_path):
+    output = tmp_path / "contrib.scad"
+    metadata_path = output.with_suffix(".json")
+    metadata_path.write_text(json.dumps({"stl": ""}))
+
+    assert cli._previous_monthly_stl_path(output) is None
+
+
 def test_cli_colors_with_more_levels_than_groups(tmp_path, monkeypatch, capsys):
     base = tmp_path / "many.scad"
     args = argparse.Namespace(
