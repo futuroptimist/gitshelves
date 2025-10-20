@@ -226,10 +226,17 @@ def _remove_previous_monthly_stl(output_path: Path) -> None:
     """Delete the STL recorded in ``output_path`` metadata if present."""
 
     previous = _previous_monthly_stl_path(output_path)
-    if previous is None:
+    if previous is not None:
+        previous.unlink(missing_ok=True)
         return
 
-    previous.unlink(missing_ok=True)
+    # Fall back to removing the default sibling STL when metadata is missing.
+    fallback = (
+        output_path.with_suffix(".stl")
+        if output_path.suffix
+        else output_path.parent / f"{output_path.name}.stl"
+    )
+    fallback.unlink(missing_ok=True)
 
 
 # Backwards compatibility for callers still using the previous helper name.

@@ -40,7 +40,8 @@ python -m gitshelves.cli <github-username> \
 
 The command creates `contributions.scad` (and optionally `contributions.stl`)
 in the current directory. Runs without `--stl` delete any lingering
-`contributions.stl` mesh so the directory mirrors the current invocation. The
+`contributions.stl` mesh so the directory mirrors the current invocation,
+even when older metadata has been removed. The
 example sets `--months-per-row 10`; omit this flag to keep the default of 12
 months per row. Use `--output` to pick a
 different `.scad` filename.
