@@ -56,7 +56,12 @@ Sep Oct Nov Dec</pre>
         <code>--months-per-row 8</code>
       </td>
       <td>
-        Same as two-tone palette<br>
+        <code>contributions_color1.scad</code><br>
+        <code>contributions_color2.scad</code><br>
+        <code>contributions_color3.scad</code><br>
+        Optional matching STLs<br>
+        <code>contributions_baseplate.scad</code><br>
+        Optional <code>contributions_baseplate.stl</code><br>
         Calendar exports relocate to <code>monthly-8x6/</code>
       </td>
       <td>
