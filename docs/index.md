@@ -24,6 +24,9 @@ Every SCAD export is paired with JSON metadata that records the geometry flags,
 resolved years, and output paths for the SCAD/STL pair. When no STL is
 generated the file sets `"stl_generated"` to `false` and stores `null` in
 `"stl"`, making STL omissions explicit for downstream tooling.
+Provide `--json run-summary.json` to capture a run-level summary that references
+every generated SCAD file, the corresponding STL (when present), and the
+metadata document written alongside it.
 Even when intermediate logarithmic levels are absent, `_color4` still gathers the remaining high
 orders so the accent file continues to highlight the peak contribution range.
 `--months-per-row` values below one exit with a parser error before any files are

@@ -64,3 +64,29 @@ def test_metadata_writer_unlink(tmp_path):
     MetadataWriter.unlink_for(scad_path)
 
     assert not json_path.exists()
+
+
+def test_metadata_writer_run_summary(tmp_path, writer: MetadataWriter, capsys):
+    scad_path = tmp_path / "example.scad"
+    scad_path.write_text("// test")
+
+    writer.write_scad(
+        scad_path,
+        kind="monthly",
+        monthly_contributions=writer.monthly_contributions(),
+    )
+
+    summary_path = tmp_path / "run.json"
+    writer.write_run_summary(summary_path)
+
+    payload = json.loads(summary_path.read_text())
+    assert payload["outputs"]
+    monthly_entry = next(
+        (entry for entry in payload["outputs"] if entry["kind"] == "monthly"),
+        None,
+    )
+    assert monthly_entry is not None
+    assert monthly_entry["scad"] == str(scad_path)
+    assert monthly_entry["metadata"] == str(scad_path.with_suffix(".json"))
+    captured = capsys.readouterr().out
+    assert f"Wrote {summary_path}" in captured
