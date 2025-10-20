@@ -110,6 +110,8 @@ groups are appended to the final `color` output so accent-colored cubes repeat f
 of magnitude. `group_scad_levels` enforces this by keeping the first three levels in their own
 groups and funneling all higher orders into the fourth group whenever five colors are requested,
 so the accent color consistently represents the highest magnitudes.
+Switching to multi-color runs removes any lingering combined `<name>.scad` or `.stl` so the
+`_colorN` exports fully replace the single-color block output, mirroring the CLI matrix.
 Even when intermediate logarithmic levels are missing, `_color4` still gathers the remaining high
 orders so the accent file continues to flag the peak activity.
 Pass `--baseplate-template baseplate_1x12.scad`

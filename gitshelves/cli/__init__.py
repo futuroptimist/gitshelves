@@ -533,6 +533,12 @@ def main(argv: list[str] | None = None):
             base_output = base_output.with_suffix("")
         _cleanup_color_outputs(base_output, 0, stl_requested=bool(args.stl))
     else:
+        _remove_previous_monthly_stl(output_path)
+        if args.stl:
+            Path(args.stl).unlink(missing_ok=True)
+        output_path.with_suffix(".stl").unlink(missing_ok=True)
+        output_path.unlink(missing_ok=True)
+        MetadataWriter.unlink_for(output_path)
         level_scads = generate_scad_monthly_levels(
             counts, months_per_row=args.months_per_row
         )

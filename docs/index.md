@@ -21,6 +21,8 @@ balance the logarithmic levels across the available groups while preserving
 their chronological order, so `--colors 2`, `--colors 3`, and `--colors 4`
 distribute stacks as evenly as possible before the accent color collects the
 overflow.
+Switching to multi-color runs removes any existing combined `<name>.scad`/`.stl`
+output so the `_colorN` files fully replace the single-color export.
 
 Every SCAD export is paired with JSON metadata that records the geometry flags,
 resolved years, and output paths for the SCAD/STL pair. When no STL is
