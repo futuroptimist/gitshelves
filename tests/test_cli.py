@@ -1619,6 +1619,73 @@ def test_cli_multi_color_without_stl_removes_lingering_color_meshes(
     assert (tmp_path / "nostl_color3.scad").exists()
 
 
+def test_cli_without_stl_removes_previous_monthly_mesh(tmp_path, monkeypatch):
+    """README describes the STL output as optional and should remove stale meshes."""
+
+    output = tmp_path / "contrib.scad"
+    monthly_stl = tmp_path / "contrib.stl"
+
+    args_with_stl = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=str(monthly_stl),
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=None,
+    )
+
+    args_without_stl = argparse.Namespace(**{**args_with_stl.__dict__, "stl": None})
+
+    args_iter = iter([args_with_stl, args_without_stl])
+
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: next(args_iter)
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *_args, **_kwargs: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_scad_monthly",
+        lambda _counts, months_per_row=12: "// monthly",
+    )
+
+    def fake_calendars(_daily, year, *, days_per_row):
+        assert days_per_row == 12
+        return {month: "// calendar" for month in range(1, 13)}
+
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        fake_calendars,
+    )
+
+    def fake_scad_to_stl(src: str, dest: str) -> None:
+        Path(dest).write_text("solid", encoding="utf-8")
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_scad_to_stl)
+
+    cli.main()
+    assert monthly_stl.exists()
+
+    cli.main()
+    assert not monthly_stl.exists()
+
+    metadata = json.loads(output.with_suffix(".json").read_text())
+    assert metadata["stl_generated"] is False
+    assert metadata["stl"] is None
+
+
 def test_cli_colors_with_more_levels_than_groups(tmp_path, monkeypatch, capsys):
     base = tmp_path / "many.scad"
     args = argparse.Namespace(
