@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -95,6 +96,9 @@ class MetadataWriter:
     gridfinity_columns: int
     gridfinity_cubes: bool
     baseplate_template: str
+    _records: list[tuple[Dict[str, Any], Path]] = field(
+        default_factory=list, init=False, repr=False
+    )
 
     def _common_payload(self) -> Dict[str, Any]:
         return {
@@ -173,6 +177,25 @@ class MetadataWriter:
         metadata_path.parent.mkdir(parents=True, exist_ok=True)
         metadata_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
         print(f"Wrote {metadata_path}")
+        self._records.append((copy.deepcopy(payload), metadata_path))
+
+    def write_run_summary(self, json_path: Path | str) -> Path:
+        """Write a run-level metadata summary covering all SCAD artifacts."""
+
+        summary_path = Path(json_path)
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        summary: Dict[str, Any] = {
+            **self._common_payload(),
+            "outputs": [],
+        }
+        for payload, metadata_path in self._records:
+            entry = dict(payload)
+            entry["metadata"] = str(metadata_path)
+            summary["outputs"].append(entry)
+
+        summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+        print(f"Wrote {summary_path}")
+        return summary_path
 
     @staticmethod
     def unlink_for(scad_path: Path) -> None:
