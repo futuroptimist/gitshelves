@@ -497,7 +497,7 @@ def main(argv: list[str] | None = None):
         level_scads = generate_scad_monthly_levels(
             counts, months_per_row=args.months_per_row
         )
-        color_groups = args.colors - 1 if args.colors > 1 else 1
+        color_groups = min(args.colors, 4) if args.colors > 1 else 1
         grouped, level_mapping = group_scad_levels_with_mapping(
             level_scads, color_groups
         )

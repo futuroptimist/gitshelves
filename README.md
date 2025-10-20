@@ -84,15 +84,17 @@ Print the current version with:
 python -m gitshelves.cli --version
 ```
 
-Use `--colors` to control multi-color outputs. `--colors 2` produces one block file and a baseplate
-for two-color prints. `--colors 3` or `4` group logarithmic levels into additional color files, and
-`--colors 5` separates the levels into four distinct block colors. Smaller palettes balance the
-logarithmic levels across the available groups while preserving their chronological order, so
-`--colors 2`, `--colors 3`, and `--colors 4` spread stacks as evenly as possible before the accent
-color kicks in. Each `*_colorN.scad` (`*_colorN.stl`) contains the blocks for a color group, and the
-baseplate is written as `<name>_baseplate.scad` (and `.stl` when requested). When contribution
-counts span more than four logarithmic levels, the fourth color collects the remaining higher
-magnitudes so extra orders reuse the accent color.
+Use `--colors` to control multi-color outputs. `--colors 2` splits blocks between
+`*_color1.scad` and `*_color2.scad` while also writing `<name>_baseplate.scad` for the baseplate.
+`--colors 3` and `--colors 4` add `*_color3.scad` and `*_color4.scad` so up to four block groups are
+generated, and `--colors 5` keeps the same four block colors while reusing the accent file for any
+additional logarithmic levels. Smaller palettes balance the logarithmic levels across the available
+groups while preserving their chronological order, so `--colors 2`, `--colors 3`, and `--colors 4`
+spread stacks as evenly as possible before the accent color kicks in. Each `*_colorN.scad`
+(`*_colorN.stl`) contains the blocks for a color group, and the baseplate is written as
+`<name>_baseplate.scad` (and `.stl` when requested). When contribution counts span more than four
+logarithmic levels, the fourth color collects the remaining higher magnitudes so extra orders reuse
+the accent color.
 Lower magnitudes stay in the earliest `color` files, and any surplus levels beyond the available
 groups are appended to the final `color` output so accent-colored cubes repeat for larger orders
 of magnitude. `group_scad_levels` enforces this by keeping the first three levels in their own
