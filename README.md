@@ -121,7 +121,8 @@ Gridfinity baseplate and arranges monthly contribution cubes on top of it. The l
 columns (a 2×6 plate); adjust the footprint with `--gridfinity-columns` to match your storage grid.
 The column count must be a positive integer—values below one are rejected before any files are written.
 When `--stl` is supplied, the CLI also renders `stl/<year>/gridfinity_plate.stl` so the baseplate is
-ready to print alongside the contribution cubes. Re-running without `--gridfinity-layouts` removes
+ready to print alongside the contribution cubes. Runs that omit `--stl` delete any existing
+`gridfinity_plate.stl` meshes so the directory mirrors the current invocation. Re-running without `--gridfinity-layouts` removes
 any previously generated `gridfinity_plate.scad`/`.stl` pairs so stale layouts do not linger. Pair it
 with `--gridfinity-cubes` to generate `contrib_cube_MM.scad` stacks for every month that recorded
 contributions. The CLI always renders matching `contrib_cube_MM.stl` meshes when this flag is enabled,

@@ -36,7 +36,8 @@ bins are stacked onto a parametric baseplate; adjust the footprint with
 `--gridfinity-columns`. Supply a positive integer—values below one raise a
 parser error before any files are generated. When `--stl` is provided, the CLI also renders
 `stl/<year>/gridfinity_plate.stl` so baseplates are printable without manual
-conversion, and skipping `--gridfinity-layouts` on a later run removes any
+conversion. Omitting `--stl` deletes any existing layout STLs so the folder
+matches the current run, and skipping `--gridfinity-layouts` on a later run removes any
 previous `gridfinity_plate.*` outputs so folders do not accumulate stale
 layouts. Enable `--gridfinity-cubes` to export `contrib_cube_MM.scad` stacks for
 every month with activity. Matching `contrib_cube_MM.stl` meshes are rendered

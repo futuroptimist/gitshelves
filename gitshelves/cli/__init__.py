@@ -413,6 +413,8 @@ def main(argv: list[str] | None = None):
             if args.stl:
                 scad_to_stl(str(layout_path), str(layout_stl_path))
                 print(f"Wrote {layout_stl_path}")
+            else:
+                layout_stl_path.unlink(missing_ok=True)
             metadata_writer.write_scad(
                 layout_path,
                 kind="gridfinity-layout",
