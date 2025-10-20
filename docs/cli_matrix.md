@@ -129,7 +129,8 @@ Jul Aug Sep Oct Nov Dec</pre>
 
 - The monthly previews illustrate the top rows of the summary grid.
 - When `--colors` is greater than one, `_colorN` SCAD/STL files replace the combined
-  block export. `_baseplate` outputs always accompany color runs.
+  block export and any lingering single-color `<name>.scad`/`.stl` files are removed.
+  `_baseplate` outputs always accompany color runs.
 - `--gridfinity-cubes` removes stale `contrib_cube_MM` files (and any lingering STLs
   when `--stl` is absent) so directories stay aligned with the latest data.
 - `--gridfinity-columns` only applies when `--gridfinity-layouts` is active. Values
