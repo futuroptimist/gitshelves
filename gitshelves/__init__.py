@@ -2,6 +2,7 @@
 
 from importlib import metadata
 
+from .baseplate import load_baseplate_scad
 from .render.scad import (
     generate_scad,
     generate_scad_monthly,
@@ -25,5 +26,6 @@ __all__ = [
     "blocks_for_contributions",
     "generate_gridfinity_plate_scad",
     "fetch_user_contributions",
+    "load_baseplate_scad",
     "__version__",
 ]
