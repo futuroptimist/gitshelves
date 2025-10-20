@@ -11,7 +11,9 @@ The CLI can export OpenSCAD scripts and, if `openscad` is installed, STL meshes
 using binary output (`--export-format binstl`) to mirror the CI workflow.
 Use `--output` to change the `.scad` filename, `--months-per-row` to control the
 grid width, `--stl` to specify an STL output path, and `--colors` to split
-blocks into up to four color groups. `--colors 2` writes `*_color1.scad` and
+blocks into up to four color groups. Reruns without `--stl` delete any lingering
+monthly STL so the output directory reflects the latest invocation. `--colors 2`
+writes `*_color1.scad` and
 `*_color2.scad`, `--colors 3` and `--colors 4` add the matching `*_color3.scad`
 and `*_color4.scad`, and `--colors 5` keeps the same four block files while
 funnelling extra logarithmic levels into the accent color. Smaller palettes

@@ -1,4 +1,5 @@
 import argparse
+import json
 import re
 import shutil
 import sys
@@ -205,6 +206,32 @@ def _cleanup_color_outputs(
             stl_path.unlink(missing_ok=True)
 
 
+def _previous_monthly_stl_path(output_path: Path) -> Path | None:
+    """Return the STL recorded in the output metadata, if any."""
+
+    metadata_path = output_path.with_suffix(".json")
+    try:
+        data = json.loads(metadata_path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+    stl_value = data.get("stl")
+    if not stl_value:
+        return None
+
+    return Path(stl_value)
+
+
+def _remove_previous_monthly_stl(output_path: Path) -> None:
+    """Delete the STL recorded in ``output_path`` metadata if present."""
+
+    previous = _previous_monthly_stl_path(output_path)
+    if previous is None:
+        return
+
+    previous.unlink(missing_ok=True)
+
+
 # Backwards compatibility for callers still using the previous helper name.
 _cleanup_unused_color_outputs = _cleanup_color_outputs
 
@@ -346,6 +373,10 @@ def main(argv: list[str] | None = None):
         baseplate_template=args.baseplate_template,
     )
 
+    output_path = Path(args.output)
+    if not args.stl:
+        _remove_previous_monthly_stl(output_path)
+
     render_yearly_stl = bool(args.stl)
     for year in range(start_year, end_year + 1):
         extras: list[str] = []
@@ -479,7 +510,6 @@ def main(argv: list[str] | None = None):
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
-        output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(scad_text)
         print(f"Wrote {output_path}")
@@ -495,7 +525,7 @@ def main(argv: list[str] | None = None):
             stl_path=stl_path,
             monthly_contributions=metadata_writer.monthly_contributions(),
         )
-        base_output = Path(args.output)
+        base_output = output_path
         if base_output.suffix:
             base_output = base_output.with_suffix("")
         _cleanup_color_outputs(base_output, 0, stl_requested=bool(args.stl))
@@ -517,7 +547,7 @@ def main(argv: list[str] | None = None):
         zero_comments = generate_zero_month_annotations(
             counts, months_per_row=args.months_per_row
         )
-        base_output = Path(args.output)
+        base_output = output_path
         base_output.parent.mkdir(parents=True, exist_ok=True)
         if base_output.suffix:
             base_output = base_output.with_suffix("")
