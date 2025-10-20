@@ -912,6 +912,94 @@ def test_cli_multicolor_removes_stale_color_stls(tmp_path, monkeypatch):
     assert all("color" not in name for name in rendered_names)
 
 
+def test_cli_multicolor_replaces_combined_outputs(tmp_path, monkeypatch):
+    """Multi-color runs should remove the combined monthly export (README promise)."""
+
+    output = tmp_path / "combined.scad"
+    stl_output = tmp_path / "combined.stl"
+
+    single_args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2024,
+        end_year=2024,
+        output=str(output),
+        months_per_row=12,
+        stl=str(stl_output),
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    multi_args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2024,
+        end_year=2024,
+        output=str(output),
+        months_per_row=12,
+        stl=str(stl_output),
+        colors=3,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+    arg_runs = [single_args, multi_args]
+    monkeypatch.setattr(
+        argparse.ArgumentParser,
+        "parse_args",
+        lambda self, *a, **k: arg_runs.pop(0),
+    )
+    monkeypatch.chdir(tmp_path)
+
+    contributions = [
+        {"created_at": "2024-01-01T00:00:00Z"},
+        {"created_at": "2024-03-05T00:00:00Z"},
+    ]
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: contributions)
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// Baseplate"
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SINGLE"
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_scad_monthly_levels",
+        lambda counts, months_per_row=12: {1: "//\nLEVEL"},
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_zero_month_annotations",
+        lambda counts, months_per_row=12: ["// zero"],
+    )
+    monkeypatch.setattr(
+        cli, "scad_to_stl", lambda _src, dest: Path(dest).write_text("mesh")
+    )
+
+    cli.main()
+    assert output.exists()
+    assert output.with_suffix(".json").exists()
+    assert stl_output.exists()
+
+    cli.main()
+
+    assert not output.exists(), "Combined SCAD should be removed after multi-color run"
+    assert not output.with_suffix(
+        ".json"
+    ).exists(), "Combined metadata should be removed"
+    assert not stl_output.exists(), "Combined STL should be removed"
+    color_files = sorted(tmp_path.glob("combined_color*.scad"))
+    assert color_files, "Color-group exports should replace the combined file"
+
+
 def test_cli_multicolor_drops_stale_files_when_palette_shrinks(tmp_path, monkeypatch):
     """Shrinking the palette should remove stale `_colorN` outputs (README promise)."""
 

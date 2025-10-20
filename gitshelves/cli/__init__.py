@@ -515,7 +515,16 @@ def main(argv: list[str] | None = None):
         base_output.parent.mkdir(parents=True, exist_ok=True)
         if base_output.suffix:
             base_output = base_output.with_suffix("")
-        base_stl = Path(args.stl) if args.stl else None
+        combined_scad_path = Path(args.output)
+        combined_scad_path.unlink(missing_ok=True)
+        MetadataWriter.unlink_for(combined_scad_path)
+        original_stl_path = Path(args.stl) if args.stl else None
+        if original_stl_path:
+            original_stl_path.unlink(missing_ok=True)
+        else:
+            combined_scad_path.with_suffix(".stl").unlink(missing_ok=True)
+
+        base_stl = original_stl_path
         if base_stl:
             base_stl.parent.mkdir(parents=True, exist_ok=True)
             if base_stl.suffix:
