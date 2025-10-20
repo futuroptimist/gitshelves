@@ -2776,6 +2776,91 @@ def test_cli_cleans_up_gridfinity_cubes_when_flag_disabled(
     assert not stale_stl.exists(), "Cube STL should be removed when flag is absent"
 
 
+def test_cli_removes_gridfinity_layout_stl_when_stl_flag_dropped(
+    tmp_path, monkeypatch, gridfinity_library
+):
+    """Gridfinity layout STLs should clear when `--stl` is omitted on reruns."""
+
+    base = tmp_path / "grid.scad"
+    stl_target = tmp_path / "grid.stl"
+    args_with_stl = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=str(stl_target),
+        colors=1,
+        gridfinity_layouts=True,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=5,
+    )
+    args_without_stl = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=True,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=5,
+    )
+    args_queue = [args_with_stl, args_without_stl]
+
+    def fake_parse_args(self, *a, **k):
+        return args_queue.pop(0)
+
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", fake_parse_args)
+    monkeypatch.chdir(tmp_path)
+
+    entries = [{"created_at": "2021-02-01T00:00:00Z"}]
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: entries)
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=5: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "SCAD"
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_gridfinity_plate_scad",
+        lambda counts, year, columns=6: "// gridfinity",
+    )
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// baseplate"
+    )
+
+    def fake_scad_to_stl(src, dest):
+        dest_path = Path(dest)
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        dest_path.write_text("binary")
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_scad_to_stl)
+
+    cli.main()
+
+    year_dir = tmp_path / "stl" / "2021"
+    layout_stl = year_dir / "gridfinity_plate.stl"
+    assert layout_stl.exists()
+
+    cli.main()
+
+    assert not layout_stl.exists(), "Layout STL should be removed when not requested"
+    layout_metadata = json.loads((year_dir / "gridfinity_plate.json").read_text())
+    assert layout_metadata["stl_generated"] is False
+    assert layout_metadata["stl"] is None
+
+
 def test_cli_readme_mentions_gridfinity_outputs(
     tmp_path, monkeypatch, gridfinity_library
 ):
