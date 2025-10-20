@@ -71,10 +71,12 @@ emits `contributions.json`, `gridfinity_plate.scad` writes `gridfinity_plate.jso
 and so on.
 
 Values below one trigger a parser error before any files are written, keeping invalid
-`--months-per-row` settings from generating partial outputs. Tune the daily calendar
-footprint with `--calendar-days-per-row` (default `5`) to change how many days each
-row in the generated `monthly-{days_per_row}x6` SCAD files holds (default
-`monthly-5x6`) while leaving the monthly summary grid untouched.
+`--months-per-row` settings from generating partial outputs. When you omit
+`--calendar-days-per-row`, the CLI mirrors the monthly grid so daily calendars use the
+same width (`monthly-12x6` with the default layout). Pass `--calendar-days-per-row`
+to override that width; the generated directories always follow the
+`monthly-{days_per_row}x6` naming pattern while leaving the monthly summary grid
+untouched.
 
 Print the current version with:
 
@@ -214,12 +216,13 @@ to print without extra commands. Re-running without `--stl` removes any lingerin
 `baseplate_2x6.stl` meshes so yearly folders only contain artifacts from the current run. The CLI writes these summaries and baseplates for every year in the
 requested range, even when a year has no contributions, so your shelf layout stays predictable.
 Day-level views are also written to `stl/<year>/<calendar-slug>/` as OpenSCAD files. Each
-calendar lays out the month's days in rows of five to stay within a 256 mm square build area (use
-`--calendar-days-per-row` to widen or narrow the rows), adding a partial row for 31-day months.
-The folder slug mirrors the configured width (for example `monthly-7x6` when seven days share a
-row) and defaults to `monthly-5x6`. Days without activity are annotated as reserved slots (for
-example `// 2024-02-05 (0 contributions) reserved at [48, 0]`) so you can confirm spacing even
-when a cube isn't generated.
+calendar mirrors the monthly grid width when `--calendar-days-per-row` is omitted, keeping the
+default layout within a 256 mm square build area (`monthly-12x6`). Use
+`--calendar-days-per-row` to widen or narrow the rows as needed; the CLI still adds a partial row
+for 31-day months. The folder slug mirrors the configured width (for example `monthly-7x6` when
+seven days share a row). Days without activity are annotated as reserved slots (for example
+`// 2024-02-05 (0 contributions) reserved at [48, 0]`) so you can confirm spacing even when a
+cube isn't generated.
 Monthly `.scad` exports reserve slots for every month in the requested range as well, so years without
 activity remain in place—they simply render zero-height stacks until you contribute again.
 Months without contributions are annotated in the SCAD output so you can confirm each slot's

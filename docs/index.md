@@ -25,9 +25,10 @@ generated the file sets `"stl_generated"` to `false` and stores `null` in
 Even when intermediate logarithmic levels are absent, `_color4` still gathers the remaining high
 orders so the accent file continues to highlight the peak contribution range.
 `--months-per-row` values below one exit with a parser error before any files are
-generated so invalid layouts never produce partial outputs. Use
-`--calendar-days-per-row` (default `5`) to widen or narrow the daily calendar rows
-without changing the monthly summary grid.
+generated so invalid layouts never produce partial outputs. When you omit
+`--calendar-days-per-row`, the CLI mirrors the monthly grid so daily calendars adopt
+the same width (`monthly-12x6` by default). Provide `--calendar-days-per-row` to widen
+or narrow the daily calendar rows without changing the monthly summary grid.
 `--baseplate-template` selects which bundled Gridfinity baseplate (such as
 `baseplate_1x12.scad`) is copied when multi-color exports request a baseplate.
 `--gridfinity-layouts` writes `stl/<year>/gridfinity_plate.scad` so Gridfinity
@@ -84,9 +85,10 @@ note `SCAD + STL`, even without `--stl`, because the CLI renders those meshes au
 records the detected footprint (for example `6×2 grid`) so you can confirm the selected column
 count.
 Monthly day-level calendars live in `stl/<year>/<calendar-slug>/`. Each SCAD arranges up to
-five days per row (adjust the width with `--calendar-days-per-row`) so the footprint fits within a
-256 mm square build area. The directory slug mirrors the configured width (for example
-`monthly-7x6` when seven days share a row) and defaults to `monthly-5x6`. Days with no
+five days per row and mirrors the monthly grid width when `--calendar-days-per-row` is omitted
+so the footprint stays within a 256 mm square build area (`monthly-12x6` by default). Adjust the
+width with `--calendar-days-per-row` when you need a different footprint; the directory slug
+mirrors the configured width (for example `monthly-7x6` when seven days share a row). Days with no
 activity add reserved-slot comments (for example `// 2024-02-05 (0 contributions) reserved at [48, 0]`)
 so you can confirm spacing even when a cube is absent. Monthly contribution `.scad` exports reserve
 every month in the requested range too, keeping the layout stable for years that currently have zero
