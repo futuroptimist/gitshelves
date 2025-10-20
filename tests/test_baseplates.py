@@ -11,6 +11,14 @@ def _read(path: str) -> str:
     return Path(path).read_text()
 
 
+def test_package_root_exports_load_baseplate_scad():
+    """README promises ``load_baseplate_scad`` at the package root."""
+
+    from gitshelves import load_baseplate_scad as root_loader
+
+    assert root_loader is load_baseplate_scad
+
+
 def test_baseplate_2x6_uses_library_without_extraneous_geometry():
     data = _read("openscad/baseplate_2x6.scad")
     assert BASEPLATE_USE in data
