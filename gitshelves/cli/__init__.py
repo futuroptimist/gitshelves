@@ -245,8 +245,10 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--calendar-days-per-row",
         type=int,
-        default=5,
-        help="Days per row in generated monthly calendars",
+        default=None,
+        help=(
+            "Days per row in generated monthly calendars (defaults to match --months-per-row)"
+        ),
     )
     parser.add_argument(
         "--stl",
@@ -294,13 +296,16 @@ def main(argv: list[str] | None = None):
         args = parser.parse_args(argv)
 
     if not hasattr(args, "calendar_days_per_row"):
-        args.calendar_days_per_row = 5
+        args.calendar_days_per_row = None
 
     if args.months_per_row <= 0:
         parser.error("--months-per-row must be positive")
 
     if args.gridfinity_columns <= 0:
         parser.error("--gridfinity-columns must be positive")
+
+    if args.calendar_days_per_row is None:
+        args.calendar_days_per_row = args.months_per_row
 
     if args.calendar_days_per_row <= 0:
         parser.error("--calendar-days-per-row must be positive")

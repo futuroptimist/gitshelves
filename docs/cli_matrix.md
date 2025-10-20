@@ -1,7 +1,9 @@
 # CLI Output Matrix
 
 This matrix shows how the CLI's layout flags combine to produce files and ASCII grids.
-Each preview mirrors the layout comments written into the generated SCAD files.
+Each preview mirrors the layout comments written into the generated SCAD files. When you
+omit `--calendar-days-per-row`, the daily calendars adopt the same width as the monthly grid,
+so the compact and narrow layouts relocate their `monthly-{width}x6` directories automatically.
 
 <table>
   <thead>
