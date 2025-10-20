@@ -456,7 +456,10 @@ def main(argv: list[str] | None = None):
                 stl_path=layout_stl_path if args.stl else None,
                 year=year,
                 monthly_contributions=metadata_writer.monthly_contributions(year=year),
-                details={"columns": args.gridfinity_columns},
+                details={
+                    "columns": args.gridfinity_columns,
+                    "rows": rows,
+                },
             )
         else:
             layout_path.unlink(missing_ok=True)
