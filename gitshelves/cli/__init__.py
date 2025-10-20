@@ -303,6 +303,10 @@ def main(argv: list[str] | None = None):
         default="baseplate_2x6.scad",
         help="Bundled baseplate template to copy when generating multi-color outputs",
     )
+    parser.add_argument(
+        "--json",
+        help="Optional run-level metadata summary file",
+    )
     try:  # pragma: no cover - metadata lookup
         pkg_version = metadata.version("gitshelves")
     except metadata.PackageNotFoundError:  # pragma: no cover
@@ -361,6 +365,10 @@ def main(argv: list[str] | None = None):
         gridfinity_cubes=args.gridfinity_cubes,
         baseplate_template=args.baseplate_template,
     )
+
+    output_path = Path(args.output)
+    if not args.stl:
+        _remove_previous_monthly_stl(output_path)
 
     render_yearly_stl = bool(args.stl)
     for year in range(start_year, end_year + 1):
@@ -441,7 +449,10 @@ def main(argv: list[str] | None = None):
                 stl_path=layout_stl_path if args.stl else None,
                 year=year,
                 monthly_contributions=metadata_writer.monthly_contributions(year=year),
-                details={"columns": args.gridfinity_columns},
+                details={
+                    "columns": args.gridfinity_columns,
+                    "rows": rows,
+                },
             )
         else:
             layout_path.unlink(missing_ok=True)
@@ -495,7 +506,6 @@ def main(argv: list[str] | None = None):
 
     if args.colors == 1:
         scad_text = generate_scad_monthly(counts, months_per_row=args.months_per_row)
-        output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(scad_text)
         print(f"Wrote {output_path}")
@@ -513,7 +523,7 @@ def main(argv: list[str] | None = None):
             stl_path=stl_path,
             monthly_contributions=metadata_writer.monthly_contributions(),
         )
-        base_output = Path(args.output)
+        base_output = output_path
         if base_output.suffix:
             base_output = base_output.with_suffix("")
         _cleanup_color_outputs(base_output, 0, stl_requested=bool(args.stl))
@@ -535,7 +545,7 @@ def main(argv: list[str] | None = None):
         zero_comments = generate_zero_month_annotations(
             counts, months_per_row=args.months_per_row
         )
-        base_output = Path(args.output)
+        base_output = output_path
         base_output.parent.mkdir(parents=True, exist_ok=True)
         if base_output.suffix:
             base_output = base_output.with_suffix("")
@@ -601,6 +611,10 @@ def main(argv: list[str] | None = None):
             )
 
         _cleanup_color_outputs(base_output, color_groups, stl_requested=bool(base_stl))
+
+    summary_path = getattr(args, "json", None)
+    if summary_path:
+        metadata_writer.write_run_summary(summary_path)
 
     # Restore canonical modules so downstream imports see the default implementations.
     sys.modules["gitshelves.scad"] = _scad

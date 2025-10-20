@@ -39,8 +39,10 @@ python -m gitshelves.cli <github-username> \
 ```
 
 The command creates `contributions.scad` (and optionally `contributions.stl`)
-in the current directory. The example sets `--months-per-row 10`; omit this
-flag to keep the default of 12 months per row. Use `--output` to pick a
+in the current directory. Runs without `--stl` delete any lingering
+`contributions.stl` mesh so the directory mirrors the current invocation. The
+example sets `--months-per-row 10`; omit this flag to keep the default of 12
+months per row. Use `--output` to pick a
 different `.scad` filename.
 
 Re-running without `--stl` removes any existing `contributions.stl` so the
@@ -69,9 +71,17 @@ output paths for the SCAD/STL pair. Monthly and daily contribution counts are
 embedded so downstream tooling can render previews or perform comparisons without
 re-parsing the SCAD source. The metadata includes an `"stl_generated"` flag and
 stores `null` in `"stl"` when no mesh is produced so STL omissions are explicit.
+Gridfinity layout metadata also captures the detected footprint by recording both
+the configured column count and the derived row total, allowing automation to
+recover the plate dimensions without parsing README summaries.
 The metadata uses the same naming scheme as the SCAD source—`contributions.scad`
 emits `contributions.json`, `gridfinity_plate.scad` writes `gridfinity_plate.json`,
-and so on.
+ and so on.
+
+Pass `--json run-summary.json` to capture a run-level summary alongside the per-file
+metadata. The summary records every generated SCAD file, its STL counterpart
+(when present), and the path to the associated metadata document so downstream
+tooling can ingest a single JSON payload.
 
 Values below one trigger a parser error before any files are written, keeping invalid
 `--months-per-row` settings from generating partial outputs. When you omit
