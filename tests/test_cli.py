@@ -2859,6 +2859,7 @@ def test_cli_removes_gridfinity_layout_stl_when_stl_flag_dropped(
     layout_metadata = json.loads((year_dir / "gridfinity_plate.json").read_text())
     assert layout_metadata["stl_generated"] is False
     assert layout_metadata["stl"] is None
+    assert layout_metadata["details"] == {"columns": 6, "rows": 2}
 
 
 def test_cli_readme_mentions_gridfinity_outputs(

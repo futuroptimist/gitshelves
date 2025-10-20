@@ -66,6 +66,9 @@ output paths for the SCAD/STL pair. Monthly and daily contribution counts are
 embedded so downstream tooling can render previews or perform comparisons without
 re-parsing the SCAD source. The metadata includes an `"stl_generated"` flag and
 stores `null` in `"stl"` when no mesh is produced so STL omissions are explicit.
+Gridfinity layout metadata also captures the detected footprint by recording both
+the configured column count and the derived row total, allowing automation to
+recover the plate dimensions without parsing README summaries.
 The metadata uses the same naming scheme as the SCAD source—`contributions.scad`
 emits `contributions.json`, `gridfinity_plate.scad` writes `gridfinity_plate.json`,
 and so on.
