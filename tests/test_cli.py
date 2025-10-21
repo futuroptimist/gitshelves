@@ -347,6 +347,151 @@ def test_cli_writes_run_summary(tmp_path, monkeypatch, capsys):
     assert f"Wrote {summary}" in captured
 
 
+def test_cli_removes_stale_run_summary(tmp_path, monkeypatch):
+    output = tmp_path / "summary.scad"
+    stale_summary = tmp_path / "old-summary.json"
+    pointer = tmp_path / "summary.run-summary"
+    pointer.write_text(str(stale_summary.resolve()))
+    stale_summary.write_text("{}")
+
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=12: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "//"
+    )
+
+    cli.main()
+
+    assert not stale_summary.exists()
+    assert not pointer.exists()
+
+
+def test_cli_removes_relative_run_summary(tmp_path, monkeypatch):
+    output = tmp_path / "summary.scad"
+    pointer = tmp_path / "summary.run-summary"
+    pointer.write_text("run-summary.json")
+    summary_path = tmp_path / "run-summary.json"
+    summary_path.write_text("{}")
+
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=12: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "//"
+    )
+
+    cli.main()
+
+    assert not summary_path.exists()
+    assert not pointer.exists()
+
+
+def test_cli_updates_run_summary_pointer(tmp_path, monkeypatch, capsys):
+    output = tmp_path / "summary.scad"
+    new_summary = tmp_path / "run-summary.json"
+    old_summary = tmp_path / "old-summary.json"
+    pointer = tmp_path / "summary.run-summary"
+    pointer.write_text(str(old_summary.resolve()))
+    old_summary.write_text("{}")
+
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        json=str(new_summary),
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2021-02-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=12: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "generate_scad_monthly", lambda counts, months_per_row=12: "//"
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    cli.main()
+
+    assert not old_summary.exists()
+    assert new_summary.exists()
+    pointer_text = pointer.read_text().strip()
+    assert Path(pointer_text) == new_summary.resolve()
+    captured = capsys.readouterr().out
+    assert f"Wrote {new_summary}" in captured
+
+
 def test_cli_github_token_env(tmp_path, monkeypatch):
     output = tmp_path / "out.scad"
     args = argparse.Namespace(

@@ -207,6 +207,40 @@ def _cleanup_color_outputs(
             stl_path.unlink(missing_ok=True)
 
 
+def _summary_pointer_path(base_output: Path) -> Path:
+    """Return the pointer file used to track the last run-summary path."""
+
+    return base_output.with_name(f"{base_output.name}.run-summary")
+
+
+def _previous_run_summary(pointer_path: Path) -> Path | None:
+    """Return the previously recorded run-summary path, if any."""
+
+    try:
+        recorded = pointer_path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return None
+    except OSError:
+        pointer_path.unlink(missing_ok=True)
+        return None
+
+    if not recorded:
+        pointer_path.unlink(missing_ok=True)
+        return None
+
+    summary_path = Path(recorded)
+    if not summary_path.is_absolute():
+        summary_path = (pointer_path.parent / summary_path).resolve()
+    return summary_path
+
+
+def _record_run_summary(pointer_path: Path, summary_path: Path) -> None:
+    """Persist ``summary_path`` so future runs can remove stale summaries."""
+
+    pointer_path.parent.mkdir(parents=True, exist_ok=True)
+    pointer_path.write_text(str(summary_path.resolve()), encoding="utf-8")
+
+
 def _cleanup_baseplate_output(base_output: Path) -> None:
     """Remove multi-color baseplate artifacts when switching to single-color runs."""
 
@@ -404,6 +438,20 @@ def main(argv: list[str] | None = None):
     )
 
     output_path = Path(args.output)
+    base_output_no_suffix = (
+        output_path.with_suffix("") if output_path.suffix else output_path
+    )
+    summary_pointer = _summary_pointer_path(base_output_no_suffix)
+    summary_arg = getattr(args, "json", None)
+    previous_summary = _previous_run_summary(summary_pointer)
+    if summary_arg is None:
+        if previous_summary is not None:
+            previous_summary.unlink(missing_ok=True)
+            summary_pointer.unlink(missing_ok=True)
+    else:
+        new_summary_path = Path(summary_arg).resolve()
+        if previous_summary is not None and previous_summary != new_summary_path:
+            previous_summary.unlink(missing_ok=True)
     if not args.stl:
         _remove_previous_monthly_stl(output_path)
 
@@ -563,9 +611,7 @@ def main(argv: list[str] | None = None):
             monthly_contributions=metadata_writer.monthly_contributions(),
             daily_contributions=metadata_writer.daily_contributions(),
         )
-        base_output = output_path
-        if base_output.suffix:
-            base_output = base_output.with_suffix("")
+        base_output = base_output_no_suffix
         _cleanup_color_outputs(base_output, 0, stl_requested=bool(args.stl))
         _cleanup_baseplate_output(base_output)
     else:
@@ -592,10 +638,8 @@ def main(argv: list[str] | None = None):
         zero_comments = generate_zero_month_annotations(
             counts, months_per_row=args.months_per_row
         )
-        base_output = output_path
+        base_output = base_output_no_suffix
         base_output.parent.mkdir(parents=True, exist_ok=True)
-        if base_output.suffix:
-            base_output = base_output.with_suffix("")
         base_stl = Path(args.stl) if args.stl else None
         if base_stl:
             base_stl.parent.mkdir(parents=True, exist_ok=True)
@@ -664,6 +708,7 @@ def main(argv: list[str] | None = None):
     summary_path = getattr(args, "json", None)
     if summary_path:
         metadata_writer.write_run_summary(summary_path)
+        _record_run_summary(summary_pointer, Path(summary_path))
 
     # Restore canonical modules so downstream imports see the default implementations.
     sys.modules["gitshelves.scad"] = _scad
