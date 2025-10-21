@@ -67,9 +67,13 @@ JSON records the CLI arguments that influence geometry (color count, Gridfinity
 flags, baseplate template, calendar spacing), the resolved year range, and the
 output paths for the SCAD/STL pair. Monthly and daily contribution counts are
 embedded so downstream tooling can render previews or perform comparisons without
-re-parsing the SCAD source. The metadata includes an `"stl_generated"` flag and
-stores `null` in `"stl"` when no mesh is produced so STL omissions are explicit.
-Gridfinity layout metadata also captures the detected footprint by recording both
+re-parsing the SCAD source. Yearly baseplate metadata and Gridfinity layouts now
+carry the filtered day-level counts for their year, and every `gridfinity-cube`
+metadata file stores the month-specific daily histogram so automations can reuse
+the exact contribution timeline without recomputing filters. The metadata
+includes an `"stl_generated"` flag and stores `null` in `"stl"` when no mesh is
+produced so STL omissions are explicit. Gridfinity layout metadata also captures the
+detected footprint by recording both
 the configured column count and the derived row total, allowing automation to
 recover the plate dimensions without parsing README summaries.
 The metadata uses the same naming scheme as the SCAD source—`contributions.scad`

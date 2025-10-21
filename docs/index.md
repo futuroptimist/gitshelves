@@ -26,9 +26,11 @@ Switching to multi-color runs removes any existing combined `<name>.scad`/`.stl`
 output so the `_colorN` files fully replace the single-color export.
 
 Every SCAD export is paired with JSON metadata that records the geometry flags,
-resolved years, and output paths for the SCAD/STL pair. When no STL is
-generated the file sets `"stl_generated"` to `false` and stores `null` in
-`"stl"`, making STL omissions explicit for downstream tooling.
+resolved years, and output paths for the SCAD/STL pair. Yearly baseplates and
+Gridfinity layouts now embed their year-filtered daily contributions, and each
+`gridfinity-cube` metadata document carries the month-specific daily histogram.
+When no STL is generated the file sets `"stl_generated"` to `false` and stores
+`null` in `"stl"`, making STL omissions explicit for downstream tooling.
 Gridfinity layout metadata includes the detected footprint by storing both the
 column count and the calculated number of rows so scripts can reproduce plate
 dimensions without scraping README summaries.
