@@ -136,6 +136,11 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     assert metadata["stl"] == str(tmp_path / "out.stl")
     assert metadata["stl_generated"] is True
     assert metadata["monthly_contributions"]
+    assert metadata["daily_contributions"]
+    february_days = {
+        entry["day"] for entry in metadata["daily_contributions"] if entry["month"] == 2
+    }
+    assert february_days == {1, 15}
     assert any(entry["month"] == 1 for entry in metadata["zero_months"])
     baseplate_scad = tmp_path / "stl" / "2021" / "baseplate_2x6.scad"
     assert baseplate_scad.exists()
@@ -147,6 +152,11 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
         Path(baseplate_metadata["stl"]).resolve()
         == baseplate_scad.with_suffix(".stl").resolve()
     )
+    assert baseplate_metadata["daily_contributions"]
+    assert {entry["day"] for entry in baseplate_metadata["daily_contributions"]} == {
+        1,
+        15,
+    }
     readme_path = tmp_path / "stl" / "2021" / "README.md"
     readme_text = readme_path.read_text()
     assert "[`baseplate_2x6.scad`](baseplate_2x6.scad)" in readme_text
@@ -2503,6 +2513,13 @@ def test_cli_generates_gridfinity_layout(
     assert layout_metadata["details"]["columns"] == 4
     assert layout_metadata["stl_generated"] is False
     assert layout_metadata["stl"] is None
+    assert layout_metadata["daily_contributions"]
+    jan_days = {
+        entry["day"]
+        for entry in layout_metadata["daily_contributions"]
+        if entry["month"] == 1
+    }
+    assert jan_days == {1}
     captured = capsys.readouterr().out
     assert f"Wrote {layout_path.relative_to(tmp_path)}" in captured
 
@@ -2836,6 +2853,14 @@ def test_cli_generates_gridfinity_cube_stls_when_requested(
     assert cube_scad.read_text() == "// cubes 1"
     assert cube_stl.read_text() == "STL"
     assert any("contrib_cube_02.scad" in str(src) for src, _ in stl_calls)
+    cube_metadata = json.loads(cube_scad.with_suffix(".json").read_text())
+    assert cube_metadata["kind"] == "gridfinity-cube"
+    feb_days = {
+        entry["day"]
+        for entry in cube_metadata["daily_contributions"]
+        if entry["month"] == 2
+    }
+    assert feb_days == {1, 2}
 
     readme_text = (tmp_path / "stl" / "2021" / "README.md").read_text()
     assert "- Gridfinity cubes: Feb, Apr (SCAD + STL)" in readme_text

@@ -48,14 +48,16 @@ def _monthly_payload(
 def _daily_payload(
     counts: DailyCounts,
     *,
-    year: int,
-    month: int,
+    year: int | None = None,
+    month: int | None = None,
 ) -> List[Dict[str, Any]]:
     """Serialise daily contribution counts for JSON metadata."""
 
     items: List[Dict[str, Any]] = []
     for (count_year, count_month, day), count in sorted(counts.items()):
-        if count_year != year or count_month != month:
+        if year is not None and count_year != year:
+            continue
+        if month is not None and count_month != month:
             continue
         items.append(
             {
@@ -129,7 +131,9 @@ class MetadataWriter:
     ) -> List[Dict[str, Any]]:
         return _monthly_payload(self.monthly_counts, year=year, month=month)
 
-    def daily_contributions(self, *, year: int, month: int) -> List[Dict[str, Any]]:
+    def daily_contributions(
+        self, *, year: int | None = None, month: int | None = None
+    ) -> List[Dict[str, Any]]:
         return _daily_payload(self.daily_counts, year=year, month=month)
 
     def zero_months(self) -> List[Dict[str, int]]:

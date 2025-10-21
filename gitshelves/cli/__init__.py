@@ -124,6 +124,7 @@ def _write_year_baseplate(
         stl_path=baseplate_stl,
         year=year,
         monthly_contributions=metadata_writer.monthly_contributions(year=year),
+        daily_contributions=metadata_writer.daily_contributions(year=year),
     )
 
 
@@ -463,6 +464,7 @@ def main(argv: list[str] | None = None):
                 stl_path=layout_stl_path if args.stl else None,
                 year=year,
                 monthly_contributions=metadata_writer.monthly_contributions(year=year),
+                daily_contributions=metadata_writer.daily_contributions(year=year),
                 details={
                     "columns": args.gridfinity_columns,
                     "rows": rows,
@@ -501,6 +503,9 @@ def main(argv: list[str] | None = None):
                     monthly_contributions=metadata_writer.monthly_contributions(
                         year=year, month=month
                     ),
+                    daily_contributions=metadata_writer.daily_contributions(
+                        year=year, month=month
+                    ),
                     details={"levels": levels},
                 )
             _cleanup_gridfinity_cube_outputs(
@@ -534,6 +539,7 @@ def main(argv: list[str] | None = None):
             kind="monthly",
             stl_path=stl_path,
             monthly_contributions=metadata_writer.monthly_contributions(),
+            daily_contributions=metadata_writer.daily_contributions(),
         )
         base_output = output_path
         if base_output.suffix:
@@ -591,6 +597,7 @@ def main(argv: list[str] | None = None):
             kind="baseplate-template",
             stl_path=baseplate_stl,
             monthly_contributions=metadata_writer.monthly_contributions(),
+            daily_contributions=metadata_writer.daily_contributions(),
             details={"template": args.baseplate_template},
         )
         for idx in sorted(grouped):
@@ -622,6 +629,7 @@ def main(argv: list[str] | None = None):
                 color_index=idx,
                 levels=level_mapping.get(idx, []),
                 monthly_contributions=metadata_writer.monthly_contributions(),
+                daily_contributions=metadata_writer.daily_contributions(),
                 details={
                     "has_geometry": has_geometry,
                     "zero_month_annotations": bool(zero_comments),

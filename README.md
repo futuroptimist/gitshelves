@@ -75,9 +75,6 @@ can detect when accent levels are consolidated. Gridfinity layout metadata also
 captures the detected footprint by recording both the configured column count and the
 derived row total, allowing automation to recover the plate dimensions without parsing
 README summaries.
-The metadata uses the same naming scheme as the SCAD source—`contributions.scad`
-emits `contributions.json`, `gridfinity_plate.scad` writes `gridfinity_plate.json`,
- and so on.
 
 Pass `--json run-summary.json` to capture a run-level summary alongside the per-file
 metadata. The summary records every generated SCAD file, its STL counterpart
