@@ -206,6 +206,28 @@ def _cleanup_color_outputs(
             stl_path.unlink(missing_ok=True)
 
 
+def _cleanup_baseplate_output(base_output: Path) -> None:
+    """Remove multi-color baseplate artifacts when switching to single-color runs."""
+
+    baseplate_path = base_output.with_name(f"{base_output.name}_baseplate.scad")
+    metadata_path = baseplate_path.with_suffix(".json")
+    stl_path: Path | None = None
+    try:
+        data = json.loads(metadata_path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        stl_path = baseplate_path.with_suffix(".stl")
+    else:
+        stl_value = data.get("stl")
+        if stl_value:
+            stl_path = Path(stl_value)
+        else:
+            stl_path = baseplate_path.with_suffix(".stl")
+    if stl_path is not None:
+        stl_path.unlink(missing_ok=True)
+    baseplate_path.unlink(missing_ok=True)
+    MetadataWriter.unlink_for(baseplate_path)
+
+
 def _previous_monthly_stl_path(output_path: Path) -> Path | None:
     """Return the STL recorded in the output metadata, if any."""
 
@@ -539,6 +561,7 @@ def main(argv: list[str] | None = None):
         if base_output.suffix:
             base_output = base_output.with_suffix("")
         _cleanup_color_outputs(base_output, 0, stl_requested=bool(args.stl))
+        _cleanup_baseplate_output(base_output)
     else:
         _remove_previous_monthly_stl(output_path)
         if args.stl:

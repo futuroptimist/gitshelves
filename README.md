@@ -127,7 +127,9 @@ When you reduce the palette, stale `_colorN.scad` files above the requested rang
 those `_colorN.stl` meshes (and every `_colorN.stl` is purged when `--stl` isn't requested) so follow-on
 jobs only see the current color set. Switching to multi-color outputs removes the unified `<name>.scad`
 export and its metadata so only the `_colorN` files remain. Returning to single-color runs with `--colors 1`
-clears any lingering `_colorN` SCAD/STL files, leaving only the combined contribution export.
+clears any lingering `_colorN` SCAD/STL files, leaving only the combined contribution export. Single-color
+reruns also delete the matching `_baseplate` SCAD/STL pair from earlier multi-color runs so the directory
+truly returns to the single-file layout.
 
 For print tuning tips—including slicer presets for baseplates and cubes plus AMS
 automation snippets—see [docs/usage.md](docs/usage.md).

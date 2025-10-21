@@ -75,7 +75,9 @@ when `--stl` is omitted), keeping the folder limited to the current color set.
 Switching to multi-color exports removes the unified `<name>.scad` artifact and its
 metadata so only the `_colorN` files remain in the output directory.
 Switching back to single-color exports with `--colors 1` removes any lingering
-`_colorN` SCAD/STL outputs so only the unified contribution file remains.
+`_colorN` SCAD/STL outputs so only the unified contribution file remains. Single-color
+reruns also delete the matching `_baseplate` SCAD/STL pair from earlier multi-color
+runs so directories revert to the single-file layout.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates.
