@@ -1068,6 +1068,105 @@ def test_cli_multicolor_writes_placeholders_for_empty_data(tmp_path, monkeypatch
         assert "translate([" not in text, "Placeholder should not include geometry"
 
 
+def test_cli_single_color_removes_multicolor_baseplate(tmp_path, monkeypatch):
+    """Single-color runs should drop `_baseplate` artifacts from past multi-color exports."""
+
+    output = tmp_path / "chart.scad"
+    baseplate_scad = tmp_path / "chart_baseplate.scad"
+    baseplate_scad.write_text("// stale baseplate")
+    baseplate_stl = baseplate_scad.with_suffix(".stl")
+    baseplate_stl.write_text("stale stl")
+    baseplate_json = baseplate_scad.with_suffix(".json")
+    baseplate_json.write_text(json.dumps({"stl": str(baseplate_stl)}))
+
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2022,
+        end_year=2022,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=None,
+    )
+    monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self: args)
+    monkeypatch.chdir(tmp_path)
+
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2022-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_scad_monthly",
+        lambda counts, months_per_row=12: "// monthly",
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=12: {m: "//" for m in range(1, 13)},
+    )
+    monkeypatch.setattr(cli, "_write_year_baseplate", lambda *a, **k: None)
+
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        *,
+        include_baseplate_stl=False,
+        calendar_slug=calendar_slug(),
+    ):
+        path = tmp_path / "stl" / str(year) / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# materials")
+        return path
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
+
+    cli.main()
+
+    assert (
+        not baseplate_scad.exists()
+    ), "Single-color run should remove multi-color baseplate SCAD"
+    assert (
+        not baseplate_stl.exists()
+    ), "Single-color run should remove multi-color baseplate STL"
+    assert (
+        not baseplate_json.exists()
+    ), "Single-color run should remove baseplate metadata"
+
+
+def test_cleanup_baseplate_uses_default_stl_when_metadata_missing(
+    tmp_path, monkeypatch
+):
+    """Fallback to the sibling STL when metadata omits the recorded path."""
+
+    base_output = tmp_path / "chart"
+    baseplate_scad = tmp_path / "chart_baseplate.scad"
+    baseplate_scad.write_text("// stale baseplate")
+    stale_stl = baseplate_scad.with_suffix(".stl")
+    stale_stl.write_text("stale stl")
+    metadata_path = baseplate_scad.with_suffix(".json")
+    metadata_path.write_text(json.dumps({"scad": str(baseplate_scad)}))
+
+    unlinked: list[Path] = []
+    monkeypatch.setattr(
+        cli.MetadataWriter, "unlink_for", lambda path: unlinked.append(path)
+    )
+
+    cli._cleanup_baseplate_output(base_output)
+
+    assert not baseplate_scad.exists(), "Baseplate SCAD should be removed"
+    assert not stale_stl.exists(), "Default STL neighbor should be removed"
+    assert unlinked == [baseplate_scad]
+
+
 def test_cli_multicolor_removes_stale_color_stls(tmp_path, monkeypatch):
     """Empty multi-color runs should clean up stale color STLs (docs promise)."""
 
