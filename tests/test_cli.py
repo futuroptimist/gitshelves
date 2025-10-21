@@ -1132,7 +1132,9 @@ def test_cli_single_color_removes_multicolor_baseplate(tmp_path, monkeypatch):
     ), "Single-color run should remove baseplate metadata"
 
 
-def test_cleanup_baseplate_uses_default_stl_when_metadata_missing(tmp_path, monkeypatch):
+def test_cleanup_baseplate_uses_default_stl_when_metadata_missing(
+    tmp_path, monkeypatch
+):
     """Fallback to the sibling STL when metadata omits the recorded path."""
 
     base_output = tmp_path / "chart"
