@@ -34,6 +34,17 @@ def test_metadata_writer_produces_monthly_and_daily_payload(writer: MetadataWrit
     assert {entry["day"] for entry in february_daily} == {1, 2}
 
 
+def test_metadata_writer_daily_contributions_filters(writer: MetadataWriter):
+    all_daily = writer.daily_contributions()
+    assert len(all_daily) == 2
+    assert all_daily[0]["day"] == 1
+
+    yearly = writer.daily_contributions(year=2021)
+    assert {entry["month"] for entry in yearly} == {2}
+
+    assert writer.daily_contributions(year=2021, month=1) == []
+
+
 def test_metadata_writer_writes_json(tmp_path, writer: MetadataWriter, capsys):
     scad_path = tmp_path / "example.scad"
     scad_path.write_text("// test")
