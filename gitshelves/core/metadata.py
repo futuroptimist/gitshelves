@@ -104,11 +104,22 @@ class MetadataWriter:
     )
 
     def __post_init__(self) -> None:
-        if self.colors <= 1:
-            groups = 1
-        else:
-            groups = min(self.colors, 4)
-        self.color_groups = groups
+        max_allowed = min(self.colors, 4) if self.colors > 0 else 0
+        if max_allowed == 0:
+            self.color_groups = 0
+            return
+
+        positive_levels: set[int] = set()
+        for count in self.monthly_counts.values():
+            blocks = _scad.blocks_for_contributions(count)
+            if blocks > 0:
+                positive_levels.add(blocks)
+
+        if not positive_levels:
+            self.color_groups = 0
+            return
+
+        self.color_groups = min(max_allowed, len(positive_levels))
 
     def _common_payload(self) -> Dict[str, Any]:
         return {
