@@ -175,7 +175,11 @@ def _cleanup_gridfinity_cube_outputs(
 
 
 def _cleanup_color_outputs(
-    base_output: Path, color_groups: int, *, stl_requested: bool
+    base_output: Path,
+    color_groups: int,
+    *,
+    stl_requested: bool,
+    stl_base: Path | None = None,
 ) -> None:
     """Remove stale multi-color SCAD/STL files after rendering.
 
@@ -186,7 +190,11 @@ def _cleanup_color_outputs(
     if color_groups < 0:
         return
 
+    if stl_base is not None and stl_base.suffix:
+        stl_base = stl_base.with_suffix("")
+
     pattern = f"{base_output.name}_color*.scad"
+    removed_indices: set[int] = set()
     for scad_path in base_output.parent.glob(pattern):
         index = _color_index_from_path(scad_path)
         if index is None:
@@ -194,36 +202,80 @@ def _cleanup_color_outputs(
         if color_groups == 0 or index > color_groups:
             scad_path.unlink(missing_ok=True)
             MetadataWriter.unlink_for(scad_path)
+            removed_indices.add(index)
+
+    stl_candidates: dict[int, set[Path]] = {}
+
+    def _register_candidate(index: int | None, path: Path) -> None:
+        if index is None:
+            return
+        stl_candidates.setdefault(index, set()).add(path)
 
     stl_pattern = f"{base_output.name}_color*.stl"
     for stl_path in base_output.parent.glob(stl_pattern):
-        if not stl_requested or color_groups == 0:
-            stl_path.unlink(missing_ok=True)
+        _register_candidate(_color_index_from_path(stl_path), stl_path)
+
+    if stl_base is not None:
+        stl_pattern = f"{stl_base.name}_color*.stl"
+        for stl_path in stl_base.parent.glob(stl_pattern):
+            _register_candidate(_color_index_from_path(stl_path), stl_path)
+
+    metadata_pattern = f"{base_output.name}_color*.json"
+    for metadata_path in base_output.parent.glob(metadata_pattern):
+        index = _color_index_from_path(metadata_path.with_suffix(""))
+        try:
+            data = json.loads(metadata_path.read_text())
+        except (FileNotFoundError, json.JSONDecodeError):
             continue
-        index = _color_index_from_path(stl_path)
-        if index is None:
-            continue
-        if index > color_groups:
+        stl_value = data.get("stl")
+        if stl_value:
+            _register_candidate(index, Path(stl_value))
+
+    for index in removed_indices:
+        _register_candidate(
+            index, base_output.parent / f"{base_output.name}_color{index}.stl"
+        )
+        if stl_base is not None:
+            _register_candidate(
+                index, stl_base.with_name(f"{stl_base.name}_color{index}.stl")
+            )
+
+    if color_groups == 0 or not stl_requested:
+        indexes_to_remove = set(stl_candidates.keys())
+    else:
+        indexes_to_remove = {index for index in stl_candidates if index > color_groups}
+        indexes_to_remove.update(removed_indices)
+
+    for index in indexes_to_remove:
+        for stl_path in stl_candidates.get(index, set()):
             stl_path.unlink(missing_ok=True)
 
 
-def _cleanup_baseplate_output(base_output: Path) -> None:
+def _cleanup_baseplate_output(
+    base_output: Path, *, stl_base: Path | None = None
+) -> None:
     """Remove multi-color baseplate artifacts when switching to single-color runs."""
 
     baseplate_path = base_output.with_name(f"{base_output.name}_baseplate.scad")
     metadata_path = baseplate_path.with_suffix(".json")
-    stl_path: Path | None = None
+    stl_candidates: set[Path] = set()
     try:
         data = json.loads(metadata_path.read_text())
     except (FileNotFoundError, json.JSONDecodeError):
-        stl_path = baseplate_path.with_suffix(".stl")
+        stl_candidates.add(baseplate_path.with_suffix(".stl"))
     else:
         stl_value = data.get("stl")
         if stl_value:
-            stl_path = Path(stl_value)
+            stl_candidates.add(Path(stl_value))
         else:
-            stl_path = baseplate_path.with_suffix(".stl")
-    if stl_path is not None:
+            stl_candidates.add(baseplate_path.with_suffix(".stl"))
+
+    if stl_base is not None:
+        if stl_base.suffix:
+            stl_base = stl_base.with_suffix("")
+        stl_candidates.add(stl_base.with_name(f"{stl_base.name}_baseplate.stl"))
+
+    for stl_path in stl_candidates:
         stl_path.unlink(missing_ok=True)
     baseplate_path.unlink(missing_ok=True)
     MetadataWriter.unlink_for(baseplate_path)
@@ -551,11 +603,13 @@ def main(argv: list[str] | None = None):
         output_path.write_text(scad_text)
         print(f"Wrote {output_path}")
         stl_path = None
+        stl_base: Path | None = None
         if args.stl:
             stl_path = Path(args.stl)
             stl_path.parent.mkdir(parents=True, exist_ok=True)
             scad_to_stl(str(output_path), str(stl_path))
             print(f"Wrote {stl_path}")
+            stl_base = stl_path.with_suffix("") if stl_path.suffix else stl_path
         metadata_writer.write_scad(
             output_path,
             kind="monthly",
@@ -566,8 +620,10 @@ def main(argv: list[str] | None = None):
         base_output = output_path
         if base_output.suffix:
             base_output = base_output.with_suffix("")
-        _cleanup_color_outputs(base_output, 0, stl_requested=bool(args.stl))
-        _cleanup_baseplate_output(base_output)
+        _cleanup_color_outputs(
+            base_output, 0, stl_requested=bool(args.stl), stl_base=stl_base
+        )
+        _cleanup_baseplate_output(base_output, stl_base=stl_base)
     else:
         _remove_previous_monthly_stl(output_path)
         if args.stl:
@@ -659,7 +715,9 @@ def main(argv: list[str] | None = None):
                 },
             )
 
-        _cleanup_color_outputs(base_output, color_groups, stl_requested=bool(base_stl))
+        _cleanup_color_outputs(
+            base_output, color_groups, stl_requested=bool(base_stl), stl_base=base_stl
+        )
 
     summary_path = getattr(args, "json", None)
     if summary_path:
