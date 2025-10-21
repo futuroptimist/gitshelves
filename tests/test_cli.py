@@ -1132,6 +1132,29 @@ def test_cli_single_color_removes_multicolor_baseplate(tmp_path, monkeypatch):
     ), "Single-color run should remove baseplate metadata"
 
 
+def test_cleanup_baseplate_uses_default_stl_when_metadata_missing(tmp_path, monkeypatch):
+    """Fallback to the sibling STL when metadata omits the recorded path."""
+
+    base_output = tmp_path / "chart"
+    baseplate_scad = tmp_path / "chart_baseplate.scad"
+    baseplate_scad.write_text("// stale baseplate")
+    stale_stl = baseplate_scad.with_suffix(".stl")
+    stale_stl.write_text("stale stl")
+    metadata_path = baseplate_scad.with_suffix(".json")
+    metadata_path.write_text(json.dumps({"scad": str(baseplate_scad)}))
+
+    unlinked: list[Path] = []
+    monkeypatch.setattr(
+        cli.MetadataWriter, "unlink_for", lambda path: unlinked.append(path)
+    )
+
+    cli._cleanup_baseplate_output(base_output)
+
+    assert not baseplate_scad.exists(), "Baseplate SCAD should be removed"
+    assert not stale_stl.exists(), "Default STL neighbor should be removed"
+    assert unlinked == [baseplate_scad]
+
+
 def test_cli_multicolor_removes_stale_color_stls(tmp_path, monkeypatch):
     """Empty multi-color runs should clean up stale color STLs (docs promise)."""
 
