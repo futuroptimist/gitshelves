@@ -79,7 +79,15 @@ README summaries.
 Pass `--json run-summary.json` to capture a run-level summary alongside the per-file
 metadata. The summary records every generated SCAD file, its STL counterpart
 (when present), and the path to the associated metadata document so downstream
-tooling can ingest a single JSON payload.
+tooling can ingest a single JSON payload. The CLI now persists a
+`<output>.run-summary` pointer next to the main SCAD export so it can clean up the
+previous summary file when you drop the `--json` flag or switch to a new summary
+path on the next run—addressing the metadata follow-up noted in earlier docs. This
+pointer is resolved relative to the output directory, so legacy relative entries are
+handled, and fresh runs rewrite it with the resolved path to the newly generated
+summary. Automated coverage in `tests/test_cli.py` exercises the cleanup logic via
+`test_cli_removes_stale_run_summary`, `test_cli_removes_relative_run_summary`, and
+`test_cli_updates_run_summary_pointer`.
 
 Values below one trigger a parser error before any files are written, keeping invalid
 `--months-per-row` settings from generating partial outputs. When you omit
