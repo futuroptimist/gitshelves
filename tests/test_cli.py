@@ -1178,7 +1178,7 @@ def test_cleanup_baseplate_removes_custom_stl_without_metadata(tmp_path):
     custom_stl = custom_dir / "custom_baseplate.stl"
     custom_stl.write_text("custom")
 
-    cli._cleanup_baseplate_output(base_output, stl_base=custom_dir / "custom")
+    cli._cleanup_baseplate_output(base_output, stl_base=custom_dir / "custom.stl")
 
     assert not baseplate_scad.exists()
     assert not default_stl.exists()
@@ -3689,7 +3689,7 @@ def test_cleanup_color_outputs_removes_custom_stls_without_metadata(tmp_path):
         base_output,
         2,
         stl_requested=True,
-        stl_base=custom_dir / "custom",
+        stl_base=custom_dir / "custom.stl",
     )
 
     assert not stale_scad.exists()
