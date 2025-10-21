@@ -145,3 +145,24 @@ def test_metadata_writer_color_groups_match_active_levels():
     )
 
     assert empty_writer.color_groups == 0
+
+
+def test_metadata_writer_color_groups_disabled_with_no_colors():
+    counts = {(2024, 1): 1}
+
+    writer = MetadataWriter(
+        username="user",
+        start_year=2024,
+        end_year=2024,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=0,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert writer.color_groups == 0
