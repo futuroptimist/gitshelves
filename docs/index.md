@@ -28,10 +28,12 @@ output so the `_colorN` files fully replace the single-color export.
 Every SCAD export is paired with JSON metadata that records the geometry flags,
 resolved years, and output paths for the SCAD/STL pair. When no STL is
 generated the file sets `"stl_generated"` to `false` and stores `null` in
-`"stl"`, making STL omissions explicit for downstream tooling.
-Gridfinity layout metadata includes the detected footprint by storing both the
-column count and the calculated number of rows so scripts can reproduce plate
-dimensions without scraping README summaries.
+`"stl"`, making STL omissions explicit for downstream tooling. Multi-color runs
+record both the requested palette size (`"colors"`) and the derived block-group
+count (`"color_groups"`, capped at four) so automation can tell when higher
+orders share the accent file. Gridfinity layout metadata includes the detected
+footprint by storing both the column count and the calculated number of rows so
+scripts can reproduce plate dimensions without scraping README summaries.
 Even when intermediate logarithmic levels are absent, `_color4` still gathers the remaining high
 orders so the accent file continues to highlight the peak contribution range.
 `--months-per-row` values below one exit with a parser error before any files are
