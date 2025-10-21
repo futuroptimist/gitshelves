@@ -1167,6 +1167,24 @@ def test_cleanup_baseplate_uses_default_stl_when_metadata_missing(
     assert unlinked == [baseplate_scad]
 
 
+def test_cleanup_baseplate_removes_custom_stl_without_metadata(tmp_path):
+    base_output = tmp_path / "chart"
+    baseplate_scad = tmp_path / "chart_baseplate.scad"
+    baseplate_scad.write_text("// stale baseplate")
+    default_stl = baseplate_scad.with_suffix(".stl")
+    default_stl.write_text("default")
+    custom_dir = tmp_path / "exports"
+    custom_dir.mkdir()
+    custom_stl = custom_dir / "custom_baseplate.stl"
+    custom_stl.write_text("custom")
+
+    cli._cleanup_baseplate_output(base_output, stl_base=custom_dir / "custom.stl")
+
+    assert not baseplate_scad.exists()
+    assert not default_stl.exists()
+    assert not custom_stl.exists()
+
+
 def test_cli_multicolor_removes_stale_color_stls(tmp_path, monkeypatch):
     """Empty multi-color runs should clean up stale color STLs (docs promise)."""
 
@@ -3670,6 +3688,29 @@ def test_cleanup_color_outputs_respects_palette_and_stl_request(tmp_path):
     assert not remove_scad.with_suffix(".json").exists()
     assert not remove_stl_no_request.exists()
     assert not remove_stl_extra_color.exists()
+
+
+def test_cleanup_color_outputs_removes_custom_stls_without_metadata(tmp_path):
+    base_output = tmp_path / "contributions"
+    stale_scad = tmp_path / "contributions_color3.scad"
+    stale_scad.write_text("stale")
+    default_stl = tmp_path / "contributions_color3.stl"
+    default_stl.write_text("default")
+    custom_dir = tmp_path / "exports"
+    custom_dir.mkdir()
+    custom_stl = custom_dir / "custom_color3.stl"
+    custom_stl.write_text("custom")
+
+    cli._cleanup_color_outputs(
+        base_output,
+        2,
+        stl_requested=True,
+        stl_base=custom_dir / "custom.stl",
+    )
+
+    assert not stale_scad.exists()
+    assert not default_stl.exists()
+    assert not custom_stl.exists()
 
 
 def test_cli_version(capsys):
