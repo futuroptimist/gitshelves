@@ -1288,6 +1288,97 @@ def test_cli_multicolor_writes_placeholders_for_unused_groups(tmp_path, monkeypa
     assert "multi_color4.scad" not in rendered_sources
 
 
+def test_cli_metadata_records_color_groups(tmp_path, monkeypatch):
+    """Metadata should surface the actual color-group count documented in the README."""
+
+    base = tmp_path / "palette.scad"
+    summary_path = tmp_path / "run-summary.json"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2024,
+        end_year=2024,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=5,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=12,
+        json=str(summary_path),
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.setattr(
+        cli,
+        "fetch_user_contributions",
+        lambda *a, **k: [{"created_at": "2024-01-01T00:00:00Z"}],
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=12: {month: "//" for month in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_scad_monthly_levels",
+        lambda counts, months_per_row=12: {0: "//"},
+    )
+
+    def fake_group_scad_levels_with_mapping(levels, groups):
+        assert groups == 4, "--colors 5 should still render four block groups"
+        grouped = {idx: "// color" for idx in range(1, groups + 1)}
+        mapping = {idx: [idx] for idx in range(1, groups + 1)}
+        return grouped, mapping
+
+    monkeypatch.setattr(
+        cli, "group_scad_levels_with_mapping", fake_group_scad_levels_with_mapping
+    )
+    monkeypatch.setattr(
+        cli, "generate_zero_month_annotations", lambda counts, months_per_row=12: []
+    )
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// baseplate"
+    )
+
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        *,
+        include_baseplate_stl=False,
+        calendar_slug=calendar_slug(),
+    ):
+        path = tmp_path / "stl" / str(year) / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# materials")
+        return path
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
+
+    cli.main()
+
+    color1_meta = json.loads((tmp_path / "palette_color1.json").read_text())
+    assert color1_meta["colors"] == 5
+    assert color1_meta["color_groups"] == 4
+
+    assert summary_path.exists()
+    summary = json.loads(summary_path.read_text())
+    assert summary["color_groups"] == 4
+    color_entries = [
+        entry for entry in summary["outputs"] if entry.get("kind") == "monthly-color"
+    ]
+    assert color_entries, "Run summary should record the color-group outputs"
+    for entry in color_entries:
+        assert entry["colors"] == 5
+        assert entry["color_groups"] == 4
+
+
 def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
     base = tmp_path / "multi.scad"
     stl = tmp_path / "multi.stl"

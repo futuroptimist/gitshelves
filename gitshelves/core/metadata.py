@@ -98,9 +98,17 @@ class MetadataWriter:
     gridfinity_columns: int
     gridfinity_cubes: bool
     baseplate_template: str
+    color_groups: int = field(init=False)
     _records: list[tuple[Dict[str, Any], Path]] = field(
         default_factory=list, init=False, repr=False
     )
+
+    def __post_init__(self) -> None:
+        if self.colors <= 1:
+            groups = 1
+        else:
+            groups = min(self.colors, 4)
+        self.color_groups = groups
 
     def _common_payload(self) -> Dict[str, Any]:
         return {
@@ -109,6 +117,7 @@ class MetadataWriter:
             "months_per_row": self.months_per_row,
             "calendar_days_per_row": self.calendar_days_per_row,
             "colors": self.colors,
+            "color_groups": self.color_groups,
             "gridfinity": {
                 "layouts": self.gridfinity_layouts,
                 "columns": self.gridfinity_columns,
