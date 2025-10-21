@@ -105,3 +105,64 @@ def test_metadata_writer_run_summary(tmp_path, writer: MetadataWriter, capsys):
     assert monthly_entry["color_groups"] == 1
     captured = capsys.readouterr().out
     assert f"Wrote {summary_path}" in captured
+
+
+def test_metadata_writer_color_groups_match_active_levels():
+    counts = {(2022, month): 0 for month in range(1, 13)}
+    counts[(2022, 2)] = 25  # two blocks
+    counts[(2022, 3)] = 400  # three blocks
+    writer = MetadataWriter(
+        username="user",
+        start_year=2022,
+        end_year=2022,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=5,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert writer.color_groups == 2
+
+    empty_counts = {(2023, month): 0 for month in range(1, 13)}
+    empty_writer = MetadataWriter(
+        username="user",
+        start_year=2023,
+        end_year=2023,
+        monthly_counts=empty_counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=4,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert empty_writer.color_groups == 0
+
+
+def test_metadata_writer_color_groups_disabled_with_no_colors():
+    counts = {(2024, 1): 1}
+
+    writer = MetadataWriter(
+        username="user",
+        start_year=2024,
+        end_year=2024,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=0,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert writer.color_groups == 0

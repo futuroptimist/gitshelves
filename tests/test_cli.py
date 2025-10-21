@@ -1413,10 +1413,17 @@ def test_cli_metadata_records_color_groups(tmp_path, monkeypatch):
     monkeypatch.setattr(
         argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
     )
+    counts = {(2024, month): 0 for month in range(1, 13)}
+    counts[(2024, 1)] = 1  # level 1
+    counts[(2024, 2)] = 25  # level 2
+    counts[(2024, 3)] = 400  # level 3
+    daily_counts: dict[tuple[int, int, int], int] = {}
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
     monkeypatch.setattr(
         cli,
-        "fetch_user_contributions",
-        lambda *a, **k: [{"created_at": "2024-01-01T00:00:00Z"}],
+        "build_contribution_maps",
+        lambda *a, **k: (2024, 2024, counts, daily_counts),
     )
     monkeypatch.setattr(
         cli,
@@ -1426,13 +1433,22 @@ def test_cli_metadata_records_color_groups(tmp_path, monkeypatch):
     monkeypatch.setattr(
         cli,
         "generate_scad_monthly_levels",
-        lambda counts, months_per_row=12: {0: "//"},
+        lambda counts, months_per_row=12: {
+            1: f"{cli.SCAD_HEADER}\ntranslate([0, 0, 0]) cube(10);",
+            2: f"{cli.SCAD_HEADER}\ntranslate([12, 0, 0]) cube(10);",
+            3: f"{cli.SCAD_HEADER}\ntranslate([24, 0, 0]) cube(10);",
+        },
     )
 
     def fake_group_scad_levels_with_mapping(levels, groups):
-        assert groups == 4, "--colors 5 should still render four block groups"
-        grouped = {idx: "// color" for idx in range(1, groups + 1)}
-        mapping = {idx: [idx] for idx in range(1, groups + 1)}
+        assert groups == 4, "--colors 5 should still cap at four block groups"
+        grouped = {
+            1: levels[1],
+            2: levels[2],
+            3: levels[3],
+            4: cli.SCAD_HEADER,
+        }
+        mapping = {1: [1], 2: [2], 3: [3], 4: []}
         return grouped, mapping
 
     monkeypatch.setattr(
@@ -1464,18 +1480,18 @@ def test_cli_metadata_records_color_groups(tmp_path, monkeypatch):
 
     color1_meta = json.loads((tmp_path / "palette_color1.json").read_text())
     assert color1_meta["colors"] == 5
-    assert color1_meta["color_groups"] == 4
+    assert color1_meta["color_groups"] == 3
 
     assert summary_path.exists()
     summary = json.loads(summary_path.read_text())
-    assert summary["color_groups"] == 4
+    assert summary["color_groups"] == 3
     color_entries = [
         entry for entry in summary["outputs"] if entry.get("kind") == "monthly-color"
     ]
     assert color_entries, "Run summary should record the color-group outputs"
     for entry in color_entries:
         assert entry["colors"] == 5
-        assert entry["color_groups"] == 4
+        assert entry["color_groups"] == 3
 
 
 def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
