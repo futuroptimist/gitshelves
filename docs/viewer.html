@@ -27,6 +27,7 @@
 </div>
 <script>
 const palette = [0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728, 0x9467bd];
+const accentIndex = palette.length - 1;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -109,7 +110,7 @@ function loadFiles(list) {
     reader.onload = e => {
       const geo = loader.parse(e.target.result);
       const paletteIndex = colorIndex > 0
-        ? ((colorIndex - 1) % (palette.length - 1)) + 1
+        ? Math.min(colorIndex, accentIndex)
         : 0;
       const mat = new THREE.MeshPhongMaterial({ color: palette[paletteIndex] });
       const mesh = new THREE.Mesh(geo, mat);

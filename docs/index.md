@@ -117,7 +117,9 @@ Zero-contribution months are annotated in the generated SCAD so you can double-c
 positions even when no cubes are rendered.
 [`viewer.html`](viewer.html) previews the resulting STLs in the browser with
 [Three.js](https://threejs.org/). Load the baseplate and `_colorN` (or legacy
-`levelN`) STLs to see each color group rendered with its own material. The viewer
+`levelN`) STLs to see each color group rendered with its own material. Legacy
+`levelN` stacks above four automatically reuse the accent color so historical
+exports line up with the CLI's color consolidation. The viewer
 automatically infers how many color groups are present from the filenames,
 displays the detected block-color count next to the picker, and rebuilds the Colors
 dropdown so it shrinks or expands to the detected total for quick confirmation.
