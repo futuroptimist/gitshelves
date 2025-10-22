@@ -57,6 +57,18 @@ def test_viewer_dropdown_filters_block_colors():
     ), "visibility should clamp to the selected color count"
 
 
+def test_viewer_reuses_accent_color_for_extra_levels():
+    """Legacy levelN files should reuse the accent color for magnitudes above four."""
+
+    html = Path("docs/viewer.html").read_text()
+    assert (
+        "const accentIndex = palette.length - 1" in html
+    ), "viewer should expose an accent index for legacy files"
+    assert (
+        "Math.min(colorIndex, accentIndex)" in html
+    ), "higher color indexes should clamp to the accent color"
+
+
 def test_viewer_expands_dropdown_to_highest_color_index():
     """Sparse color files should still surface their highest stack in the dropdown."""
 
