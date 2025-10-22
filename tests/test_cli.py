@@ -14,7 +14,9 @@ import gitshelves
 import gitshelves.cli as cli
 
 
-def calendar_slug(days_per_row: int = 12) -> str:
+def calendar_slug(days_per_row: int | None = None) -> str:
+    if days_per_row is None:
+        days_per_row = cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP
     return f"monthly-{days_per_row}x6"
 
 
@@ -167,7 +169,12 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert f"Wrote {output}" in captured.out
     assert "baseplate_2x6.scad" in captured.out
-    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug(args.months_per_row)
+    calendar_dir = (
+        tmp_path
+        / "stl"
+        / "2021"
+        / calendar_slug(min(args.months_per_row, cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP))
+    )
     files = sorted(calendar_dir.glob("*.scad"))
     assert len(files) == 12
     february = calendar_dir / "02_february.scad"
@@ -229,6 +236,126 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
     calendar_dir = tmp_path / "stl" / "2021" / calendar_slug(args.calendar_days_per_row)
     assert calendar_dir.is_dir()
     assert len(list(calendar_dir.glob("*.scad"))) == 12
+
+
+def test_cli_defaults_calendar_days_per_row_caps_above_limit(tmp_path, monkeypatch):
+    """Default calendar width should cap at the documented five-day limit."""
+
+    output = tmp_path / "default.scad"
+    captured_days: list[int] = []
+
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=12,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=None,
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
+    monkeypatch.setattr(cli, "generate_scad_monthly", lambda counts, **_: "//")
+
+    def capture_calendars(_daily, year, days_per_row):
+        captured_days.append(days_per_row)
+        return {month: "//" for month in range(1, 13)}
+
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", capture_calendars)
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        *,
+        include_baseplate_stl=False,
+        calendar_slug=calendar_slug(),
+    ):
+        path = tmp_path / "stl" / str(year) / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# materials")
+        return path
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
+
+    cli.main()
+
+    assert captured_days == [cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP]
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug()
+    assert calendar_dir.is_dir()
+
+
+def test_cli_defaults_calendar_days_per_row_respects_narrow_months(
+    tmp_path, monkeypatch
+):
+    """Default calendar width should match narrow monthly grids below the cap."""
+
+    output = tmp_path / "narrow.scad"
+    captured_days: list[int] = []
+
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=3,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=None,
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
+    monkeypatch.setattr(cli, "generate_scad_monthly", lambda counts, **_: "//")
+
+    def capture_narrow_calendars(_daily, year, days_per_row):
+        captured_days.append(days_per_row)
+        return {month: "//" for month in range(1, 13)}
+
+    monkeypatch.setattr(
+        cli, "generate_monthly_calendar_scads", capture_narrow_calendars
+    )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        *,
+        include_baseplate_stl=False,
+        calendar_slug=calendar_slug(args.months_per_row),
+    ):
+        path = tmp_path / "stl" / str(year) / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# materials")
+        return path
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
+
+    cli.main()
+
+    assert captured_days == [args.months_per_row]
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug(args.months_per_row)
+    assert calendar_dir.is_dir()
 
 
 def test_cli_env_token(tmp_path, monkeypatch):
@@ -313,7 +440,9 @@ def test_cli_writes_run_summary(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year, days_per_row=12: {m: "//" for m in range(1, 13)},
+        lambda daily, year, days_per_row=cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP: {
+            m: "//" for m in range(1, 13)
+        },
     )
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "//"
@@ -442,9 +571,10 @@ def test_cli_forwards_calendar_days_per_row(tmp_path, monkeypatch):
 
 
 def test_cli_defaults_calendar_width_to_months_per_row(tmp_path, monkeypatch):
-    """Docs promise calendar exports follow the monthly grid when not overridden."""
+    """Docs promise calendar exports follow the monthly grid up to the five-day cap."""
 
     base = tmp_path / "auto.scad"
+    requested_width = 8
     argv = [
         "user",
         "--output",
@@ -454,7 +584,7 @@ def test_cli_defaults_calendar_width_to_months_per_row(tmp_path, monkeypatch):
         "--end-year",
         "2021",
         "--months-per-row",
-        "8",
+        str(requested_width),
     ]
 
     monkeypatch.chdir(tmp_path)
@@ -504,12 +634,14 @@ def test_cli_defaults_calendar_width_to_months_per_row(tmp_path, monkeypatch):
 
     cli.main(argv)
 
-    assert calendar_capture == {"year": 2021, "days_per_row": 8}
-    assert captured_slug["slug"] == calendar_slug(8)
+    expected_width = min(requested_width, cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP)
+    assert calendar_capture == {"year": 2021, "days_per_row": expected_width}
+    assert captured_slug["slug"] == calendar_slug(expected_width)
 
     year_dir = tmp_path / "stl" / "2021"
-    assert (year_dir / calendar_slug(8)).is_dir()
-    assert not (year_dir / calendar_slug(5)).exists()
+    assert (year_dir / calendar_slug(expected_width)).is_dir()
+    if requested_width != expected_width:
+        assert not (year_dir / calendar_slug(requested_width)).exists()
 
 
 def test_cli_writes_calendars_to_dynamic_slug(tmp_path, monkeypatch):
@@ -1107,10 +1239,15 @@ def test_cli_single_color_removes_multicolor_baseplate(tmp_path, monkeypatch):
         "generate_scad_monthly",
         lambda counts, months_per_row=12: "// monthly",
     )
+
+    def capture_default_calendars(_daily, year, *, days_per_row):
+        assert days_per_row == cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP
+        return {month: "//" for month in range(1, 13)}
+
     monkeypatch.setattr(
         cli,
         "generate_monthly_calendar_scads",
-        lambda daily, year, days_per_row=12: {m: "//" for m in range(1, 13)},
+        capture_default_calendars,
     )
     monkeypatch.setattr(cli, "_write_year_baseplate", lambda *a, **k: None)
 
@@ -2122,7 +2259,7 @@ def test_cli_without_stl_removes_previous_monthly_mesh(tmp_path, monkeypatch):
     )
 
     def fake_calendars(_daily, year, *, days_per_row):
-        assert days_per_row == 12
+        assert days_per_row == cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP
         return {month: "// calendar" for month in range(1, 13)}
 
     monkeypatch.setattr(
