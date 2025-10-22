@@ -1499,6 +1499,8 @@ def test_cli_metadata_records_color_groups(tmp_path, monkeypatch):
     color1_meta = json.loads((tmp_path / "palette_color1.json").read_text())
     assert color1_meta["colors"] == 5
     assert color1_meta["color_groups"] == 3
+    expected_zero_months = [{"year": 2024, "month": month} for month in range(4, 13)]
+    assert color1_meta["zero_months"] == expected_zero_months
 
     assert summary_path.exists()
     summary = json.loads(summary_path.read_text())
@@ -1510,6 +1512,7 @@ def test_cli_metadata_records_color_groups(tmp_path, monkeypatch):
     for entry in color_entries:
         assert entry["colors"] == 5
         assert entry["color_groups"] == 3
+        assert entry["zero_months"] == expected_zero_months
 
 
 def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):

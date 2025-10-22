@@ -166,3 +166,22 @@ def test_metadata_writer_color_groups_disabled_with_no_colors():
     )
 
     assert writer.color_groups == 0
+
+
+def test_metadata_writer_includes_zero_months_in_color_metadata(
+    tmp_path, writer: MetadataWriter
+):
+    scad_path = tmp_path / "color1.scad"
+    scad_path.write_text("// color")
+
+    writer.write_scad(
+        scad_path,
+        kind="monthly-color",
+        color_index=1,
+        monthly_contributions=writer.monthly_contributions(),
+        daily_contributions=writer.daily_contributions(),
+    )
+
+    metadata_path = scad_path.with_suffix(".json")
+    payload = json.loads(metadata_path.read_text())
+    assert payload["zero_months"] == writer.zero_months()

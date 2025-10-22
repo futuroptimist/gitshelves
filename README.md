@@ -74,6 +74,9 @@ For multi-color runs, `"colors"` preserves the requested palette size while
 can detect when accent levels are consolidated. When only a subset of the palette
 contains geometry, the metadata records that smaller `"color_groups"` value (for
 example, a five-color run with two populated levels reports `"color_groups": 2`).
+Color-specific metadata now mirrors the SCAD annotations by listing `"zero_months"`
+so placeholder `_colorN.scad` files still report which months occupy each slot even
+when no blocks are printed.
 Gridfinity layout metadata also
 captures the detected footprint by recording both the configured column count and the
 derived row total, allowing automation to recover the plate dimensions without parsing

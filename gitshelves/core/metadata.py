@@ -194,7 +194,7 @@ class MetadataWriter:
             payload["daily_contributions"] = daily_contributions
         if details:
             payload["details"] = details
-        if kind == "monthly":
+        if kind in {"monthly", "monthly-color"}:
             payload["zero_months"] = self.zero_months()
 
         metadata_path = scad_path.with_suffix(".json")
