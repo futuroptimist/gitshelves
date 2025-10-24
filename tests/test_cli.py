@@ -239,7 +239,7 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
 
 
 def test_cli_defaults_calendar_days_per_row_caps_above_limit(tmp_path, monkeypatch):
-    """Default calendar width should cap at the documented five-day limit."""
+    """Default calendar width should cap at the documented twelve-day limit."""
 
     output = tmp_path / "default.scad"
     captured_days: list[int] = []
@@ -250,7 +250,7 @@ def test_cli_defaults_calendar_days_per_row_caps_above_limit(tmp_path, monkeypat
         start_year=2021,
         end_year=2021,
         output=str(output),
-        months_per_row=12,
+        months_per_row=18,
         stl=None,
         colors=1,
         gridfinity_layouts=False,
@@ -571,7 +571,7 @@ def test_cli_forwards_calendar_days_per_row(tmp_path, monkeypatch):
 
 
 def test_cli_defaults_calendar_width_to_months_per_row(tmp_path, monkeypatch):
-    """Docs promise calendar exports follow the monthly grid up to the five-day cap."""
+    """Docs promise calendar exports follow the monthly grid up to the default cap."""
 
     base = tmp_path / "auto.scad"
     requested_width = 8
