@@ -1,4 +1,22 @@
+from pathlib import Path
+
 from gitshelves.render import static
+
+
+def test_is_library_path_outside_root(tmp_path):
+    root = tmp_path / "openscad"
+    root.mkdir()
+    outside = tmp_path / "other" / "file.scad"
+    outside.parent.mkdir()
+    outside.write_text("// outside")
+
+    assert static._is_library_path(outside, root) is False
+
+
+def test_discover_static_scad_files_missing_root(tmp_path):
+    missing = tmp_path / "missing"
+
+    assert static.discover_static_scad_files(missing) == []
 
 
 def test_discover_static_scad_files_skips_lib(tmp_path):
@@ -55,3 +73,22 @@ def test_render_static_stls_invokes_scad_to_stl(tmp_path, monkeypatch):
     assert called == [(str(pair[0]), str(pair[1])) for pair in expected_pairs]
     for _, stl_path in expected_pairs:
         assert stl_path.parent.exists()
+
+
+def test_cli_invokes_render_static_stls(monkeypatch, capsys):
+    called: dict[str, tuple[Path | None, Path | None]] = {}
+
+    def fake_render_static_stls(*, source_root=None, output_root=None):
+        called["args"] = (source_root, output_root)
+        return [
+            (Path("source.scad"), Path("output.stl")),
+        ]
+
+    monkeypatch.setattr(static, "render_static_stls", fake_render_static_stls)
+
+    exit_code = static._cli([])
+
+    assert exit_code == 0
+    assert called["args"] == (None, None)
+    captured = capsys.readouterr()
+    assert "Rendered output.stl from source.scad" in captured.out
