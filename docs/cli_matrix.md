@@ -2,8 +2,8 @@
 
 This matrix shows how the CLI's layout flags combine to produce files and ASCII grids.
 Each preview mirrors the layout comments written into the generated SCAD files. When you
-omit `--calendar-days-per-row`, the daily calendars adopt the monthly grid width up to the five-day cap,
-so the compact and narrow layouts relocate their `monthly-{width}x6` directories automatically.
+omit `--calendar-days-per-row`, the daily calendars adopt the monthly grid width up to the twelve-day
+cap, so the compact and narrow layouts relocate their `monthly-{width}x6` directories automatically.
 
 <table>
   <thead>
