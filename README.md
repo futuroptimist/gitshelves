@@ -89,8 +89,8 @@ tooling can ingest a single JSON payload.
 
 Values below one trigger a parser error before any files are written, keeping invalid
 `--months-per-row` settings from generating partial outputs. When you omit
-`--calendar-days-per-row`, the CLI mirrors the monthly grid width while capping daily calendars at
-five days per row (`monthly-5x6` with the default layout). Pass `--calendar-days-per-row`
+`--calendar-days-per-row`, the CLI mirrors the monthly grid width (matching the value passed to
+`--months-per-row` and defaulting to `monthly-12x6`). Pass `--calendar-days-per-row`
 to override that width; the generated directories always follow the
 `monthly-{days_per_row}x6` naming pattern while leaving the monthly summary grid
 untouched.
@@ -241,10 +241,10 @@ to print without extra commands. Re-running without `--stl` removes any lingerin
 `baseplate_2x6.stl` meshes so yearly folders only contain artifacts from the current run. The CLI writes these summaries and baseplates for every year in the
 requested range, even when a year has no contributions, so your shelf layout stays predictable.
 Day-level views are also written to `stl/<year>/<calendar-slug>/` as OpenSCAD files. Each
-calendar mirrors the monthly grid width when `--calendar-days-per-row` is omitted, capping the
-default layout at five days per row so it stays within a 256 mm square build area (`monthly-5x6`). Use
-`--calendar-days-per-row` to widen or narrow the rows as needed; the CLI still adds a partial row
-for 31-day months. The folder slug mirrors the configured width (for example `monthly-7x6` when
+calendar mirrors the monthly grid width when `--calendar-days-per-row` is omitted, matching the
+requested layout (`monthly-{months_per_row}x6`). Use `--calendar-days-per-row` to widen or narrow the
+rows as needed; the CLI still adds a partial row for 31-day months. The folder slug mirrors the
+configured width (for example `monthly-7x6` when
 seven days share a row). Days without activity are annotated as reserved slots (for example
 `// 2024-02-05 (0 contributions) reserved at [48, 0]`) so you can confirm spacing even when a
 cube isn't generated.

@@ -16,7 +16,7 @@ import gitshelves.cli as cli
 
 def calendar_slug(days_per_row: int | None = None) -> str:
     if days_per_row is None:
-        days_per_row = cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP
+        days_per_row = 12
     return f"monthly-{days_per_row}x6"
 
 
@@ -169,12 +169,7 @@ def test_cli_main(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert f"Wrote {output}" in captured.out
     assert "baseplate_2x6.scad" in captured.out
-    calendar_dir = (
-        tmp_path
-        / "stl"
-        / "2021"
-        / calendar_slug(min(args.months_per_row, cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP))
-    )
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug(args.months_per_row)
     files = sorted(calendar_dir.glob("*.scad"))
     assert len(files) == 12
     february = calendar_dir / "02_february.scad"
@@ -238,8 +233,10 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
-def test_cli_defaults_calendar_days_per_row_caps_above_limit(tmp_path, monkeypatch):
-    """Default calendar width should cap at the documented five-day limit."""
+def test_cli_defaults_calendar_days_per_row_matches_months_per_row(
+    tmp_path, monkeypatch
+):
+    """Default calendar width should mirror the monthly layout when unspecified."""
 
     output = tmp_path / "default.scad"
     captured_days: list[int] = []
@@ -291,15 +288,15 @@ def test_cli_defaults_calendar_days_per_row_caps_above_limit(tmp_path, monkeypat
 
     cli.main()
 
-    assert captured_days == [cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP]
-    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug()
+    assert captured_days == [args.months_per_row]
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug(args.months_per_row)
     assert calendar_dir.is_dir()
 
 
 def test_cli_defaults_calendar_days_per_row_respects_narrow_months(
     tmp_path, monkeypatch
 ):
-    """Default calendar width should match narrow monthly grids below the cap."""
+    """Default calendar width should match narrow monthly grids when omitted."""
 
     output = tmp_path / "narrow.scad"
     captured_days: list[int] = []
@@ -437,13 +434,13 @@ def test_cli_writes_run_summary(tmp_path, monkeypatch, capsys):
         "fetch_user_contributions",
         lambda *a, **k: [{"created_at": "2021-02-01T00:00:00Z"}],
     )
-    monkeypatch.setattr(
-        cli,
-        "generate_monthly_calendar_scads",
-        lambda daily, year, days_per_row=cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP: {
-            m: "//" for m in range(1, 13)
-        },
-    )
+    captured_days: list[int] = []
+
+    def fake_calendars(daily, year, *, days_per_row):
+        captured_days.append(days_per_row)
+        return {m: "//" for m in range(1, 13)}
+
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", fake_calendars)
     monkeypatch.setattr(
         cli, "generate_scad_monthly", lambda counts, months_per_row=12: "//"
     )
@@ -473,6 +470,7 @@ def test_cli_writes_run_summary(tmp_path, monkeypatch, capsys):
     assert monthly["scad"] == str(output)
     assert monthly["metadata"].endswith("run-summary.json") is False
     captured = capsys.readouterr().out
+    assert captured_days == [args.calendar_days_per_row]
     assert f"Wrote {summary}" in captured
 
 
@@ -571,7 +569,7 @@ def test_cli_forwards_calendar_days_per_row(tmp_path, monkeypatch):
 
 
 def test_cli_defaults_calendar_width_to_months_per_row(tmp_path, monkeypatch):
-    """Docs promise calendar exports follow the monthly grid up to the five-day cap."""
+    """Docs promise calendar exports mirror the monthly grid when width is omitted."""
 
     base = tmp_path / "auto.scad"
     requested_width = 8
@@ -634,14 +632,15 @@ def test_cli_defaults_calendar_width_to_months_per_row(tmp_path, monkeypatch):
 
     cli.main(argv)
 
-    expected_width = min(requested_width, cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP)
+    expected_width = requested_width
     assert calendar_capture == {"year": 2021, "days_per_row": expected_width}
     assert captured_slug["slug"] == calendar_slug(expected_width)
 
     year_dir = tmp_path / "stl" / "2021"
     assert (year_dir / calendar_slug(expected_width)).is_dir()
-    if requested_width != expected_width:
-        assert not (year_dir / calendar_slug(requested_width)).exists()
+    unexpected_slug = calendar_slug(5)
+    if unexpected_slug != calendar_slug(expected_width):
+        assert not (year_dir / unexpected_slug).exists()
 
 
 def test_cli_writes_calendars_to_dynamic_slug(tmp_path, monkeypatch):
@@ -1241,7 +1240,7 @@ def test_cli_single_color_removes_multicolor_baseplate(tmp_path, monkeypatch):
     )
 
     def capture_default_calendars(_daily, year, *, days_per_row):
-        assert days_per_row == cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP
+        assert days_per_row == args.months_per_row
         return {month: "//" for month in range(1, 13)}
 
     monkeypatch.setattr(
@@ -2259,7 +2258,7 @@ def test_cli_without_stl_removes_previous_monthly_mesh(tmp_path, monkeypatch):
     )
 
     def fake_calendars(_daily, year, *, days_per_row):
-        assert days_per_row == cli.DEFAULT_CALENDAR_DAYS_PER_ROW_CAP
+        assert days_per_row == args_with_stl.months_per_row
         return {month: "// calendar" for month in range(1, 13)}
 
     monkeypatch.setattr(
