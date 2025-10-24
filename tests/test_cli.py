@@ -2957,6 +2957,38 @@ def test_cli_rejects_non_positive_calendar_days_per_row(tmp_path, monkeypatch, c
     scad_mock.assert_not_called()
 
 
+@pytest.mark.parametrize("value", ["0", "6"])
+def test_cli_rejects_out_of_range_colors(tmp_path, monkeypatch, capsys, value):
+    """`--colors` must stay within the documented 1–5 range."""
+
+    monkeypatch.chdir(tmp_path)
+
+    fetch_mock = Mock(name="fetch_user_contributions")
+    monthly_mock = Mock(name="generate_monthly_calendar_scads")
+    scad_mock = Mock(name="generate_scad_monthly")
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", fetch_mock)
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", monthly_mock)
+    monkeypatch.setattr(cli, "generate_scad_monthly", scad_mock)
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(
+            [
+                "user",
+                "--colors",
+                value,
+            ]
+        )
+
+    assert excinfo.value.code == 2
+    captured = capsys.readouterr()
+    assert "--colors must be between 1 and 5" in captured.err
+
+    fetch_mock.assert_not_called()
+    monthly_mock.assert_not_called()
+    scad_mock.assert_not_called()
+
+
 def test_cli_rejects_non_positive_gridfinity_columns(tmp_path, monkeypatch, capsys):
     """`--gridfinity-columns` should reject non-positive values before running."""
 

@@ -25,6 +25,9 @@ overflow.
 Switching to multi-color runs removes any existing combined `<name>.scad`/`.stl`
 output so the `_colorN` files fully replace the single-color export.
 
+Values outside the documented `--colors` 1–5 range raise a parser error before
+any files are generated so invalid palettes never produce partial outputs.
+
 Every SCAD export is paired with JSON metadata that records the geometry flags,
 resolved years, and output paths for the SCAD/STL pair. When no STL is
 generated the file sets `"stl_generated"` to `false` and stores `null` in
