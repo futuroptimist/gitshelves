@@ -205,7 +205,8 @@ git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
     openscad/lib/gridfinity-rebuilt
 # `scad_to_stl` automatically wraps `openscad` in `xvfb-run` when `$DISPLAY`
 # is unset or empty and exports binary STLs (`--export-format binstl`) to match
-# the CI configuration. Ensure `xvfb-run` is installed on headless systems.
+# the CI configuration. Import it via `from gitshelves import scad_to_stl` and
+# ensure `xvfb-run` is installed on headless systems.
 openscad -o stl/2024/baseplate_2x6.stl \
     --export-format binstl openscad/baseplate_2x6.scad
 ```

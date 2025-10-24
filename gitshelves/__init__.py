@@ -10,6 +10,7 @@ from .render.scad import (
     generate_monthly_calendar_scads,
     blocks_for_contributions,
     generate_gridfinity_plate_scad,
+    scad_to_stl,
 )
 from .core.github import fetch_user_contributions
 
@@ -27,5 +28,6 @@ __all__ = [
     "generate_gridfinity_plate_scad",
     "fetch_user_contributions",
     "load_baseplate_scad",
+    "scad_to_stl",
     "__version__",
 ]

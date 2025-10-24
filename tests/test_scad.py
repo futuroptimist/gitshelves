@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+import gitshelves
 from gitshelves import scad as scad_module
 from gitshelves.scad import (
     _iter_monthly_block_positions,
@@ -35,6 +36,12 @@ def _normalise_gridfinity_paths(scad_text: str) -> str:
     return scad_text.replace(baseplate, "<GRIDFINITY_BASEPLATE>").replace(
         bin_path, "<GRIDFINITY_BIN>"
     )
+
+
+def test_package_root_exports_scad_to_stl():
+    """README references ``scad_to_stl`` as a helper available to consumers."""
+
+    assert gitshelves.scad_to_stl is scad_to_stl
 
 
 def test_scad_shim_allows_module_rebinding():
