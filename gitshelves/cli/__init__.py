@@ -220,16 +220,24 @@ def _cleanup_color_outputs(
         for stl_path in stl_base.parent.glob(stl_pattern):
             _register_candidate(_color_index_from_path(stl_path), stl_path)
 
+    metadata_to_remove: set[Path] = set()
     metadata_pattern = f"{base_output.name}_color*.json"
     for metadata_path in base_output.parent.glob(metadata_pattern):
         index = _color_index_from_path(metadata_path.with_suffix(""))
+        remove_metadata = color_groups == 0 or (
+            index is not None and (index > color_groups or index in removed_indices)
+        )
         try:
             data = json.loads(metadata_path.read_text())
         except (FileNotFoundError, json.JSONDecodeError):
+            if remove_metadata:
+                metadata_to_remove.add(metadata_path)
             continue
         stl_value = data.get("stl")
         if stl_value:
             _register_candidate(index, Path(stl_value))
+        if remove_metadata:
+            metadata_to_remove.add(metadata_path)
 
     for index in removed_indices:
         _register_candidate(
@@ -249,6 +257,9 @@ def _cleanup_color_outputs(
     for index in indexes_to_remove:
         for stl_path in stl_candidates.get(index, set()):
             stl_path.unlink(missing_ok=True)
+
+    for metadata_path in metadata_to_remove:
+        metadata_path.unlink(missing_ok=True)
 
 
 def _cleanup_baseplate_output(
