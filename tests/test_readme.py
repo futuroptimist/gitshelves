@@ -9,7 +9,7 @@ def test_write_year_readme(tmp_path):
     assert "[`baseplate_2x6.stl`](baseplate_2x6.stl)" not in text
     assert "January: 5 contributions" in text
     assert "February: 20 contributions" in text
-    assert "`monthly-5x6`" in text
+    assert "`monthly-12x6`" in text
 
 
 def test_write_year_readme_custom_calendar_slug(tmp_path):

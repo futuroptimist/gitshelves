@@ -238,8 +238,8 @@ def test_cli_creates_output_dirs(tmp_path, monkeypatch):
     assert len(list(calendar_dir.glob("*.scad"))) == 12
 
 
-def test_cli_defaults_calendar_days_per_row_caps_above_limit(tmp_path, monkeypatch):
-    """Default calendar width should cap at the documented five-day limit."""
+def test_cli_defaults_calendar_days_per_row_matches_year_span(tmp_path, monkeypatch):
+    """Default calendar width should match the documented monthly layout."""
 
     output = tmp_path / "default.scad"
     captured_days: list[int] = []
@@ -299,7 +299,7 @@ def test_cli_defaults_calendar_days_per_row_caps_above_limit(tmp_path, monkeypat
 def test_cli_defaults_calendar_days_per_row_respects_narrow_months(
     tmp_path, monkeypatch
 ):
-    """Default calendar width should match narrow monthly grids below the cap."""
+    """Default calendar width should match narrow monthly grids."""
 
     output = tmp_path / "narrow.scad"
     captured_days: list[int] = []
@@ -334,6 +334,64 @@ def test_cli_defaults_calendar_days_per_row_respects_narrow_months(
     monkeypatch.setattr(
         cli, "generate_monthly_calendar_scads", capture_narrow_calendars
     )
+    monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
+
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        *,
+        include_baseplate_stl=False,
+        calendar_slug=calendar_slug(args.months_per_row),
+    ):
+        path = tmp_path / "stl" / str(year) / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# materials")
+        return path
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
+
+    cli.main()
+
+    assert captured_days == [args.months_per_row]
+    calendar_dir = tmp_path / "stl" / "2021" / calendar_slug(args.months_per_row)
+    assert calendar_dir.is_dir()
+
+
+def test_cli_defaults_calendar_days_per_row_tracks_wider_months(tmp_path, monkeypatch):
+    """Default calendar width should follow wider monthly grids in docs."""
+
+    output = tmp_path / "wider.scad"
+    captured_days: list[int] = []
+
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2021,
+        end_year=2021,
+        output=str(output),
+        months_per_row=8,
+        stl=None,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=None,
+    )
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
+    monkeypatch.setattr(cli, "generate_scad_monthly", lambda counts, **_: "//")
+
+    def capture_wide_calendars(_daily, year, days_per_row):
+        captured_days.append(days_per_row)
+        return {month: "//" for month in range(1, 13)}
+
+    monkeypatch.setattr(cli, "generate_monthly_calendar_scads", capture_wide_calendars)
     monkeypatch.setattr(cli, "scad_to_stl", lambda *a, **k: None)
 
     def fake_write_year_readme(
@@ -571,7 +629,7 @@ def test_cli_forwards_calendar_days_per_row(tmp_path, monkeypatch):
 
 
 def test_cli_defaults_calendar_width_to_months_per_row(tmp_path, monkeypatch):
-    """Docs promise calendar exports follow the monthly grid up to the five-day cap."""
+    """Docs promise calendar exports follow the monthly grid width."""
 
     base = tmp_path / "auto.scad"
     requested_width = 8

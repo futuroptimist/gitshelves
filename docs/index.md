@@ -43,9 +43,9 @@ Even when intermediate logarithmic levels are absent, `_color4` still gathers th
 orders so the accent file continues to highlight the peak contribution range.
 `--months-per-row` values below one exit with a parser error before any files are
 generated so invalid layouts never produce partial outputs. When you omit
-`--calendar-days-per-row`, the CLI mirrors the monthly grid width while capping daily calendars at
-five days per row (`monthly-5x6` by default). Provide `--calendar-days-per-row` to widen
-or narrow the daily calendar rows without changing the monthly summary grid.
+`--calendar-days-per-row`, the CLI mirrors the monthly grid width up to the twelve-month span
+(`monthly-12x6` by default). Provide `--calendar-days-per-row` to widen or narrow the daily
+calendar rows without changing the monthly summary grid.
 `--baseplate-template` selects which bundled Gridfinity baseplate (such as
 `baseplate_1x12.scad`) is copied when multi-color exports request a baseplate.
 `--gridfinity-layouts` writes `stl/<year>/gridfinity_plate.scad` so Gridfinity
@@ -107,9 +107,9 @@ note `SCAD + STL`, even without `--stl`, because the CLI renders those meshes au
 records the detected footprint (for example `6×2 grid`) so you can confirm the selected column
 count.
 Monthly day-level calendars live in `stl/<year>/<calendar-slug>/`. Each SCAD arranges up to
-five days per row and mirrors the monthly grid width when `--calendar-days-per-row` is omitted,
-so the footprint stays within a 256 mm square build area with the default five-day cap
-(`monthly-5x6` by default). Adjust the width with `--calendar-days-per-row` when you need a
+twelve days per row and mirrors the monthly grid width when `--calendar-days-per-row` is omitted,
+so the footprint stays within a 256 mm square build area with the default twelve-column layout
+(`monthly-12x6` by default). Adjust the width with `--calendar-days-per-row` when you need a
 different footprint; the directory slug mirrors the configured width (for example `monthly-7x6` when
 seven days share a row). Days with no
 activity add reserved-slot comments (for example `// 2024-02-05 (0 contributions) reserved at [48, 0]`)
