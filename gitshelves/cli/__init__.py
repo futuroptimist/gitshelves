@@ -366,7 +366,6 @@ def main(argv: list[str] | None = None):
     parser.add_argument(
         "--colors",
         type=int,
-        choices=range(1, 6),
         default=1,
         help="Number of print colors (1-5)",
     )
@@ -422,6 +421,9 @@ def main(argv: list[str] | None = None):
 
     if args.calendar_days_per_row <= 0:
         parser.error("--calendar-days-per-row must be positive")
+
+    if not (1 <= args.colors <= 5):
+        parser.error("--colors must be between 1 and 5")
 
     if not hasattr(args, "baseplate_template"):
         args.baseplate_template = "baseplate_2x6.scad"
