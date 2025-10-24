@@ -23,6 +23,7 @@ from .scad import (
     group_scad_levels_with_mapping,
     scad_to_stl,
 )
+from .static import discover_static_scad_files, render_static_stls
 
 __all__ = [
     "BLOCK_SIZE",
@@ -43,5 +44,7 @@ __all__ = [
     "group_scad_levels",
     "group_scad_levels_with_mapping",
     "load_baseplate_scad",
+    "discover_static_scad_files",
+    "render_static_stls",
     "scad_to_stl",
 ]

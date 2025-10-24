@@ -213,6 +213,19 @@ openscad -o stl/2024/baseplate_2x6.stl \
 Run `black --check .`, `pytest -q`, and `codespell docs README.md` before submitting
 changes. Add project-specific terms to `dict/allow.txt`.
 
+### Render bundled OpenSCAD templates
+
+Generate STL previews for the static templates bundled with the repository by
+running:
+
+```bash
+python -m gitshelves.render.static --output-root stl/static
+```
+
+The helper skips vendored `openscad/lib/` directories, mirroring the CI job that
+converts every packaged `.scad` file to a binary STL artifact. Override
+`--source-root` when testing alternate template directories.
+
 ## Import migration helpers
 
 The package layout now splits fetch/transform helpers under `gitshelves.core`

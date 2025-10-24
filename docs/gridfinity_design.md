@@ -168,6 +168,11 @@ xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
   openscad -o stl/$year/baseplate_2x6.stl openscad/baseplate_2x6.scad --export-format binstl
 ```
 
+Run `python -m gitshelves.render.static` locally to mirror the workflow. The
+helper enumerates every bundled OpenSCAD template outside of `openscad/lib/` and
+renders binary STLs (defaulting to `stl/static/`) so the CI job and local builds
+share the same conversion logic.
+
 ---
 
 ## 6  Dependency Declaration
