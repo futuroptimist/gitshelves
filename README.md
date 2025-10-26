@@ -74,6 +74,10 @@ For multi-color runs, `"colors"` preserves the requested palette size while
 can detect when accent levels are consolidated. When only a subset of the palette
 contains geometry, the metadata records that smaller `"color_groups"` value (for
 example, a five-color run with two populated levels reports `"color_groups": 2`).
+Stacks that reach higher magnitudes still populate the lower logarithmic levels,
+and the metadata reflects that by reporting the highest occupied level even when
+every month lands in the same magnitude—three-block stacks still contribute three
+color groups, for instance.
 Color-specific metadata now mirrors the SCAD annotations by listing `"zero_months"`
 so placeholder `_colorN.scad` files still report which months occupy each slot even
 when no blocks are printed.
