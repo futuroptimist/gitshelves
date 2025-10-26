@@ -126,7 +126,7 @@ def test_metadata_writer_color_groups_match_active_levels():
         baseplate_template="baseplate_2x6.scad",
     )
 
-    assert writer.color_groups == 2
+    assert writer.color_groups == 3
 
     empty_counts = {(2023, month): 0 for month in range(1, 13)}
     empty_writer = MetadataWriter(
@@ -166,6 +166,47 @@ def test_metadata_writer_color_groups_disabled_with_no_colors():
     )
 
     assert writer.color_groups == 0
+
+
+def test_metadata_writer_color_groups_reflect_highest_level():
+    """Metadata should record the highest populated logarithmic level."""
+
+    counts = {(2024, month): 0 for month in range(1, 13)}
+    counts[(2024, 5)] = 400  # three blocks
+
+    writer = MetadataWriter(
+        username="user",
+        start_year=2024,
+        end_year=2024,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=4,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert writer.color_groups == 3
+
+    two_color_writer = MetadataWriter(
+        username="user",
+        start_year=2024,
+        end_year=2024,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=2,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert two_color_writer.color_groups == 2
 
 
 def test_metadata_writer_includes_zero_months_in_color_metadata(

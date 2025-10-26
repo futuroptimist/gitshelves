@@ -109,17 +109,17 @@ class MetadataWriter:
             self.color_groups = 0
             return
 
-        positive_levels: set[int] = set()
+        max_level = 0
         for count in self.monthly_counts.values():
             blocks = _scad.blocks_for_contributions(count)
-            if blocks > 0:
-                positive_levels.add(blocks)
+            if blocks > max_level:
+                max_level = blocks
 
-        if not positive_levels:
+        if max_level == 0:
             self.color_groups = 0
             return
 
-        self.color_groups = min(max_allowed, len(positive_levels))
+        self.color_groups = min(max_allowed, max_level)
 
     def _common_payload(self) -> Dict[str, Any]:
         return {
