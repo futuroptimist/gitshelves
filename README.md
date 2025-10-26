@@ -224,7 +224,7 @@ running:
 python -m gitshelves.render.static --output-root stl/static
 ```
 
-The helper skips vendored `openscad/lib/` directories, mirroring the CI job that
+The helper skips vendored `openscad/lib/` directories (case-insensitive), mirroring the CI job that
 converts every packaged `.scad` file to a binary STL artifact. Override
 `--source-root` when testing alternate template directories.
 

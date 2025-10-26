@@ -13,6 +13,17 @@ def test_is_library_path_outside_root(tmp_path):
     assert static._is_library_path(outside, root) is False
 
 
+def test_is_library_path_treats_lib_case_insensitively(tmp_path):
+    root = tmp_path / "openscad"
+    root.mkdir()
+    lib_dir = root / "Lib"
+    lib_dir.mkdir()
+    nested = lib_dir / "inner.scad"
+    nested.write_text("// inner")
+
+    assert static._is_library_path(nested, root) is True
+
+
 def test_discover_static_scad_files_missing_root(tmp_path):
     missing = tmp_path / "missing"
 

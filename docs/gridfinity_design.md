@@ -169,7 +169,8 @@ xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
 ```
 
 Run `python -m gitshelves.render.static` locally to mirror the workflow. The
-helper enumerates every bundled OpenSCAD template outside of `openscad/lib/` and
+helper enumerates every bundled OpenSCAD template outside of `openscad/lib/`
+(case-insensitive) and
 renders binary STLs (defaulting to `stl/static/`) so the CI job and local builds
 share the same conversion logic.
 

@@ -26,7 +26,7 @@ def _is_library_path(path: Path, root: Path) -> bool:
         parts = path.relative_to(root).parts
     except ValueError:
         return False
-    return "lib" in parts
+    return any(part.lower() == "lib" for part in parts)
 
 
 def discover_static_scad_files(root: Path | None = None) -> list[Path]:
