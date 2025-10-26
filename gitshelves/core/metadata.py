@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
@@ -99,11 +100,18 @@ class MetadataWriter:
     gridfinity_cubes: bool
     baseplate_template: str
     color_groups: int = field(init=False)
+    gridfinity_rows: int | None = field(init=False, default=None)
     _records: list[tuple[Dict[str, Any], Path]] = field(
         default_factory=list, init=False, repr=False
     )
 
     def __post_init__(self) -> None:
+        if self.gridfinity_columns > 0:
+            months_per_year = 12
+            self.gridfinity_rows = math.ceil(months_per_year / self.gridfinity_columns)
+        else:
+            self.gridfinity_rows = None
+
         max_allowed = min(self.colors, 4) if self.colors > 0 else 0
         if max_allowed == 0:
             self.color_groups = 0
@@ -122,6 +130,14 @@ class MetadataWriter:
         self.color_groups = min(max_allowed, len(positive_levels))
 
     def _common_payload(self) -> Dict[str, Any]:
+        gridfinity_details = {
+            "layouts": self.gridfinity_layouts,
+            "columns": self.gridfinity_columns,
+            "cubes": self.gridfinity_cubes,
+        }
+        if self.gridfinity_rows is not None:
+            gridfinity_details["rows"] = self.gridfinity_rows
+
         return {
             "username": self.username,
             "year_range": {"start": self.start_year, "end": self.end_year},
@@ -129,11 +145,7 @@ class MetadataWriter:
             "calendar_days_per_row": self.calendar_days_per_row,
             "colors": self.colors,
             "color_groups": self.color_groups,
-            "gridfinity": {
-                "layouts": self.gridfinity_layouts,
-                "columns": self.gridfinity_columns,
-                "cubes": self.gridfinity_cubes,
-            },
+            "gridfinity": gridfinity_details,
             "baseplate_template": self.baseplate_template,
         }
 
