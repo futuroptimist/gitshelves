@@ -63,7 +63,7 @@ def test_metadata_writer_writes_json(tmp_path, writer: MetadataWriter, capsys):
     assert payload["stl_generated"] is False
     assert payload["stl"] is None
     assert payload["colors"] == 1
-    assert payload["color_groups"] == 1
+    assert payload["color_groups"] == 2
     assert payload["zero_months"] == [{"year": 2021, "month": 1}]
     captured = capsys.readouterr().out
     assert f"Wrote {metadata_path}" in captured
@@ -94,7 +94,7 @@ def test_metadata_writer_run_summary(tmp_path, writer: MetadataWriter, capsys):
 
     payload = json.loads(summary_path.read_text())
     assert payload["outputs"]
-    assert payload["color_groups"] == 1
+    assert payload["color_groups"] == 2
     monthly_entry = next(
         (entry for entry in payload["outputs"] if entry["kind"] == "monthly"),
         None,
@@ -102,7 +102,7 @@ def test_metadata_writer_run_summary(tmp_path, writer: MetadataWriter, capsys):
     assert monthly_entry is not None
     assert monthly_entry["scad"] == str(scad_path)
     assert monthly_entry["metadata"] == str(scad_path.with_suffix(".json"))
-    assert monthly_entry["color_groups"] == 1
+    assert monthly_entry["color_groups"] == 2
     captured = capsys.readouterr().out
     assert f"Wrote {summary_path}" in captured
 
@@ -255,10 +255,34 @@ def test_metadata_writer_color_groups_reflect_highest_level():
 
     assert writer.color_groups == 3
 
-    two_color_writer = MetadataWriter(
+    single_color_writer = MetadataWriter(
         username="user",
         start_year=2024,
         end_year=2024,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert single_color_writer.color_groups == 3
+
+
+def test_metadata_writer_color_groups_signal_consolidated_levels():
+    """color_groups should reflect stacked levels even when palettes are smaller."""
+
+    counts = {(2025, month): 0 for month in range(1, 13)}
+    counts[(2025, 1)] = 400  # three blocks consolidated into a two-color palette
+
+    writer = MetadataWriter(
+        username="user",
+        start_year=2025,
+        end_year=2025,
         monthly_counts=counts,
         daily_counts={},
         months_per_row=12,
@@ -270,7 +294,7 @@ def test_metadata_writer_color_groups_reflect_highest_level():
         baseplate_template="baseplate_2x6.scad",
     )
 
-    assert two_color_writer.color_groups == 2
+    assert writer.color_groups == 3
 
 
 def test_metadata_writer_includes_zero_months_in_color_metadata(
