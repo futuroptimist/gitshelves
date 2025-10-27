@@ -105,3 +105,22 @@ def test_load_baseplate_scad_falls_back_when_packaged_file_missing(monkeypatch):
 
     expected = _read("openscad/baseplate_2x6.scad")
     assert load_baseplate_scad() == expected
+
+
+def test_load_baseplate_scad_falls_back_when_packaged_file_unreadable(monkeypatch):
+    """Unreadable packaged data should trigger the repository fallback."""
+
+    class CorruptedResource:
+        def joinpath(self, name: str):
+            assert name == "baseplate_2x6.scad"
+            return self
+
+        def read_text(self, encoding: str = "utf-8") -> str:
+            raise UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte")
+
+    monkeypatch.setattr(
+        "gitshelves.baseplate.resources.files", lambda package: CorruptedResource()
+    )
+
+    expected = _read("openscad/baseplate_2x6.scad")
+    assert load_baseplate_scad() == expected
