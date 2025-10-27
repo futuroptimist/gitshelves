@@ -107,6 +107,70 @@ def test_metadata_writer_run_summary(tmp_path, writer: MetadataWriter, capsys):
     assert f"Wrote {summary_path}" in captured
 
 
+def test_metadata_writer_includes_gridfinity_rows_in_summary(tmp_path, capsys):
+    counts = {(2025, month): 0 for month in range(1, 13)}
+    writer = MetadataWriter(
+        username="user",
+        start_year=2025,
+        end_year=2025,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=1,
+        gridfinity_layouts=True,
+        gridfinity_columns=4,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    scad_path = tmp_path / "gridfinity_plate.scad"
+    scad_path.write_text("// gridfinity")
+    writer.write_scad(scad_path, kind="gridfinity-layout")
+
+    summary_path = tmp_path / "summary.json"
+    writer.write_run_summary(summary_path)
+
+    summary = json.loads(summary_path.read_text())
+    assert summary["gridfinity"]["layouts"] is True
+    assert summary["gridfinity"]["columns"] == 4
+    assert summary["gridfinity"]["rows"] == 3
+    captured = capsys.readouterr().out
+    assert f"Wrote {summary_path}" in captured
+
+
+def test_metadata_writer_includes_rows_without_layouts(tmp_path, capsys):
+    counts = {(2026, month): 0 for month in range(1, 13)}
+    writer = MetadataWriter(
+        username="user",
+        start_year=2026,
+        end_year=2026,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=3,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    scad_path = tmp_path / "example.scad"
+    scad_path.write_text("// monthly")
+    writer.write_scad(scad_path, kind="monthly")
+
+    summary_path = tmp_path / "summary.json"
+    writer.write_run_summary(summary_path)
+
+    summary = json.loads(summary_path.read_text())
+    assert summary["gridfinity"]["layouts"] is False
+    assert summary["gridfinity"]["columns"] == 3
+    assert summary["gridfinity"]["rows"] == 4
+    captured = capsys.readouterr().out
+    assert f"Wrote {summary_path}" in captured
+
+
 def test_metadata_writer_color_groups_match_active_levels():
     counts = {(2022, month): 0 for month in range(1, 13)}
     counts[(2022, 2)] = 25  # two blocks
@@ -226,3 +290,29 @@ def test_metadata_writer_includes_zero_months_in_color_metadata(
     metadata_path = scad_path.with_suffix(".json")
     payload = json.loads(metadata_path.read_text())
     assert payload["zero_months"] == writer.zero_months()
+
+
+def test_metadata_writer_omits_gridfinity_rows_when_columns_disabled(tmp_path):
+    writer = MetadataWriter(
+        username="user",
+        start_year=2027,
+        end_year=2027,
+        monthly_counts={(2027, 1): 0},
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=0,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    scad_path = tmp_path / "gridfinity_disabled.scad"
+    scad_path.write_text("// disabled")
+    writer.write_scad(scad_path, kind="monthly")
+
+    metadata_path = scad_path.with_suffix(".json")
+    payload = json.loads(metadata_path.read_text())
+    assert payload["gridfinity"]["columns"] == 0
+    assert "rows" not in payload["gridfinity"]

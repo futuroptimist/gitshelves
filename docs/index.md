@@ -41,7 +41,10 @@ the SCAD annotations by including `"zero_months"` so placeholder `_colorN.scad`
 files still report their reserved slots even when they contain no blocks. Gridfinity layout
 metadata includes the detected
 footprint by storing both the column count and the calculated number of rows so
-scripts can reproduce plate dimensions without scraping README summaries.
+scripts can reproduce plate dimensions without scraping README summaries. The
+run-level metadata exposes this derived row count as `gridfinity.rows`, even
+when layout exports are skipped, making the footprint available without
+inspecting individual layout entries.
 Even when intermediate logarithmic levels are absent, `_color4` still gathers the remaining high
 orders so the accent file continues to highlight the peak contribution range.
 `--months-per-row` values below one exit with a parser error before any files are
