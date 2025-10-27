@@ -249,3 +249,29 @@ def test_metadata_writer_includes_zero_months_in_color_metadata(
     metadata_path = scad_path.with_suffix(".json")
     payload = json.loads(metadata_path.read_text())
     assert payload["zero_months"] == writer.zero_months()
+
+
+def test_metadata_writer_omits_gridfinity_rows_when_columns_disabled(tmp_path):
+    writer = MetadataWriter(
+        username="user",
+        start_year=2027,
+        end_year=2027,
+        monthly_counts={(2027, 1): 0},
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=0,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    scad_path = tmp_path / "gridfinity_disabled.scad"
+    scad_path.write_text("// disabled")
+    writer.write_scad(scad_path, kind="monthly")
+
+    metadata_path = scad_path.with_suffix(".json")
+    payload = json.loads(metadata_path.read_text())
+    assert payload["gridfinity"]["columns"] == 0
+    assert "rows" not in payload["gridfinity"]
