@@ -1651,6 +1651,100 @@ def test_cli_metadata_records_color_groups(tmp_path, monkeypatch):
         assert entry["zero_months"] == expected_zero_months
 
 
+def test_cli_rolls_high_levels_into_accent_group(tmp_path, monkeypatch):
+    """`--colors 5` should funnel fifth-order stacks into the `_color4` accent file."""
+
+    base = tmp_path / "accent.scad"
+    args = argparse.Namespace(
+        username="user",
+        token=None,
+        start_year=2024,
+        end_year=2024,
+        output=str(base),
+        months_per_row=12,
+        stl=None,
+        colors=5,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+        calendar_days_per_row=12,
+    )
+
+    monkeypatch.setattr(
+        argparse.ArgumentParser, "parse_args", lambda self, *a, **k: args
+    )
+    monkeypatch.chdir(tmp_path)
+
+    counts = {(2024, month): 0 for month in range(1, 13)}
+    counts.update(
+        {
+            (2024, 1): 1,
+            (2024, 2): 12,
+            (2024, 3): 123,
+            (2024, 4): 1_234,
+            (2024, 5): 12_345,
+        }
+    )
+    daily_counts: dict[tuple[int, int, int], int] = {}
+
+    monkeypatch.setattr(cli, "fetch_user_contributions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        cli,
+        "build_contribution_maps",
+        lambda *a, **k: (2024, 2024, counts, daily_counts),
+    )
+    monkeypatch.setattr(
+        cli,
+        "generate_monthly_calendar_scads",
+        lambda daily, year, days_per_row=12: {month: "//" for month in range(1, 13)},
+    )
+    monkeypatch.setattr(
+        cli, "load_baseplate_scad", lambda name="baseplate_2x6.scad": "// baseplate"
+    )
+
+    def fake_write_year_readme(
+        year,
+        counts,
+        extras=None,
+        *,
+        include_baseplate_stl=False,
+        calendar_slug=calendar_slug(),
+    ):
+        path = tmp_path / "stl" / str(year) / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# materials")
+        return path
+
+    monkeypatch.setattr(cli, "write_year_readme", fake_write_year_readme)
+
+    stl_calls: list[tuple[tuple[str, ...], dict]] = []
+
+    def fake_scad_to_stl(*args, **kwargs):
+        stl_calls.append((args, kwargs))
+
+    monkeypatch.setattr(cli, "scad_to_stl", fake_scad_to_stl)
+
+    cli.main()
+
+    color_files = [tmp_path / f"accent_color{index}.scad" for index in range(1, 5)]
+    for path in color_files:
+        assert path.exists(), f"Expected {path.name} to be generated"
+
+    assert not (tmp_path / "accent_color5.scad").exists()
+
+    color4_text = (tmp_path / "accent_color4.scad").read_text()
+    assert "2024-04" in color4_text
+    assert "2024-05" in color4_text
+
+    color4_meta = json.loads((tmp_path / "accent_color4.json").read_text())
+    assert color4_meta["colors"] == 5
+    assert color4_meta["color_groups"] == 4
+    assert color4_meta["levels"] == [4, 5]
+
+    assert not stl_calls, "STL rendering should not run without --stl"
+
+
 def test_cli_supports_four_block_colors(tmp_path, monkeypatch, capsys):
     base = tmp_path / "multi.scad"
     stl = tmp_path / "multi.stl"
