@@ -35,6 +35,19 @@ def test_discover_static_scad_files_skips_lib(tmp_path):
     assert sorted(path.name for path in discovered) == ["inner.scad", "top.scad"]
 
 
+def test_discover_static_scad_files_ignores_lib_case_insensitive(tmp_path):
+    root = tmp_path / "openscad"
+    root.mkdir()
+    (root / "keep.scad").write_text("// keep")
+    upper_lib = root / "Lib"
+    upper_lib.mkdir()
+    (upper_lib / "ignored.scad").write_text("// ignored")
+
+    discovered = static.discover_static_scad_files(root)
+
+    assert [path.name for path in discovered] == ["keep.scad"]
+
+
 def test_render_static_stls_invokes_scad_to_stl(tmp_path, monkeypatch):
     source = tmp_path / "openscad"
     source.mkdir()
