@@ -118,7 +118,8 @@ spread stacks as evenly as possible before the accent color kicks in. Each `*_co
 `<name>_baseplate.scad` (and `.stl` when requested). When contribution counts span more than four
 logarithmic levels, the fourth color collects the remaining higher magnitudes so extra orders reuse
 the accent color. Values outside the documented 1–5 range trigger a parser error before any files
-are written.
+are written. Automated regression tests ensure that `_color4` captures those higher stacks so no
+`_color5` placeholder is emitted, even when activity spans five orders of magnitude.
 Lower magnitudes stay in the earliest `color` files, and any surplus levels beyond the available
 groups are appended to the final `color` output so accent-colored cubes repeat for larger orders
 of magnitude. `group_scad_levels` enforces this by keeping the first three levels in their own
