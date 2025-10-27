@@ -23,7 +23,7 @@ def load_baseplate_scad(filename: str = "baseplate_2x6.scad") -> str:
     if package_root is not None:
         try:
             return package_root.joinpath(filename).read_text(encoding="utf-8")
-        except FileNotFoundError:
+        except (OSError, UnicodeDecodeError):
             pass
 
     fallback = Path(__file__).resolve().parents[2] / "openscad" / filename

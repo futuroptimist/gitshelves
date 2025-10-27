@@ -13,8 +13,8 @@ A simple wall shelf with drywall mounting holes lives in `openscad/shelf.scad`. 
 
 `load_baseplate_scad()` ships both the 2×6 Gridfinity plate and a packaged `baseplate_1x12.scad`
 for tall single-row layouts, so you can source narrow baseplates without cloning the OpenSCAD
-sources. If the packaged data is unavailable, it automatically falls back to the matching templates
-in `openscad/` so source checkouts stay functional.
+sources. If the packaged data is unavailable or unreadable, it automatically falls back to the
+matching templates in `openscad/` so source checkouts stay functional.
 
 ## Usage
 

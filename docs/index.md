@@ -93,7 +93,7 @@ reruns also delete the matching `_baseplate` SCAD/STL pair from earlier multi-co
 runs so directories revert to the single-file layout.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
-cloning the OpenSCAD templates.
+cloning the OpenSCAD templates, and falls back to the repository templates when the packaged data is missing or unreadable.
 
 For printer-specific guidance, see the [usage guide](usage.md) with slicer
 presets and AMS filament scripting examples.
