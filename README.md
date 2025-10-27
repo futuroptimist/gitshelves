@@ -74,6 +74,9 @@ For multi-color runs, `"colors"` preserves the requested palette size while
 can detect when accent levels are consolidated. When only a subset of the palette
 contains geometry, the metadata records that smaller `"color_groups"` value (for
 example, a five-color run with two populated levels reports `"color_groups": 2`).
+Tall stacks in single- or two-color runs still report every occupied logarithmic
+level, so `"color_groups"` can exceed the palette size (for example,
+`"colors": 1` with a three-block stack records `"color_groups": 3`).
 Stacks that reach higher magnitudes still populate the lower logarithmic levels,
 and the metadata reflects that by reporting the highest occupied level even when
 every month lands in the same magnitude—three-block stacks still contribute three

@@ -112,8 +112,7 @@ class MetadataWriter:
         else:
             self.gridfinity_rows = None
 
-        max_allowed = min(self.colors, 4) if self.colors > 0 else 0
-        if max_allowed == 0:
+        if self.colors <= 0:
             self.color_groups = 0
             return
 
@@ -127,7 +126,7 @@ class MetadataWriter:
             self.color_groups = 0
             return
 
-        self.color_groups = min(max_allowed, max_level)
+        self.color_groups = min(max_level, 4)
 
     def _common_payload(self) -> Dict[str, Any]:
         gridfinity_details = {
