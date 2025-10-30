@@ -39,7 +39,10 @@ metadata reports that smaller `"color_groups"` value (for example, a five-color
 run with two populated levels records `"color_groups": 2`). Tall stacks in
 single- or two-color runs still report every occupied logarithmic level, so
 `"color_groups"` can exceed the palette size (for example, `"colors": 1` with a
-three-block stack records `"color_groups": 3`). Color metadata mirrors
+three-block stack records `"color_groups": 3`). Those smaller palettes never cap
+the value, so activity that reaches fifth or sixth orders of magnitude continues
+to surface the full logarithmic span even when only one or two SCAD files are
+produced. Color metadata mirrors
 the SCAD annotations by including `"zero_months"` so placeholder `_colorN.scad`
 files still report their reserved slots even when they contain no blocks. Gridfinity layout
 metadata includes the detected

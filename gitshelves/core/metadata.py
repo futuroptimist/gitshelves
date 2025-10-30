@@ -126,6 +126,10 @@ class MetadataWriter:
             self.color_groups = 0
             return
 
+        if self.colors <= 2:
+            self.color_groups = max_level
+            return
+
         self.color_groups = min(max_level, 4)
 
     def _common_payload(self) -> Dict[str, Any]:
