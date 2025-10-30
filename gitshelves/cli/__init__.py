@@ -328,6 +328,21 @@ def _cleanup_calendar_directories(year_dir: Path, keep_slug: str) -> None:
             path.unlink(missing_ok=True)
 
 
+def _resolve_package_version() -> str:
+    """Return the CLI version string using the package ``__version__`` when available."""
+
+    package = sys.modules.get("gitshelves")
+    if package is not None:
+        version = getattr(package, "__version__", None)
+        if version:
+            return str(version)
+
+    try:  # pragma: no cover - fallback for unusual environments
+        return metadata.version("gitshelves")
+    except metadata.PackageNotFoundError:  # pragma: no cover
+        return "0.0.0"
+
+
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(
         description="Generate 3D GitHub contribution charts",
@@ -395,12 +410,10 @@ def main(argv: list[str] | None = None):
         "--json",
         help="Optional run-level metadata summary file",
     )
-    try:  # pragma: no cover - metadata lookup
-        pkg_version = metadata.version("gitshelves")
-    except metadata.PackageNotFoundError:  # pragma: no cover
-        pkg_version = "0.0.0"
     parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {pkg_version}"
+        "--version",
+        action="version",
+        version=f"%(prog)s {_resolve_package_version()}",
     )
     if argv is None:
         args = parser.parse_args()

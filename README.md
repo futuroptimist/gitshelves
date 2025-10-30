@@ -110,6 +110,9 @@ Print the current version with:
 python -m gitshelves.cli --version
 ```
 
+The flag reuses `gitshelves.__version__`, so development checkouts without
+installed package metadata still surface the same version string.
+
 Use `--colors` to control multi-color outputs. `--colors 2` splits blocks between
 `*_color1.scad` and `*_color2.scad` while also writing `<name>_baseplate.scad` for the baseplate.
 `--colors 3` and `--colors 4` add `*_color3.scad` and `*_color4.scad` so up to four block groups are
