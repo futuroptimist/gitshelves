@@ -81,6 +81,9 @@ Stacks that reach higher magnitudes still populate the lower logarithmic levels,
 and the metadata reflects that by reporting the highest occupied level even when
 every month lands in the same magnitude—three-block stacks still contribute three
 color groups, for instance.
+Single- and two-color runs keep that span uncapped, so fifth- or sixth-order
+activity continues to report those higher `"color_groups"` values even though the
+output may only include one or two SCAD files.
 Color-specific metadata now mirrors the SCAD annotations by listing `"zero_months"`
 so placeholder `_colorN.scad` files still report which months occupy each slot even
 when no blocks are printed.

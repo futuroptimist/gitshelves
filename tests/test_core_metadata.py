@@ -297,6 +297,63 @@ def test_metadata_writer_color_groups_signal_consolidated_levels():
     assert writer.color_groups == 3
 
 
+def test_metadata_writer_color_groups_expand_for_small_palettes():
+    """Single- and two-color runs should report every occupied logarithmic level."""
+
+    counts = {(2026, month): 0 for month in range(1, 13)}
+    counts[(2026, 7)] = 150_000  # six blocks
+
+    single_color = MetadataWriter(
+        username="user",
+        start_year=2026,
+        end_year=2026,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=1,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    two_color = MetadataWriter(
+        username="user",
+        start_year=2026,
+        end_year=2026,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=2,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert single_color.color_groups == 6
+    assert two_color.color_groups == 6
+
+    multi_color = MetadataWriter(
+        username="user",
+        start_year=2026,
+        end_year=2026,
+        monthly_counts=counts,
+        daily_counts={},
+        months_per_row=12,
+        calendar_days_per_row=12,
+        colors=5,
+        gridfinity_layouts=False,
+        gridfinity_columns=6,
+        gridfinity_cubes=False,
+        baseplate_template="baseplate_2x6.scad",
+    )
+
+    assert multi_color.color_groups == 4
+
+
 def test_metadata_writer_includes_zero_months_in_color_metadata(
     tmp_path, writer: MetadataWriter
 ):
