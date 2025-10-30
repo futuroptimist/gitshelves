@@ -88,6 +88,41 @@ def test_render_static_stls_invokes_scad_to_stl(tmp_path, monkeypatch):
         assert stl_path.parent.exists()
 
 
+def test_render_static_stls_removes_stale_outputs(tmp_path, monkeypatch):
+    source = tmp_path / "openscad"
+    source.mkdir()
+    keep_scad = source / "keep.scad"
+    keep_scad.write_text("// keep")
+
+    output = tmp_path / "stl"
+    output.mkdir()
+    stale_root = output / "orphan.stl"
+    stale_root.write_text("stale")
+    stale_dir = output / "old"
+    stale_dir.mkdir()
+    stale_nested = stale_dir / "unused.stl"
+    stale_nested.write_text("old")
+
+    recorded: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        static,
+        "scad_to_stl",
+        lambda src, dest: recorded.append((src, dest)),
+    )
+
+    rendered = static.render_static_stls(
+        source_root=source,
+        output_root=output,
+    )
+
+    expected_stl = output / "keep.stl"
+    assert rendered == [(keep_scad, expected_stl)]
+    assert recorded == [(str(keep_scad), str(expected_stl))]
+    assert not stale_root.exists()
+    assert not stale_nested.exists()
+    assert not stale_dir.exists()
+
+
 def test_cli_invokes_render_static_stls(monkeypatch, capsys):
     called: dict[str, tuple[Path | None, Path | None]] = {}
 

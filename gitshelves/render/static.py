@@ -60,11 +60,30 @@ def render_static_stls(
 
     src_root = DEFAULT_SOURCE_ROOT if source_root is None else Path(source_root)
     out_root = DEFAULT_OUTPUT_ROOT if output_root is None else Path(output_root)
-    rendered: list[tuple[Path, Path]] = []
+    scad_paths = discover_static_scad_files(src_root)
+    expected_pairs: list[tuple[Path, Path]] = []
+    expected_relatives: set[Path] = set()
 
-    for scad_path in discover_static_scad_files(src_root):
+    for scad_path in scad_paths:
         relative = scad_path.relative_to(src_root)
         stl_path = out_root / relative.with_suffix(".stl")
+        expected_pairs.append((scad_path, stl_path))
+        expected_relatives.add(stl_path.relative_to(out_root))
+
+    if out_root.exists():
+        for existing in out_root.rglob("*.stl"):
+            if existing.relative_to(out_root) not in expected_relatives:
+                existing.unlink(missing_ok=True)
+
+        for path in sorted(out_root.rglob("*"), reverse=True):
+            if path.is_dir() and path != out_root:
+                try:
+                    next(path.iterdir())
+                except StopIteration:
+                    path.rmdir()
+
+    rendered: list[tuple[Path, Path]] = []
+    for scad_path, stl_path in expected_pairs:
         stl_path.parent.mkdir(parents=True, exist_ok=True)
         scad_to_stl(scad_path.as_posix(), stl_path.as_posix())
         rendered.append((scad_path, stl_path))

@@ -235,8 +235,9 @@ python -m gitshelves.render.static --output-root stl/static
 ```
 
 The helper skips vendored `openscad/lib/` directories, mirroring the CI job that
-converts every packaged `.scad` file to a binary STL artifact. Override
-`--source-root` when testing alternate template directories.
+converts every packaged `.scad` file to a binary STL artifact, and removes stale
+STLs in the target tree so the output directory reflects the current templates.
+Override `--source-root` when testing alternate template directories.
 
 ## Import migration helpers
 
