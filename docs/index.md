@@ -95,6 +95,18 @@ Switching back to single-color exports with `--colors 1` removes any lingering
 reruns also delete the matching `_baseplate` SCAD/STL pair from earlier multi-color
 runs so directories revert to the single-file layout.
 
+Generate STL previews for the static templates bundled with the repository by
+running:
+
+```bash
+python -m gitshelves.render.static --output-root stl/static
+```
+
+The helper skips vendored `openscad/lib/` directories, mirroring the CI job that
+converts every packaged `.scad` file to a binary STL artifact, and removes stale
+STLs in the target tree so the output directory reflects the current templates.
+Override `--source-root` when testing alternate template directories.
+
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates, and falls back to the repository templates when the packaged data is missing or unreadable.
 
