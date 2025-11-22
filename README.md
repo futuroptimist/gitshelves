@@ -10,6 +10,8 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 
 A simple wall shelf with drywall mounting holes lives in `openscad/shelf.scad`. Use the pre-rendered `stl/shelf.stl` to print a matching display shelf for your contribution charts.
 
+The repository also seeds `stl/2021` through `stl/2025` with README placeholders so the Gridfinity build matrix has predictable destinations for the CI-rendered `baseplate_2x6.stl` artifacts.
+
 
 `load_baseplate_scad()` ships both the 2×6 Gridfinity plate and a packaged `baseplate_1x12.scad`
 for tall single-row layouts, so you can source narrow baseplates without cloning the OpenSCAD
