@@ -79,7 +79,9 @@ activity snapshot. By default, the current year's contributions are fetched unle
 `--start-year` and `--end-year` specify a range. Months that no longer have
 contributions remove their old `contrib_cube_MM` files (and any lingering STLs
 when cube meshes are not requested elsewhere) so directories stay in sync with the
-latest activity snapshot.
+latest activity snapshot. Clearing cube STLs does not affect metadata for active
+months, so SCAD files continue to ship with the metadata that describes them even
+when meshes are intentionally removed.
 Color-specific outputs also repeat the zero-contribution annotations so each
 file documents the full monthly layout even when opened in isolation.
 Whether no month produces any blocks or only some of the requested color groups
