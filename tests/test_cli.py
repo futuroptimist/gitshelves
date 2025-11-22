@@ -3341,6 +3341,25 @@ def test_cleanup_gridfinity_cube_outputs_removes_orphan_metadata(tmp_path):
     assert keep_metadata.exists()
 
 
+def test_cleanup_gridfinity_cube_outputs_keeps_active_metadata_with_remove_stls(
+    tmp_path,
+):
+    """Active-month metadata should remain even when STLs are purged."""
+
+    keep_scad = tmp_path / "contrib_cube_02.scad"
+    keep_scad.write_text("cube();")
+    keep_metadata = tmp_path / "contrib_cube_02.json"
+    keep_metadata.write_text("{}")
+    stale_metadata = tmp_path / "contrib_cube_03.json"
+    stale_metadata.write_text("{}")
+
+    cli._cleanup_gridfinity_cube_outputs(tmp_path, {2}, remove_stls=True)
+
+    assert keep_scad.exists(), "Active SCAD should be preserved"
+    assert keep_metadata.exists(), "Active metadata should be preserved"
+    assert not stale_metadata.exists(), "Inactive metadata should be removed"
+
+
 def test_cli_gridfinity_cubes_remove_stale_files(
     tmp_path, monkeypatch, gridfinity_library
 ):
