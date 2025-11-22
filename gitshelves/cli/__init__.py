@@ -177,7 +177,7 @@ def _cleanup_gridfinity_cube_outputs(
         month = _cube_month_from_path(metadata_path)
         if month is None:
             continue
-        if remove_stls or month not in active_months:
+        if month not in active_months:
             metadata_path.unlink(missing_ok=True)
 
 
