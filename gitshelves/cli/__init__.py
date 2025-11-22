@@ -173,6 +173,13 @@ def _cleanup_gridfinity_cube_outputs(
         if remove_stls or month not in active_months:
             stl_path.unlink(missing_ok=True)
 
+    for metadata_path in year_dir.glob("contrib_cube_*.json"):
+        month = _cube_month_from_path(metadata_path)
+        if month is None:
+            continue
+        if remove_stls or month not in active_months:
+            metadata_path.unlink(missing_ok=True)
+
 
 def _cleanup_color_outputs(
     base_output: Path,

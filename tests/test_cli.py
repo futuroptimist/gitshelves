@@ -3327,6 +3327,20 @@ def test_cleanup_gridfinity_cube_outputs(tmp_path):
     assert not keep_stl.exists()
 
 
+def test_cleanup_gridfinity_cube_outputs_removes_orphan_metadata(tmp_path):
+    """Stale Gridfinity metadata should be removed even when SCADs are missing."""
+
+    stale_metadata = tmp_path / "contrib_cube_01.json"
+    stale_metadata.write_text("{}")
+    keep_metadata = tmp_path / "contrib_cube_02.json"
+    keep_metadata.write_text("{}")
+
+    cli._cleanup_gridfinity_cube_outputs(tmp_path, {2}, remove_stls=False)
+
+    assert not stale_metadata.exists()
+    assert keep_metadata.exists()
+
+
 def test_cli_gridfinity_cubes_remove_stale_files(
     tmp_path, monkeypatch, gridfinity_library
 ):

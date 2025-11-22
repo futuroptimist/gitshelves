@@ -74,8 +74,8 @@ automatically whenever this flag is enabled—even without `--stl`—so install
 `openscad` on systems that generate cube stacks. Months that no longer
 record activity remove any existing `contrib_cube_MM` exports so only active
 months keep cube stacks on disk. Runs that omit `--gridfinity-cubes` also clear
-those cube files so directories always reflect the latest activity
-snapshot. By default, the current year's contributions are fetched unless
+those cube files and their metadata so directories always reflect the latest
+activity snapshot. By default, the current year's contributions are fetched unless
 `--start-year` and `--end-year` specify a range. Months that no longer have
 contributions remove their old `contrib_cube_MM` files (and any lingering STLs
 when cube meshes are not requested elsewhere) so directories stay in sync with the
