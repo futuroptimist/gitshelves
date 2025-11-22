@@ -1,4 +1,7 @@
 from pathlib import Path
+from typing import Sequence
+
+import pytest
 
 from gitshelves.render import static
 
@@ -140,3 +143,29 @@ def test_cli_invokes_render_static_stls(monkeypatch, capsys):
     assert called["args"] == (None, None)
     captured = capsys.readouterr()
     assert "Rendered output.stl from source.scad" in captured.out
+
+
+def test_main_delegates_to_cli(monkeypatch):
+    recorded: list[Sequence[str] | None] = []
+
+    monkeypatch.setattr(static, "_cli", lambda argv=None: recorded.append(argv) or 0)
+
+    assert static.main(["--output-root", "out"]) == 0
+    assert recorded == [["--output-root", "out"]]
+
+
+def test_module_entrypoint_runs_cli(monkeypatch):
+    calls: list[Sequence[str] | None] = []
+
+    def fake_main(argv=None):
+        calls.append(argv)
+        return 0
+
+    monkeypatch.setattr(static, "main", fake_main)
+    monkeypatch.setattr(static, "render_static_stls", lambda **_kwargs: [])
+
+    with pytest.raises(SystemExit) as excinfo:
+        raise SystemExit(static.main())
+
+    assert excinfo.value.code == 0
+    assert calls == [None]

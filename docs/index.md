@@ -109,6 +109,8 @@ The helper skips vendored `openscad/lib/` directories, mirroring the CI job that
 converts every packaged `.scad` file to a binary STL artifact, and removes stale
 STLs in the target tree so the output directory reflects the current templates.
 Override `--source-root` when testing alternate template directories.
+Running the module without flags renders templates into the default
+`stl/static/` directory so local spot checks match the CI defaults.
 
 `load_baseplate_scad('baseplate_1x12.scad')` provides a bundled single-row Gridfinity plate when you need taller stacks without
 cloning the OpenSCAD templates, and falls back to the repository templates when the packaged data is missing or unreadable.
