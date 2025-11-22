@@ -3334,11 +3334,14 @@ def test_cleanup_gridfinity_cube_outputs_removes_orphan_metadata(tmp_path):
     stale_metadata.write_text("{}")
     keep_metadata = tmp_path / "contrib_cube_02.json"
     keep_metadata.write_text("{}")
+    ignored_metadata = tmp_path / "contrib_cube_00.json"
+    ignored_metadata.write_text("{}")
 
     cli._cleanup_gridfinity_cube_outputs(tmp_path, {2}, remove_stls=False)
 
     assert not stale_metadata.exists()
     assert keep_metadata.exists()
+    assert ignored_metadata.exists(), "Non-month filenames should be preserved"
 
 
 def test_cleanup_gridfinity_cube_outputs_keeps_active_metadata_with_remove_stls(
