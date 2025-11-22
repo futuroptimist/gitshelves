@@ -226,10 +226,14 @@ def _cleanup_color_outputs(
         try:
             data = json.loads(metadata_path.read_text())
         except (FileNotFoundError, json.JSONDecodeError):
+            if color_groups == 0:
+                metadata_path.unlink(missing_ok=True)
             continue
         stl_value = data.get("stl")
         if stl_value:
             _register_candidate(index, Path(stl_value))
+        if color_groups == 0 or (index is not None and index > color_groups):
+            metadata_path.unlink(missing_ok=True)
 
     for index in removed_indices:
         _register_candidate(

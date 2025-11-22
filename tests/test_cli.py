@@ -3906,6 +3906,29 @@ def test_cleanup_color_outputs_removes_all_when_zero_groups(tmp_path):
     assert not stale_stl.exists()
 
 
+def test_cleanup_color_outputs_removes_orphan_metadata(tmp_path):
+    base_output = tmp_path / "palette"
+    orphan_metadata = tmp_path / "palette_color3.json"
+    referenced_stl = tmp_path / "palette_color3.stl"
+    referenced_stl.write_text("old")
+    orphan_metadata.write_text(json.dumps({"stl": str(referenced_stl)}))
+
+    cli._cleanup_color_outputs(base_output, 0, stl_requested=False)
+
+    assert not orphan_metadata.exists()
+    assert not referenced_stl.exists()
+
+
+def test_cleanup_color_outputs_removes_invalid_metadata(tmp_path):
+    base_output = tmp_path / "palette"
+    invalid_metadata = tmp_path / "palette_color2.json"
+    invalid_metadata.write_text("{invalid")
+
+    cli._cleanup_color_outputs(base_output, 0, stl_requested=False)
+
+    assert not invalid_metadata.exists()
+
+
 def test_cleanup_color_outputs_ignores_negative_groups(tmp_path):
     base_output = tmp_path / "palette"
     base_output.touch()

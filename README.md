@@ -150,8 +150,10 @@ workflows keep the expected file set; STL rendering is skipped for those empty g
 `_colorN.stl` meshes are deleted so unused groups leave no stale geometry behind.
 When you reduce the palette, stale `_colorN.scad` files above the requested range are removed alongside
 those `_colorN.stl` meshes (and every `_colorN.stl` is purged when `--stl` isn't requested) so follow-on
-jobs only see the current color set. Switching to multi-color outputs removes the unified `<name>.scad`
-export and its metadata so only the `_colorN` files remain. Returning to single-color runs with `--colors 1`
+jobs only see the current color set. Metadata from deleted color groups is cleared alongside those
+stale files so JSON exports stay aligned with the surviving SCAD/STL artifacts. Switching to
+multi-color outputs removes the unified `<name>.scad` export and its metadata so only the `_colorN`
+files remain. Returning to single-color runs with `--colors 1`
 clears any lingering `_colorN` SCAD/STL files, leaving only the combined contribution export. Single-color
 reruns also delete the matching `_baseplate` SCAD/STL pair from earlier multi-color runs so the directory
 truly returns to the single-file layout.
