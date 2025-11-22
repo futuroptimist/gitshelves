@@ -1,3 +1,5 @@
+import runpy
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -154,18 +156,35 @@ def test_main_delegates_to_cli(monkeypatch):
     assert recorded == [["--output-root", "out"]]
 
 
-def test_module_entrypoint_runs_cli(monkeypatch):
-    calls: list[Sequence[str] | None] = []
+def test_module_entrypoint_runs_cli(monkeypatch, tmp_path):
+    source_root = tmp_path / "openscad"
+    source_root.mkdir()
+    (source_root / "shape.scad").write_text("// shape")
+    output_root = tmp_path / "stl"
 
-    def fake_main(argv=None):
-        calls.append(argv)
-        return 0
-
-    monkeypatch.setattr(static, "main", fake_main)
-    monkeypatch.setattr(static, "render_static_stls", lambda **_kwargs: [])
+    calls: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        "gitshelves.render.scad.scad_to_stl",
+        lambda src, dst: calls.append((src, dst)),
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "gitshelves.render.static",
+            "--source-root",
+            str(source_root),
+            "--output-root",
+            str(output_root),
+        ],
+    )
 
     with pytest.raises(SystemExit) as excinfo:
-        raise SystemExit(static.main())
+        runpy.run_module(
+            "gitshelves.render.static", run_name="__main__", alter_sys=True
+        )
 
     assert excinfo.value.code == 0
-    assert calls == [None]
+    assert calls == [
+        (str(source_root / "shape.scad"), str(output_root / "shape.stl")),
+    ]
