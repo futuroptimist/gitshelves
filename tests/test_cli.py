@@ -3919,6 +3919,16 @@ def test_cleanup_color_outputs_removes_orphan_metadata(tmp_path):
     assert not referenced_stl.exists()
 
 
+def test_cleanup_color_outputs_removes_invalid_metadata(tmp_path):
+    base_output = tmp_path / "palette"
+    invalid_metadata = tmp_path / "palette_color2.json"
+    invalid_metadata.write_text("{invalid")
+
+    cli._cleanup_color_outputs(base_output, 0, stl_requested=False)
+
+    assert not invalid_metadata.exists()
+
+
 def test_cleanup_color_outputs_ignores_negative_groups(tmp_path):
     base_output = tmp_path / "palette"
     base_output.touch()
