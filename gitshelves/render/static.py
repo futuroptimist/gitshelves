@@ -8,7 +8,6 @@ from typing import Sequence
 
 from .scad import scad_to_stl
 
-
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOURCE_ROOT = PACKAGE_ROOT / "openscad"
 DEFAULT_OUTPUT_ROOT = PACKAGE_ROOT / "stl" / "static"

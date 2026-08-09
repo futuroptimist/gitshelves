@@ -9,5 +9,5 @@ jobs:
         with:
           python-version: '3.x'
       - run: |
-          pip install black
+          pip install black==26.5.1
           black --check .
