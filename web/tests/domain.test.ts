@@ -4,10 +4,16 @@ import {
   datasetFromCounts,
   SAMPLE,
 } from "../src/domain";
-import { classifyFilename } from "../src/files";
+import {
+  appendLiteralFilename,
+  classifyFilename,
+  parseStlGeometry,
+  readStlFiles,
+} from "../src/files";
 import { createManifest } from "../src/manifest";
 import { moduleTransform, paletteVisible } from "../src/transforms";
 import { parseMetadata } from "../src/metadata";
+import { exactInstancePlan } from "../src/scene";
 describe("product domain", () => {
   it.each([
     [0, 0],
@@ -69,7 +75,7 @@ describe("imports", () => {
       year: 2024,
       month: index + 1,
       count: index * 10,
-      blocks: 1,
+      blocks: index === 0 ? 0 : Math.floor(Math.log10(index * 10)) + 1,
     }));
     expect(
       parseMetadata(JSON.stringify({ monthly_contributions: monthly }))
@@ -82,9 +88,13 @@ describe("imports", () => {
     ).toBe(2024);
   });
   it("selects the latest year across all run-summary outputs", () => {
-    const records = (year: number) => [
-      { year, month: 1, count: year, blocks: 4 },
-    ];
+    const records = (year: number) =>
+      Array.from({ length: 12 }, (_, index) => ({
+        year,
+        month: index + 1,
+        count: year + index,
+        blocks: Math.floor(Math.log10(year + index)) + 1,
+      }));
     const dataset = parseMetadata(
       JSON.stringify({
         outputs: [
@@ -96,10 +106,102 @@ describe("imports", () => {
     expect(dataset.year).toBe(2025);
     expect(dataset.months[0]?.contributions).toBe(2025);
   });
+  it("rejects conflicting, inconsistent, and partial run summaries", () => {
+    const complete = Array.from({ length: 12 }, (_, index) => ({
+      year: 2025,
+      month: index + 1,
+      count: index,
+      blocks: index === 0 ? 0 : Math.floor(Math.log10(index)) + 1,
+    }));
+    expect(() =>
+      parseMetadata(
+        JSON.stringify({
+          outputs: [{ monthly_contributions: complete.slice(0, 11) }],
+        }),
+      ),
+    ).toThrow("complete");
+    expect(() =>
+      parseMetadata(
+        JSON.stringify({
+          outputs: [
+            { monthly_contributions: complete },
+            {
+              monthly_contributions: [{ ...complete[0], count: 2, blocks: 1 }],
+            },
+          ],
+        }),
+      ),
+    ).toThrow("Conflicting");
+    expect(() =>
+      parseMetadata(
+        JSON.stringify({
+          monthly_contributions: [{ ...complete[1], blocks: 4 }],
+        }),
+      ),
+    ).toThrow("Inconsistent");
+  });
   it.each(["", "nope", "[]", "{}"])(
     "rejects malformed/unsupported input",
     (text) => expect(() => parseMetadata(text)).toThrow(),
   );
+});
+function binaryTriangle(): Uint8Array {
+  const bytes = new Uint8Array(134),
+    view = new DataView(bytes.buffer);
+  view.setUint32(80, 1, true);
+  [
+    [0, 0, 0],
+    [1, 0, 0],
+    [0, 1, 0],
+  ].forEach((point, vertex) =>
+    point.forEach((value, axis) =>
+      view.setFloat32(84 + 12 + vertex * 12 + axis * 4, value, true),
+    ),
+  );
+  return bytes;
+}
+it("keeps hostile filenames literal and preserves downloadable bytes", async () => {
+  const prior = globalThis.document;
+  const children: Array<{ textContent: string }> = [];
+  Object.assign(globalThis, {
+    document: { createElement: () => ({ textContent: "" }) },
+  });
+  const name = "<img src=x onerror=alert(1)>.stl";
+  appendLiteralFilename(
+    {
+      append: (item: { textContent: string }) => children.push(item),
+    } as unknown as HTMLElement,
+    name,
+  );
+  expect(children).toEqual([{ textContent: name }]);
+  const bytes = binaryTriangle();
+  const input = Object.assign(new Blob([bytes.slice().buffer]), {
+    name,
+  }) as File;
+  expect((await readStlFiles([input]))[0]?.bytes).toEqual(bytes);
+  Object.assign(globalThis, { document: prior });
+});
+it("rejects empty, malformed, non-finite, and parse-failing STL geometry", () => {
+  expect(() => parseStlGeometry(new Uint8Array(84))).toThrow();
+  const malformed = binaryTriangle().slice(0, 100);
+  expect(() => parseStlGeometry(malformed)).toThrow();
+  const nonfinite = binaryTriangle();
+  new DataView(nonfinite.buffer).setFloat32(96, Infinity, true);
+  expect(() => parseStlGeometry(nonfinite)).toThrow("non-finite");
+  expect(() =>
+    parseStlGeometry(
+      new TextEncoder().encode("solid facet normal vertex endfacet"),
+    ),
+  ).toThrow();
+});
+it("plans canonical 2x6 instances with mode transforms and color visibility", () => {
+  const dataset = datasetFromCounts(Array(12).fill(10));
+  const assembled = exactInstancePlan(dataset, false);
+  const exploded = exactInstancePlan(dataset, true, new Set([1]));
+  expect(new Set(assembled.map(({ x, y }) => `${x},${y}`)).size).toBe(12);
+  expect(assembled).toHaveLength(24);
+  expect(exploded[1]?.z).not.toBe(assembled[1]?.z);
+  expect(exploded.filter((item) => !item.visible)).toHaveLength(12);
 });
 it("creates quantities and placements", () => {
   const dataset = datasetFromCounts([1, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);

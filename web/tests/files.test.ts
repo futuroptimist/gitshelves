@@ -1,7 +1,10 @@
 import { expect, it } from "vitest";
 import { readStlFiles } from "../src/files";
 const bytes = new Uint8Array(134);
-new DataView(bytes.buffer).setUint32(80, 1, true);
+const view = new DataView(bytes.buffer);
+view.setUint32(80, 1, true);
+view.setFloat32(108, 1, true);
+view.setFloat32(124, 1, true);
 const file = (name: string, content: Uint8Array = bytes) =>
   Object.assign(new Blob([content.slice().buffer]), { name }) as File;
 it("preserves exact STL bytes", async () => {

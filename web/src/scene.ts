@@ -1,10 +1,22 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import type { Dataset } from "./domain";
-import type { LocalStl } from "./files";
+import { parseStlGeometry, type LocalStl } from "./files";
 import { moduleTransform } from "./transforms";
 const COLORS = [0x263238, 0x39d98a, 0x36c5d0, 0x158f78, 0x8fffd0];
+export function exactInstancePlan(
+  dataset: Dataset,
+  exploded: boolean,
+  visible = new Set([1, 2, 3, 4]),
+) {
+  return dataset.months.flatMap((month) =>
+    Array.from({ length: month.blocks }, (_, level) => ({
+      ...moduleTransform(month, level, exploded),
+      group: Math.min(level + 1, 4),
+      visible: visible.has(Math.min(level + 1, 4)),
+    })),
+  );
+}
 export class ProductScene {
   private scene = new THREE.Scene();
   private camera: THREE.OrthographicCamera;
@@ -44,14 +56,19 @@ export class ProductScene {
     });
     this.render();
   }
-  show(dataset: Dataset, exploded: boolean, files: LocalStl[] = []) {
+  show(
+    dataset: Dataset,
+    exploded: boolean,
+    files: LocalStl[] = [],
+    visible = new Set([1, 2, 3, 4]),
+  ) {
     this.clear();
     const exact = files.length > 0;
-    if (exact) this.addExact(files);
-    else this.addProxy(dataset, exploded);
+    if (exact) this.addExact(dataset, exploded, files, visible);
+    else this.addProxy(dataset, exploded, visible);
     this.fit();
   }
-  private addProxy(dataset: Dataset, exploded: boolean) {
+  private addProxy(dataset: Dataset, exploded: boolean, visible: Set<number>) {
     const base = new THREE.Mesh(
       new THREE.BoxGeometry(256, 88, 6),
       new THREE.MeshStandardMaterial({
@@ -77,36 +94,62 @@ export class ProductScene {
         matrix.makeTranslation(p.x, p.y, p.z);
         mesh.setMatrixAt(i++, matrix);
         mesh.setColorAt(i - 1, new THREE.Color(COLORS[Math.min(level + 1, 4)]));
+        if (!visible.has(Math.min(level + 1, 4))) {
+          matrix.makeScale(0, 0, 0);
+          mesh.setMatrixAt(i - 1, matrix);
+        }
       }
     this.content.add(mesh);
   }
-  private addExact(files: LocalStl[]) {
-    const loader = new STLLoader();
-    for (const file of files) {
-      try {
-        const copy = file.bytes.slice().buffer;
-        const geometry = loader.parse(copy);
-        const positions = geometry.getAttribute("position");
-        if (!positions || positions.count === 0)
-          throw new Error("mesh contains no triangles");
-        for (const value of positions.array)
-          if (!Number.isFinite(value))
-            throw new Error("mesh has invalid bounds");
-        geometry.computeVertexNormals();
-        this.content.add(
-          new THREE.Mesh(
-            geometry,
-            new THREE.MeshStandardMaterial({
-              color: COLORS[Math.min(file.colorGroup, 4)],
-            }),
-          ),
-        );
-      } catch (error) {
-        throw new Error(
-          `${file.name} could not be rendered: ${(error as Error).message}`,
-        );
+  private addExact(
+    dataset: Dataset,
+    exploded: boolean,
+    files: LocalStl[],
+    visible: Set<number>,
+  ) {
+    const base = files.find((file) => file.type === "base");
+    const module = files.find((file) => file.type === "module");
+    if (base) this.addMesh(base, parseStlGeometry(base.bytes));
+    if (module) {
+      const geometry = parseStlGeometry(module.bytes);
+      const plan = exactInstancePlan(dataset, exploded, visible);
+      const total = plan.length;
+      const mesh = new THREE.InstancedMesh(
+        geometry,
+        new THREE.MeshStandardMaterial({ color: COLORS[1] }),
+        total,
+      );
+      const matrix = new THREE.Matrix4();
+      let index = 0;
+      for (const p of plan) {
+        const group = p.group;
+        matrix.makeTranslation(p.x, p.y, p.z);
+        if (!p.visible) matrix.makeScale(0, 0, 0);
+        mesh.setMatrixAt(index, matrix);
+        mesh.setColorAt(index++, new THREE.Color(COLORS[group]));
       }
+      this.content.add(mesh);
     }
+    for (const file of files) {
+      if (
+        file === base ||
+        file === module ||
+        !visible.has(Math.min(file.colorGroup || 1, 4))
+      )
+        continue;
+      this.addMesh(file, parseStlGeometry(file.bytes));
+    }
+  }
+  private addMesh(file: LocalStl, geometry: THREE.BufferGeometry) {
+    geometry.computeVertexNormals();
+    this.content.add(
+      new THREE.Mesh(
+        geometry,
+        new THREE.MeshStandardMaterial({
+          color: COLORS[Math.min(file.colorGroup, 4)],
+        }),
+      ),
+    );
   }
   private clear() {
     for (const object of [...this.content.children]) {

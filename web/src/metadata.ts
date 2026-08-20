@@ -15,29 +15,49 @@ function monthlyFrom(
       ? root.outputs.map((output) => record(output)?.monthly_contributions)
       : []),
   ];
-  const datasets: { year: number; counts: number[] }[] = [];
+  const records = new Map<string, { count: number; blocks?: number }>();
   for (const candidate of candidates) {
     if (Array.isArray(candidate)) {
       const items = candidate.map(record).filter((item) => item !== undefined);
-      const years = items
-        .map((item) => Number(item.year))
-        .filter(Number.isInteger);
-      if (!years.length) continue;
-      const year = Math.max(...years);
-      const counts = Array(12).fill(0) as number[];
       for (const item of items) {
+        const year = Number(item.year);
         const month = Number(item.month);
         const count = Number(item.count);
+        const suppliedBlocks = item.blocks;
         if (
-          Number(item.year) === year &&
-          month >= 1 &&
-          month <= 12 &&
-          Number.isSafeInteger(count) &&
-          count >= 0
+          !Number.isInteger(year) ||
+          month < 1 ||
+          month > 12 ||
+          !Number.isSafeInteger(count) ||
+          count < 0
         )
-          counts[month - 1] = count;
+          throw new Error(
+            "Monthly contribution records contain invalid values.",
+          );
+        const expectedBlocks =
+          count === 0 ? 0 : Math.floor(Math.log10(count)) + 1;
+        if (
+          suppliedBlocks !== undefined &&
+          Number(suppliedBlocks) !== expectedBlocks
+        )
+          throw new Error(`Inconsistent blocks for ${year}-${month}.`);
+        const key = `${year}-${month}`;
+        const prior = records.get(key);
+        if (
+          prior &&
+          (prior.count !== count ||
+            prior.blocks !==
+              (suppliedBlocks === undefined
+                ? undefined
+                : Number(suppliedBlocks)))
+        )
+          throw new Error(`Conflicting monthly records for ${year}-${month}.`);
+        records.set(key, {
+          count,
+          blocks:
+            suppliedBlocks === undefined ? undefined : Number(suppliedBlocks),
+        });
       }
-      datasets.push({ year, counts });
       continue;
     }
     const data = record(candidate);
@@ -55,9 +75,27 @@ function monthlyFrom(
       if (month >= 1 && month <= 12 && typeof raw === "number")
         counts[month - 1] = raw;
     }
-    if (Number.isInteger(year)) datasets.push({ year, counts });
+    if (Number.isInteger(year))
+      counts.forEach((count, index) =>
+        records.set(`${year}-${index + 1}`, { count }),
+      );
   }
-  return datasets.sort((a, b) => b.year - a.year)[0];
+  const years = [
+    ...new Set([...records.keys()].map((key) => Number(key.split("-")[0]))),
+  ].sort((a, b) => b - a);
+  for (const year of years) {
+    const selected = Array.from(
+      { length: 12 },
+      (_, index) => records.get(`${year}-${index + 1}`)?.count,
+    );
+    if (selected.every((count) => count !== undefined))
+      return { year, counts: selected as number[] };
+  }
+  if (records.size)
+    throw new Error(
+      "Metadata contains no complete, unambiguous year with months 1–12.",
+    );
+  return undefined;
 }
 export function parseMetadata(text: string): Dataset {
   if (!text.trim()) throw new Error("Metadata file is empty.");

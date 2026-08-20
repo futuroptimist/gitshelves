@@ -25,7 +25,9 @@ class Handler(SimpleHTTPRequestHandler):
 
     def end_headers(self):
         path = self.path.split("?", 1)[0]
-        if path.startswith("/assets/"):
+        if path in {"/healthz", "/livez"}:
+            pass  # do_GET already supplied the single no-store policy.
+        elif path.startswith("/assets/"):
             self.send_header("Cache-Control", "public, max-age=31536000, immutable")
         elif path.startswith("/models/"):
             self.send_header("Cache-Control", "no-cache")
