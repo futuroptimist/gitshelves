@@ -22,18 +22,20 @@ function draw() {
   document.querySelector("#state")!.textContent = bundle.exact
     ? "Exact STL geometry"
     : "Design preview";
-  document.querySelector("#geometry-note")!.textContent = bundle.exact
-    ? "All required geometry is represented by exact STL meshes."
-    : `Exact STL components are shown where available; proxy geometry supplies ${
-        [
-          bundle.proxyBase ? "the base" : "",
-          bundle.proxyContributionGroups.length
-            ? `contribution color group(s) ${bundle.proxyContributionGroups.join(", ")}`
-            : "",
-        ]
-          .filter(Boolean)
-          .join(" and ") || "no required components"
-      }.`;
+  document.querySelector("#geometry-note")!.textContent = !files.length
+    ? "Proxy geometry is a non-printable Design preview; both canonical downloads are unavailable. Run npm run models:prepare from web/ to enable canonical exact models."
+    : bundle.exact
+      ? "All required geometry is represented by exact STL meshes."
+      : `Exact STL components are shown where available; proxy geometry supplies ${
+          [
+            bundle.proxyBase ? "the base" : "",
+            bundle.proxyContributionGroups.length
+              ? `contribution color group(s) ${bundle.proxyContributionGroups.join(", ")}`
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" and ") || "no required components"
+        }.`;
   document.querySelector("#months")!.innerHTML = dataset.months
     .map(
       (m) =>

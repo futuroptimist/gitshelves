@@ -4,6 +4,22 @@ test("shows sample and controls", async ({ page }) => {
   await expect(page.getByText("Synthetic sample")).toBeVisible();
   await expect(page.getByRole("button", { name: "Exploded" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Print plan" })).toBeVisible();
+  await expect(page.locator("#state")).toHaveText("Design preview");
+  await expect(
+    page.getByRole("button", { name: "Download base STL" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Download module STL" }),
+  ).toBeDisabled();
+  await expect(page.locator("#geometry-note")).toContainText(
+    "Proxy geometry is a non-printable Design preview",
+  );
+  await expect(page.locator("#geometry-note")).toContainText(
+    "both canonical downloads are unavailable",
+  );
+  await expect(page.locator("#geometry-note")).toContainText(
+    "npm run models:prepare",
+  );
 });
 
 const triangle = (name: string) => ({
