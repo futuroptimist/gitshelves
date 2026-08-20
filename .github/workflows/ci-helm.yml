@@ -24,6 +24,16 @@ jobs:
         run: |
           helm lint charts/gitshelves --set image.tag=main-0123456789ab
           helm template test charts/gitshelves --set image.tag=main-0123456789ab >/dev/null
+          if helm template test charts/gitshelves >/dev/null 2>&1; then
+            echo "Missing image tag unexpectedly accepted" >&2
+            exit 1
+          fi
+          for tag in latest main staging production; do
+            if helm template test charts/gitshelves --set "image.tag=$tag" >/dev/null 2>&1; then
+              echo "Mutable image tag unexpectedly accepted: $tag" >&2
+              exit 1
+            fi
+          done
           mkdir -p .artifacts
           helm package charts/gitshelves --destination .artifacts
           version="$(helm show chart charts/gitshelves | awk '$1 == "version:" {print $2}')"

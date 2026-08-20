@@ -42,8 +42,8 @@ Contribution height remains `0 → 0`, otherwise `floor(log10(count)) + 1`. Tota
 
 | Component/interface | Modeled | CI-rendered | Mesh-checked | Test-printed | Fit-validated |
 | --- | --- | --- | --- | --- | --- |
-| 2×6 base | Yes | Existing workflow | Planned automated bounds in this PR build path | No evidence recorded | No evidence recorded |
-| 1U module | Yes | Build-generated for web | Planned automated bounds in this PR build path | No evidence recorded | No evidence recorded |
+| 2×6 base | Yes | Existing workflow | Automated nonzero-triangle and finite, nonzero-bounds validation | No evidence recorded | No evidence recorded |
+| 1U module | Yes | Build-generated for web | Automated nonzero-triangle and finite, nonzero-bounds validation | No evidence recorded | No evidence recorded |
 | base ↔ first module | Yes | Geometry renders | Visual/mesh only | No evidence recorded | **No** |
 | module ↔ module lip | Yes | Geometry renders | Visual/mesh only | No evidence recorded | **No** |
 

@@ -27,6 +27,47 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Load native image for runtime validation
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: gitshelves:runtime-smoke
+          cache-from: type=gha
+      - name: Smoke-test final image
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(docker inspect --format '{{.Config.User}}' gitshelves:runtime-smoke)" = "10001:10001"
+
+          name="gitshelves-runtime-${GITHUB_RUN_ID}"
+          trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
+          docker run --detach --name "$name" \
+            --read-only \
+            --user 10001:10001 \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --publish 127.0.0.1:18080:8080 \
+            gitshelves:runtime-smoke
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --output /dev/null http://127.0.0.1:18080/healthz; then
+              break
+            fi
+            if (( attempt == 30 )); then
+              docker logs "$name"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          test "$(curl --fail --silent --output /tmp/root.html --write-out '%{http_code}' http://127.0.0.1:18080/)" = 200
+          grep --fixed-strings --quiet 'GitShelves' /tmp/root.html
+          for endpoint in healthz livez; do
+            test "$(curl --fail --silent --output "/tmp/$endpoint" --write-out '%{http_code}' "http://127.0.0.1:18080/$endpoint")" = 200
+            test "$(cat "/tmp/$endpoint")" = ok
+          done
 
   publish:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
