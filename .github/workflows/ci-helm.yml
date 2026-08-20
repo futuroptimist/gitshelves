@@ -1,0 +1,36 @@
+name: Helm chart
+on:
+  pull_request:
+    branches: [main]
+    paths: ["charts/gitshelves/**", ".github/workflows/ci-helm.yml"]
+  push:
+    branches: [main]
+    paths: ["charts/gitshelves/**", ".github/workflows/ci-helm.yml"]
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  chart:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: azure/setup-helm@v4
+        with: {version: v3.17.3}
+      - run: helm lint charts/gitshelves --set image.tag=main-0123abcd
+      - run: helm package charts/gitshelves --destination .helm-package
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        run: echo "${{ github.token }}" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Refuse an existing version and publish
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(awk '/^version:/{print $2}' charts/gitshelves/Chart.yaml)"
+          ref="oci://ghcr.io/futuroptimist/charts/gitshelves:${version}"
+          if helm show chart "$ref" >/dev/null 2>&1; then echo "Refusing to overwrite ${ref}" >&2; exit 1; fi
+          helm push ".helm-package/gitshelves-${version}.tgz" oci://ghcr.io/futuroptimist/charts
+          echo "published=${ref}"

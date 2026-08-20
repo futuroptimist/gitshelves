@@ -18,7 +18,7 @@ GRIDFINITY_LIBRARY_ROOT = (
 GRIDFINITY_BASEPLATE_SCAD = (
     GRIDFINITY_LIBRARY_ROOT / "gridfinity-rebuilt-baseplate.scad"
 )
-GRIDFINITY_BIN_SCAD = GRIDFINITY_LIBRARY_ROOT / "gridfinity-rebuilt-bin.scad"
+GRIDFINITY_BIN_SCAD = GRIDFINITY_LIBRARY_ROOT / "gridfinity-rebuilt-bins.scad"
 
 
 def blocks_for_contributions(count: int) -> int:

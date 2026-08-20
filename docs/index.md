@@ -173,3 +173,13 @@ meshes remain visible without extra clicks.
 Run `codespell` to catch typos. Project-specific words such as Gitshelves,
 Gridfinity, OpenSCAD, and Xvfb live in `dict/allow.txt`. Keep the list sorted
 alphabetically.
+
+## Browser MVP and hosted-product plan
+
+- [Product and engineering design](product-design.md) defines the monthly physical system, browser scene and future secure hosted generator.
+- [Roadmap](roadmap.md) separates this browser/release-contract draft from physical validation, APIs, generation, staging, and production.
+- [Release guide](releasing.md) covers the immutable GHCR image and OCI Helm chart.
+
+Run `cd web && npm ci && npm run dev` for proxy development. For exact local model preview, return to the repository root, run `scripts/fetch_gridfinity.sh` and `python scripts/prepare_web_models.py`, then restart Vite. Production uses `npm ci`/`npm run build` in the multi-stage container and includes those generated (uncommitted) models.
+
+The app imports existing metadata/run summaries and local STL bundles, preserves the standalone [legacy viewer](viewer.html), and downloads a personalized print manifest. It does not retrieve GitHub data live. `/`, `/healthz`, and `/livez` are the static runtime contract. `staging.gitshelves.com` is planned; environment overlays, DNS, and Cloudflare Tunnel routing remain external.

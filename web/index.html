@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#090d12" />
+    <title>GitShelves — physical contribution sculpture</title>
+  </head>
+  <body>
+    <div id="app">
+      <main
+        id="scene"
+        aria-label="Interactive orthographic model. Drag to orbit, right-drag to pan, and scroll or pinch to zoom."
+      ></main>
+      <header>
+        <p class="eyebrow">GITHUB ACTIVITY, MADE PHYSICAL</p>
+        <h1>GitShelves</h1>
+        <p>
+          Twelve months. One reusable 2×6 base. A stack you can read and build.
+        </p>
+        <span id="status" role="status">Design preview</span>
+      </header>
+      <aside aria-label="Design controls">
+        <div>
+          <button data-mode="assembled" aria-pressed="true">Assembled</button
+          ><button data-mode="exploded" aria-pressed="false">Exploded</button>
+        </div>
+        <button id="reset">Reset camera</button
+        ><button id="fit">Fit model</button>
+        <fieldset>
+          <legend>Color groups</legend>
+          <label><input type="checkbox" data-color="1" checked /> green</label
+          ><label><input type="checkbox" data-color="2" checked /> cyan</label
+          ><label><input type="checkbox" data-color="3" checked /> blue</label
+          ><label
+            ><input type="checkbox" data-color="4" checked /> violet</label
+          >
+        </fieldset>
+        <label class="file"
+          >Import metadata JSON<input
+            id="metadata"
+            type="file"
+            accept="application/json,.json" /></label
+        ><label class="file"
+          >Import local STL files<input
+            id="stls"
+            type="file"
+            accept=".stl"
+            multiple
+        /></label>
+        <p id="errors" class="error" role="alert"></p>
+        <p id="model-help">
+          Local files remain in your browser. No GitHub or third-party API is
+          contacted.
+        </p>
+        <button id="base-download" disabled>Download base STL</button
+        ><button id="cube-download" disabled>Download module STL</button
+        ><button id="manifest">Download manifest</button>
+      </aside>
+      <details class="text">
+        <summary>
+          Text mode and print plan (<span id="total">0</span> cubes)
+        </summary>
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Contributions</th>
+              <th>Cubes</th>
+              <th>Base cell</th>
+            </tr>
+          </thead>
+          <tbody id="month-list"></tbody>
+        </table>
+        <h2>Loaded STL files</h2>
+        <ul id="file-list">
+          <li>No local files loaded.</li>
+        </ul>
+      </details>
+    </div>
+    <noscript
+      >JavaScript is needed for the interactive model. Use the Python CLI
+      documented in README.md.</noscript
+    >
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

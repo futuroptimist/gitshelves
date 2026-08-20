@@ -215,3 +215,11 @@ __marimo__/
 # Generated STL models
 *.stl
 
+
+# Web build and generated canonical models
+web/node_modules/
+web/dist/
+web/public/models/*.stl
+web/test-results/
+web/playwright-report/
+web/*.tsbuildinfo

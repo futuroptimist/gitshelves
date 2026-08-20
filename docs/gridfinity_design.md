@@ -86,7 +86,7 @@ Stacking one cube per order of magnitude (1s, 10s, 100s,…) produces a vertic
 
 ```scad
 // openscad/contrib_cube.scad
-use <lib/gridfinity-rebuilt/gridfinity-rebuilt-bin.scad>;
+use <lib/gridfinity-rebuilt/gridfinity-rebuilt-bins.scad>;
 
 bin(
     ux = 1, uy = 1, uh = 1,              // 1×1 base, 1 unit high
