@@ -1,0 +1,73 @@
+name: Helm chart
+on:
+  pull_request:
+    branches: [main]
+    paths: ["charts/gitshelves/**", ".github/workflows/ci-helm.yml"]
+  push:
+    branches: [main]
+    paths: ["charts/gitshelves/**", ".github/workflows/ci-helm.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: azure/setup-helm@v4
+        with: {version: v3.18.4}
+      - name: Lint and package
+        id: package
+        run: |
+          helm lint charts/gitshelves --set image.tag=main-0123456789ab
+          helm template test charts/gitshelves --set image.tag=main-0123456789ab >/dev/null
+          if helm template test charts/gitshelves >/dev/null 2>&1; then
+            echo "Missing image tag unexpectedly accepted" >&2
+            exit 1
+          fi
+          for tag in latest main staging production; do
+            if helm template test charts/gitshelves --set "image.tag=$tag" >/dev/null 2>&1; then
+              echo "Mutable image tag unexpectedly accepted: $tag" >&2
+              exit 1
+            fi
+          done
+          mkdir -p .artifacts
+          helm package charts/gitshelves --destination .artifacts
+          version="$(helm show chart charts/gitshelves | awk '$1 == "version:" {print $2}')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gitshelves-chart
+          path: .artifacts/gitshelves-${{ steps.package.outputs.version }}.tgz
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: azure/setup-helm@v4
+        with: {version: v3.18.4}
+      - uses: actions/download-artifact@v4
+        with:
+          name: gitshelves-chart
+          path: .artifacts
+      - name: Read chart version
+        id: package
+        run: echo "version=$(helm show chart charts/gitshelves | awk '$1 == "version:" {print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Login and refuse overwrite
+        env: {GH_TOKEN: "${{ github.token }}"}
+        run: |
+          echo "$GH_TOKEN" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+          ref="oci://ghcr.io/futuroptimist/charts/gitshelves"
+          if helm show chart "$ref" --version "${{ steps.package.outputs.version }}" >/dev/null 2>&1; then echo "Refusing to overwrite existing chart version" >&2; exit 1; fi
+          helm push ".artifacts/gitshelves-${{ steps.package.outputs.version }}.tgz" oci://ghcr.io/futuroptimist/charts
+          echo "Published: $ref:${{ steps.package.outputs.version }}"
+          echo "### Published chart\n\`$ref:${{ steps.package.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
