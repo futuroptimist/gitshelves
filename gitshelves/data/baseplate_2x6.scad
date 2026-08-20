@@ -1,5 +1,6 @@
 // Gridfinity 2×6 baseplate for Bambu Lab A1 (fits 256 mm² bed)
 use <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
+use <lib/gridfinity-rebuilt/src/core/gridfinity-rebuilt-holes.scad>;
 
 // Grid unit length (mm) from Gridfinity specification
 l_grid = 42;

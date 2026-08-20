@@ -1,0 +1,11 @@
+# GitShelves roadmap
+
+Dependencies are ordered; unchecked boxes are not implemented by the opening MVP.
+
+- [x] **1. Browser/release-contract MVP.** Product design, synthetic/local-only Three.js preview, canonical build assets, manifest, container, image workflow, environment-neutral Helm chart/workflow, and release guide. Exit: unit/browser/build checks and immutable coordinates exist. Risk: physical geometry remains unvalidated.
+- [ ] **2. Physical validation.** Depends on coupon design and printer access. Publish source, printer/material/layer-height matrix, measurements, repeated assembly, wobble/shear/stack results, and photos. Exit: reviewed base/module fit evidence and supported tolerance range. Risk: printer and filament variance.
+- [ ] **3. Authenticated data API.** Depends on threat review and GitHub application credentials managed outside source. Add versioned same-origin API, authenticated server-side retrieval, cache, quotas, and contract tests. Exit: no token reaches browser/logs and rate-limit failure is observable. Risk: privacy and API quota exhaustion.
+- [ ] **4. Isolated generation.** Depends on API and validated parameter bounds. Add bounded asynchronous queue, isolated OpenSCAD, CPU/memory/time/output limits, checksummed manifests, storage, signed expiring bundles, and cleanup. Exit: adversarial jobs cannot escape limits and expiry is proven. Risk: compute abuse and malformed meshes.
+- [ ] **5. Sugarkube staging.** Depends on immutable published image/chart. Sugarkube owns `staging.gitshelves.com` overlay/deploy; Cloudflare owns routing. Prove rate limits, observability discovery, smoke checks, deploy and rollback. Exit: recorded immutable coordinates and rollback evidence. Risk: Raspberry Pi capacity.
+- [ ] **6. Production launch.** Depends on staging soak and security/physical sign-off. Deploy `gitshelves.com`; Cloudflare supplies DNS/Tunnel and `www` redirect. Exit: SLOs, support/runbook, recovery, and public checks pass. Risk: traffic/abuse and support load.
+- [ ] **7. Later product work.** Daily 53×7 view, validated modular carrier tiles, palettes, saved projects, sharing, and optional privacy-safe metrics. Exit criteria are separate designs and physical/performance validation; no feature inherits MVP validation by implication.

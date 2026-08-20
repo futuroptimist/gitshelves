@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ .Release.Name }}-smoke"
+  labels: {{- include "gitshelves.labels" . | nindent 4 }}
+  annotations: {"helm.sh/hook": test}
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext: {runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}
+  containers:
+    - name: wget
+      image: busybox:1.37.0
+      command: [wget, -qO-, "http://{{ .Release.Name }}:{{ .Values.service.port }}/healthz"]
+      securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: ["ALL"]}, runAsUser: 65534}

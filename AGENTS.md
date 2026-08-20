@@ -43,3 +43,9 @@ The STL workflow uses Gridfinity base plates and contribution cubes. Month-to-cu
 
 Mathematically `floor(log10(count)) + 1` cubes are stacked for any count ≥ 1 (else 0). This mirrors `gitshelves.scad.blocks_for_contributions()`.
 
+
+## Web MVP and release surfaces
+- `web/` is strict TypeScript/Vite/Three.js; use `npm ci`, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
+- `npm run prepare:models` generates ignored canonical STLs from the existing OpenSCAD sources. Never commit `web/public/models`, `web/dist`, or `web/node_modules`.
+- Preserve the distinction between metadata proxy previews and exact printable OpenSCAD STL bytes. Browser code must not fetch GitHub or arbitrary remote URLs.
+- `Dockerfile`, `charts/gitshelves/`, and the `ci-image.yml`/`ci-helm.yml` workflows form the app-owned immutable release contract. Keep the chart environment-neutral; Sugarkube and Cloudflare configuration is external.

@@ -296,3 +296,21 @@ OpenSCAD exits with status 1 when it cannot access an X display. The
 `scad_to_stl` helper wraps the command in `xvfb-run` when `$DISPLAY` is
 unset or empty. Install `xvfb-run` if you still encounter this error on a headless
 machine.
+
+## Three.js web MVP
+
+The deployable browser MVP in [`web/`](web/) opens with a clearly synthetic twelve-month boundary sample on the established 2×6 product. It supports assembled/exploded orthographic views, orbit/pan/zoom, a complete text inventory, local GitShelves metadata/run-summary and STL imports, unchanged local-STL downloads, and a personalized print manifest. Local files never leave the browser. There is no GitHub login, username control, live GitHub retrieval, runtime OpenSCAD, or remote-URL loader in this PR.
+
+```bash
+cd web
+npm ci
+npm run dev                 # proxy preview works without generated assets
+npm run prepare:models      # OpenSCAD + Xvfb + pinned Gridfinity checkout required
+npm run format:check && npm run lint && npm run typecheck && npm test
+npm run build
+npm run test:e2e
+```
+
+Build-prepared canonical base/module STLs appear as **Exact STL geometry** and are the exact bytes offered for download. An unprepared dev session remains a **Design preview**, disables canonical STL downloads, and explains model preparation; proxy boxes are never printable files. Generated models, `dist`, and `node_modules` are ignored. The older [`docs/viewer.html`](docs/viewer.html) remains a compatible local viewer for baseplate, `_colorN`, legacy `levelN`, and visibility workflows while users migrate.
+
+The production container serves `/`, `/healthz`, and `/livez` on port 8080 as a non-root, read-only static service. See the [product design](docs/product-design.md), [roadmap](docs/roadmap.md), and [release guide](docs/releasing.md). A later Sugarkube-owned overlay may deploy `staging.gitshelves.com`; DNS and Cloudflare Tunnel routing remain external. Import current CLI JSON and associated local STL files with the HUD pickers, then download the manifest and canonical reusable parts.

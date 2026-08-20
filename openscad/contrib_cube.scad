@@ -1,10 +1,15 @@
-// openscad/contrib_cube.scad
-// Dimensions cross-checked with vector76/gridfinity_openscad.
-include <lib/gridfinity-rebuilt/gridfinity-rebuilt-bin.scad>;
+// Reusable 1×1 contribution module using the pinned Gridfinity-Rebuilt API.
+// "Cube" is product language: the body is one 42 mm cell and one 7 mm unit,
+// plus the library's existing seating base and stackable lip.
+include <lib/gridfinity-rebuilt/src/core/standard.scad>;
+use <lib/gridfinity-rebuilt/src/core/bin.scad>;
+use <lib/gridfinity-rebuilt/src/core/gridfinity-rebuilt-holes.scad>;
 
-bin(
-    ux = 1, uy = 1, uh = 1,              // 1×1 base, 1 unit high
-    walls = 1.2, floor = 1.6, lid = "none",
-    magnet_pockets = false,              // cubes don’t need magnets
-    stackable = true                     // preserves Gridfinity lip
+contribution_module = new_bin(
+    grid_size = [1, 1],
+    height_mm = 7,
+    include_lip = true,
+    hole_options = bundle_hole_options()
 );
+
+bin_render(contribution_module);
