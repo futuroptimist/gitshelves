@@ -1,0 +1,34 @@
+name: Helm chart
+on:
+  pull_request:
+    paths: ['charts/gitshelves/**', '.github/workflows/ci-helm.yml']
+  push:
+    branches: [main]
+    paths: ['charts/gitshelves/**', '.github/workflows/ci-helm.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  chart:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: azure/setup-helm@v4
+      - run: helm lint charts/gitshelves --set image.tag=main-0123456
+      - run: helm package charts/gitshelves --destination .helm-dist
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        run: echo "${{ github.token }}" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: Refuse overwrite and publish
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(helm show chart charts/gitshelves | awk '$1 == "version:" {print $2}')"
+          ref="oci://ghcr.io/futuroptimist/charts/gitshelves"
+          if helm show chart "$ref" --version "$version" >/dev/null 2>&1; then echo "Refusing to overwrite $ref:$version" >&2; exit 1; fi
+          helm push ".helm-dist/gitshelves-${version}.tgz" oci://ghcr.io/futuroptimist/charts
+          echo "Published ${ref}:${version}"

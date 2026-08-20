@@ -1,0 +1,35 @@
+{
+  "name": "gitshelves-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "prepare:models": "bash scripts/prepare-models.sh",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --pretty false",
+    "test": "vitest run",
+    "lint": "eslint src tests vite.config.ts",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.34.0",
+    "@playwright/test": "1.55.0",
+    "@types/three": "0.180.0",
+    "eslint": "9.34.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "16.3.0",
+    "prettier": "3.6.2",
+    "typescript": "5.9.2",
+    "typescript-eslint": "8.41.0",
+    "vite": "7.1.3",
+    "vitest": "3.2.4",
+    "jsdom": "26.1.0",
+    "@types/node": "24.3.0"
+  }
+}

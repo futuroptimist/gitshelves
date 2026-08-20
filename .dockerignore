@@ -1,0 +1,12 @@
+.git
+.github
+**/__pycache__
+.pytest_cache
+.coverage
+coverage.xml
+stl
+web/node_modules
+web/dist
+web/public/models/*.stl
+web/test-results
+web/playwright-report

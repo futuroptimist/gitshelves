@@ -8,6 +8,45 @@
 
 Gitshelves fetches GitHub contribution data and turns it into 3D printable models. Each month of activity becomes a stack of blocks whose height is determined logarithmically by the number of contributions. The models are exported as `.scad` files for OpenSCAD and can be previewed with Three.js.
 
+## Web MVP
+
+The isolated [`web/`](web/) application immediately presents a clearly synthetic
+twelve-month sample on the existing 2×6 product. Orbit, pan, zoom, assembled and
+exploded views, camera reset/fit, a complete text print plan, and manifest download
+work without an account. Import current GitShelves metadata/run-summary JSON and
+associated STL files through the browser file picker; files stay local and every
+STL is classified as baseplate, cube/contribution, `_colorN`, or legacy `levelN`.
+
+The status always distinguishes **Design preview** (efficient metadata-driven proxy
+geometry, not printable) from **Exact STL geometry** (canonical build-generated or
+locally imported bytes). Production builds contain canonical base and reusable
+module STLs generated from the repository OpenSCAD. An unprepared development
+checkout falls back honestly to proxy geometry and disables exact downloads.
+
+```bash
+cd web
+npm ci
+npm run dev                         # proxy fallback is okay
+npm run prepare:models              # requires git, OpenSCAD and headless Xvfb
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run test:browser
+npm run build
+```
+
+The browser deliberately performs no live GitHub retrieval and offers no username,
+OAuth, GitHub App, or PAT control. Generate metadata with the existing CLI, then
+load it locally. See the [product design](docs/product-design.md),
+[roadmap](docs/roadmap.md), and [release guide](docs/releasing.md).
+
+The production container serves `/`, `/healthz`, and `/livez` on port 8080 through
+a small Python standard-library server. It is non-root, stateless, and supports a
+read-only root filesystem without a temporary mount. The planned hostname is
+`staging.gitshelves.com`, but Sugarkube owns its environment overlay/deployment and
+Cloudflare owns DNS/Tunnel routing; neither external configuration is included here.
+
 A simple wall shelf with drywall mounting holes lives in `openscad/shelf.scad`. Use the pre-rendered `stl/shelf.stl` to print a matching display shelf for your contribution charts.
 
 The repository also seeds `stl/2021` through `stl/2025` with README placeholders so the Gridfinity build matrix has predictable destinations for the CI-rendered `baseplate_2x6.stl` artifacts.

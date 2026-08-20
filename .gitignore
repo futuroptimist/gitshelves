@@ -215,3 +215,15 @@ __marimo__/
 # Generated STL models
 *.stl
 
+
+# Web build and generated canonical models
+web/node_modules/
+web/dist/
+web/public/models/*.stl
+web/test-results/
+web/playwright-report/
+# Fetched pinned Gridfinity implementation (retain tracked license/readme)
+openscad/lib/gridfinity-rebuilt/*
+!openscad/lib/gridfinity-rebuilt/LICENSE
+!openscad/lib/gridfinity-rebuilt/README.md
+web/*.tsbuildinfo
