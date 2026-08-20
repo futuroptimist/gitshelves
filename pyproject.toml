@@ -22,5 +22,5 @@ gitshelves = ["data/*.scad"]
 [tool.black]
 line-length = 88
 exclude = '''
-/(openscad/lib)/
+/(openscad/lib|web/node_modules|web/dist)/
 '''

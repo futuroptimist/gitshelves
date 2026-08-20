@@ -1,0 +1,17 @@
+replicaCount: 1
+image:
+  repository: ghcr.io/futuroptimist/gitshelves
+  tag: ""
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 80
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  annotations: {}
+  tls: []
+resources:
+  requests: {cpu: 20m, memory: 32Mi}
+  limits: {cpu: 250m, memory: 128Mi}
