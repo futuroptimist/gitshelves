@@ -10,11 +10,10 @@ on:
 permissions:
   contents: read
 jobs:
-  chart:
+  validate:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -29,8 +28,31 @@ jobs:
           helm package charts/gitshelves --destination .artifacts
           version="$(helm show chart charts/gitshelves | awk '$1 == "version:" {print $2}')"
           echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gitshelves-chart
+          path: .artifacts/gitshelves-${{ steps.package.outputs.version }}.tgz
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: azure/setup-helm@v4
+        with: {version: v3.18.4}
+      - uses: actions/download-artifact@v4
+        with:
+          name: gitshelves-chart
+          path: .artifacts
+      - name: Read chart version
+        id: package
+        run: echo "version=$(helm show chart charts/gitshelves | awk '$1 == "version:" {print $2}')" >> "$GITHUB_OUTPUT"
       - name: Login and refuse overwrite
-        if: github.event_name != 'pull_request'
         env: {GH_TOKEN: "${{ github.token }}"}
         run: |
           echo "$GH_TOKEN" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin

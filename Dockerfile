@@ -9,7 +9,7 @@ RUN rm -rf openscad/lib/gridfinity-rebuilt && git clone https://github.com/kenne
     mkdir -p /models && xvfb-run -a openscad -o /models/baseplate_2x6.stl --export-format binstl openscad/baseplate_2x6.scad && \
     xvfb-run -a openscad -o /models/contrib_cube.stl --export-format binstl openscad/contrib_cube.scad && python3 ./validate-stl.py /models/baseplate_2x6.stl /models/contrib_cube.stl
 
-FROM --platform=$BUILDPLATFORM node:20.20.0-alpine3.21 AS web-build
+FROM --platform=$BUILDPLATFORM node:22.19.0-alpine3.22@sha256:d2166de198f26e17e5a442f537754dd616ab069c47cc57b889310a717e0abbf9 AS web-build
 WORKDIR /app
 COPY web/package.json web/package-lock.json ./
 RUN npm ci --ignore-scripts
