@@ -173,3 +173,9 @@ meshes remain visible without extra clicks.
 Run `codespell` to catch typos. Project-specific words such as Gitshelves,
 Gridfinity, OpenSCAD, and Xvfb live in `dict/allow.txt`. Keep the list sorted
 alphabetically.
+
+## Browser product preview
+
+The isolated [Three.js MVP](../web/) immediately shows a synthetic monthly 2×6 sample, then accepts current metadata/run-summary JSON and related local STL bundles without upload or runtime third-party requests. It preserves baseplate, `_colorN`, and legacy `levelN` classification, shows every file and download status, and generates a personalized print manifest. **Design preview** proxy geometry explains layout only; **Exact STL geometry** comes from selected files or build-generated Python/OpenSCAD assets. The legacy [viewer](viewer.html) remains available during migration.
+
+Use `cd web && npm ci && npm run dev` for development, `npm run prepare:models` for canonical assets, and `npm run build` for production. See [product design](product-design.md), [roadmap](roadmap.md), and [releasing](releasing.md). The container serves `/`, `/healthz`, and `/livez`. This release has no live GitHub retrieval. Sugarkube may later own a `staging.gitshelves.com` overlay; DNS and Tunnel configuration are external.

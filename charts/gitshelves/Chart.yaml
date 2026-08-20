@@ -1,0 +1,6 @@
+apiVersion: v2
+name: gitshelves
+description: GitShelves static Three.js product preview
+version: 0.1.0
+appVersion: "0.1.0"
+type: application

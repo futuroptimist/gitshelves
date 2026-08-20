@@ -1,0 +1,55 @@
+name: Helm chart
+on:
+  pull_request:
+    paths: [charts/gitshelves/**, .github/workflows/ci-helm.yml]
+  push:
+    branches: [main]
+    paths: [charts/gitshelves/**, .github/workflows/ci-helm.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Lint, render, and package
+        run: |
+          helm lint charts/gitshelves --set image.tag=main-0123456
+          helm template gitshelves charts/gitshelves --set image.tag=main-0123456 >/dev/null
+          mkdir -p .packages
+          helm package charts/gitshelves --destination .packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gitshelves-chart
+          path: .packages/*.tgz
+  publish:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: gitshelves-chart
+          path: .packages
+      - name: Login to GHCR
+        run: echo '${{ secrets.GITHUB_TOKEN }}' | helm registry login ghcr.io -u '${{ github.actor }}' --password-stdin
+      - name: Refuse overwrite and publish
+        shell: bash
+        run: |
+          version=$(helm show chart charts/gitshelves | awk '$1=="version:" {print $2}')
+          reference="oci://ghcr.io/futuroptimist/charts/gitshelves"
+          if helm show chart "$reference" --version "$version" >/dev/null 2>&1; then
+            echo "Refusing to overwrite $reference:$version" >&2
+            exit 1
+          fi
+          helm push ".packages/gitshelves-$version.tgz" oci://ghcr.io/futuroptimist/charts
+          echo "Published $reference:$version"
+          echo "### Chart" >> "$GITHUB_STEP_SUMMARY"
+          echo "$reference:$version" >> "$GITHUB_STEP_SUMMARY"
