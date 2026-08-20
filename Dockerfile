@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
-FROM --platform=$BUILDPLATFORM openscad/openscad:2021.01 AS models
+FROM --platform=$BUILDPLATFORM debian:bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241 AS models
 ARG GRIDFINITY_COMMIT=910e22d8607fd7f5f51ad5e5cbc5287a76810bfd
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git python3 xvfb && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git openscad=2021.01-6 python3 xauth xvfb && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY openscad ./openscad
 COPY web/scripts/validate-stl.py ./validate-stl.py
