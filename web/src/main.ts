@@ -1,0 +1,147 @@
+import "./style.css";
+import { SAMPLE, type Dataset } from "./domain";
+import { parseMetadata } from "./metadata";
+import { readStlFiles, validateStlBytes, type LocalStl } from "./files";
+import { createManifest } from "./manifest";
+import { ProductScene } from "./scene";
+const app = document.querySelector<HTMLDivElement>("#app")!;
+app.innerHTML = `<main><div id="scene" aria-label="Interactive orthographic model; drag to orbit, right-drag to pan, and scroll to zoom"></div><header><p class="eyebrow">GitShelves / monthly 2×6</p><h1>Activity,<br>made tangible.</h1><p class="lede">A local-first design preview for a reusable base and modular contribution cubes.</p></header><aside class="hud" aria-label="Design controls"><div class="status"><span id="state">Design preview</span><span id="sample">Synthetic sample</span></div><div class="controls"><button id="assembled" aria-pressed="true">Assembled</button><button id="exploded" aria-pressed="false">Exploded</button><button id="reset">Reset camera</button><button id="fit">Fit model</button></div><label>Load metadata or run summary<input id="metadata" type="file" accept="application/json,.json"></label><label>Load local STL files<input id="stls" type="file" accept=".stl" multiple></label><p class="privacy">Files stay in this browser. No GitHub or third-party API is contacted.</p><div id="downloads"><button id="base" disabled>Download base STL</button><button id="module" disabled>Download module STL</button><button id="manifest">Download print manifest</button></div><output id="message" aria-live="polite"></output></aside><section class="text"><h2>Print plan</h2><p id="geometry-note">Procedural geometry is a design preview, not printable STL. Run <code>npm run models:prepare</code> from <code>web/</code> to enable canonical exact models.</p><div class="table"><table><thead><tr><th>Month</th><th>Contributions</th><th>Cubes</th><th>Base cell</th></tr></thead><tbody id="months"></tbody></table></div><h3>Loaded STL files</h3><ul id="file-list"><li>None</li></ul><p id="total"></p></section></main>`;
+let dataset: Dataset = SAMPLE,
+  files: LocalStl[] = [],
+  exploded = false;
+const scene = new ProductScene(document.querySelector("#scene")!);
+function draw() {
+  scene.show(dataset, exploded, files);
+  document.querySelector("#months")!.innerHTML = dataset.months
+    .map(
+      (m) =>
+        `<tr><td>${m.label}</td><td>${m.contributions.toLocaleString()}</td><td>${m.blocks}</td><td>${m.x / 42 + 1}, ${m.y / 42 + 1}</td></tr>`,
+    )
+    .join("");
+  document.querySelector("#total")!.textContent =
+    `${dataset.months.reduce((s, m) => s + m.blocks, 0)} reusable cubes total.`;
+  document.querySelector("#file-list")!.innerHTML = files.length
+    ? files
+        .map(
+          (f) =>
+            `<li>${f.name} — ${f.type}, color ${f.colorGroup || "base"}, ${f.bytes.byteLength.toLocaleString()} bytes</li>`,
+        )
+        .join("")
+    : "<li>None</li>";
+}
+function message(text: string, error = false) {
+  const el = document.querySelector<HTMLOutputElement>("#message")!;
+  el.textContent = text;
+  el.classList.toggle("error", error);
+}
+function download(name: string, bytes: BlobPart | Uint8Array, type: string) {
+  const part = bytes instanceof Uint8Array ? bytes.slice().buffer : bytes;
+  const url = URL.createObjectURL(new Blob([part], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+document.querySelector("#assembled")!.addEventListener("click", () => {
+  exploded = false;
+  setMode();
+});
+document.querySelector("#exploded")!.addEventListener("click", () => {
+  exploded = true;
+  setMode();
+});
+function setMode() {
+  document
+    .querySelector("#assembled")!
+    .setAttribute("aria-pressed", String(!exploded));
+  document
+    .querySelector("#exploded")!
+    .setAttribute("aria-pressed", String(exploded));
+  draw();
+  message(
+    exploded
+      ? "Exploded view shows the seating and vertical stack interfaces."
+      : "Assembled view.",
+  );
+}
+document
+  .querySelector("#reset")!
+  .addEventListener("click", () => scene.reset());
+document.querySelector("#fit")!.addEventListener("click", () => scene.fit());
+document
+  .querySelector<HTMLInputElement>("#metadata")!
+  .addEventListener("change", async (e) => {
+    try {
+      const file = ((e.target as HTMLInputElement).files ?? [])[0];
+      if (!file) return;
+      dataset = parseMetadata(await file.text());
+      document.querySelector("#sample")!.textContent = "Local metadata";
+      draw();
+      message(`Loaded ${file.name}.`);
+    } catch (err) {
+      message((err as Error).message, true);
+    }
+  });
+document
+  .querySelector<HTMLInputElement>("#stls")!
+  .addEventListener("change", async (e) => {
+    try {
+      files = await readStlFiles(
+        Array.from((e.target as HTMLInputElement).files ?? []),
+      );
+      draw();
+      document.querySelector("#state")!.textContent = "Exact STL geometry";
+      message(`Loaded ${files.length} STL file(s) locally.`);
+    } catch (err) {
+      files = [];
+      draw();
+      message((err as Error).message, true);
+    }
+  });
+document
+  .querySelector("#manifest")!
+  .addEventListener("click", () =>
+    download(
+      "gitshelves-print-manifest.json",
+      JSON.stringify(createManifest(dataset, files), null, 2),
+      "application/json",
+    ),
+  );
+async function loadCanonical() {
+  const targets: [[string, string], [string, string]] = [
+    ["base", "/models/baseplate_2x6.stl"],
+    ["module", "/models/contrib_cube.stl"],
+  ];
+  const loaded: LocalStl[] = [];
+  for (const [id, url] of targets) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error();
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      validateStlBytes(bytes);
+      const type = id === "base" ? "base" : "module";
+      loaded.push({ name: url.split("/").pop()!, type, colorGroup: 0, bytes });
+      const button = document.querySelector<HTMLButtonElement>(`#${id}`)!;
+      button.disabled = false;
+      button.addEventListener("click", () =>
+        download(
+          loaded.find((f) => f.type === type)!.name,
+          loaded.find((f) => f.type === type)!.bytes,
+          "model/stl",
+        ),
+      );
+    } catch {
+      /* expected in an unprepared checkout */
+    }
+  }
+  if (loaded.length === 2) {
+    files = loaded;
+    document.querySelector("#state")!.textContent = "Exact STL geometry";
+    document.querySelector("#geometry-note")!.textContent =
+      "Build-generated canonical OpenSCAD meshes are shown and available unchanged.";
+    draw();
+  }
+}
+draw();
+void loadCanonical();

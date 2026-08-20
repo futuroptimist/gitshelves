@@ -2,6 +2,24 @@
 
 For setup and usage details, see the [README](../README.md).
 
+## Web product documentation
+
+- [Product and engineering design](product-design.md) defines the monthly 2×6 physical
+  contract, browser scene, proxy/exact distinction, hosted architecture, threats, and
+  ownership boundaries.
+- [Roadmap](roadmap.md) separates this static browser/release MVP from physical
+  calibration, authenticated retrieval, isolated generation, staging, and production.
+- [Release guide](releasing.md) covers immutable GHCR images and OCI Helm charts.
+
+Run the local browser app with `cd web && npm ci && npm run dev`. It starts with synthetic
+data and accepts local metadata/run summaries and STL bundles without uploads. Use
+`npm run models:prepare` before a production build to generate ignored canonical base and
+module assets from OpenSCAD. Proxy geometry is planning-only; exact STL geometry and
+downloads preserve source bytes. This release has no live GitHub retrieval.
+
+The container serves `/`, `/healthz`, and `/livez`. `staging.gitshelves.com` is planned,
+but Sugarkube overlays and Cloudflare DNS/Tunnel routing are owned outside this repository.
+
 Authentication tokens resolve in the documented fallback order: an explicit
 `--token` argument takes precedence, followed by the `GH_TOKEN` environment
 variable and then `GITHUB_TOKEN`. The CLI and underlying fetch helpers share

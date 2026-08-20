@@ -8,6 +8,43 @@
 
 Gitshelves fetches GitHub contribution data and turns it into 3D printable models. Each month of activity becomes a stack of blocks whose height is determined logarithmically by the number of contributions. The models are exported as `.scad` files for OpenSCAD and can be previewed with Three.js.
 
+## Browser MVP
+
+The isolated [`web/`](web/) app immediately opens a clearly synthetic twelve-month
+2×6 product preview. Orbit, pan, zoom, fit/reset, assembled/exploded modes, a complete
+text print plan, local metadata/run-summary and STL imports, and print-manifest downloads
+work without uploading files. There is **no live GitHub retrieval, authentication, PAT
+entry, remote URL loading, or runtime CAD generation** in this opening PR.
+
+```bash
+cd web
+npm ci
+npm run dev                 # procedural Design preview works immediately
+npm run models:prepare      # requires OpenSCAD + Xvfb; creates ignored canonical STLs
+npm run build               # production Vite build
+npm run format && npm run lint && npm run typecheck && npm test
+npm run test:browser        # after installing Playwright Chromium
+```
+
+Open an existing CLI metadata JSON or run-summary JSON, then select associated local
+STLs. `_baseplate`, `_colorN`, and legacy `levelN` names retain their component/color
+meaning. Every STL is listed with type, group, and byte size; downloaded local bytes are
+unchanged. **Design preview** uses efficient metadata-driven boxes only and never offers
+them as printable STL. **Exact STL geometry** comes from local meshes or build-generated
+canonical `baseplate_2x6.stl` and `contrib_cube.stl`. An unprepared dev checkout explains
+model preparation and disables canonical STL buttons; the production container always
+prepares and includes both exact models.
+
+See the concrete [product/engineering design](docs/product-design.md), phased
+[roadmap](docs/roadmap.md), and [release guide](docs/releasing.md). The monthly design is
+retained because it matches today's canonical Python/OpenSCAD metadata and 2×6 physical
+system; daily 53×7 carriers and alternate connectors are future, physically validated
+work.
+
+The static production service exposes `/`, `/healthz`, and `/livez` on port 8080. A
+future Sugarkube overlay may route `staging.gitshelves.com`; DNS and Cloudflare Tunnel
+configuration are external to this repository.
+
 A simple wall shelf with drywall mounting holes lives in `openscad/shelf.scad`. Use the pre-rendered `stl/shelf.stl` to print a matching display shelf for your contribution charts.
 
 The repository also seeds `stl/2021` through `stl/2025` with README placeholders so the Gridfinity build matrix has predictable destinations for the CI-rendered `baseplate_2x6.stl` artifacts.

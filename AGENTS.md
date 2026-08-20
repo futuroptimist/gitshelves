@@ -11,6 +11,13 @@
 - `openscad/lib/gridfinity-rebuilt/` holds the Gridfinity library (MIT). CI clones it automatically; clone it manually for local builds and keep the `LICENSE` file. We consult vector76/gridfinity_openscad for guidance
 - `openscad/shelf.scad` and its pre-rendered `stl/shelf.stl` define a basic wall shelf with drywall mounting holes
 - `--colors` controls multi-color output, grouping logarithmic levels into up to four block colors
+- `web/` is the Vite/strict-TypeScript/Three.js browser MVP. Use `npm ci`,
+  `npm run format`, `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
+  `npm run models:prepare` creates ignored canonical STL assets; never commit them.
+- The browser is local-only: do not add GitHub/browser-token or arbitrary remote URL
+  retrieval. Keep proxy geometry explicitly non-printable and Python/OpenSCAD canonical.
+- `Dockerfile`, `charts/gitshelves/`, and the image/chart workflows are the app-owned
+  Sugarkube release contract. Keep Helm defaults environment-neutral and coordinates immutable.
 
 ## Coding Conventions
 - Python code is formatted with `black`
@@ -28,6 +35,7 @@ pytest -q
    ```bash
    black --check .
    pytest -q
+   cd web && npm ci && npm run format && npm run lint && npm run typecheck && npm test && npm run build
    ```
 2. Update `README.md` and `AGENTS.md` when CLI options or workflows change.
 3. Include a clear description and reference relevant issues.
@@ -42,4 +50,3 @@ The STL workflow uses Gridfinity base plates and contribution cubes. Month-to-cu
 - and so on
 
 Mathematically `floor(log10(count)) + 1` cubes are stacked for any count ≥ 1 (else 0). This mirrors `gitshelves.scad.blocks_for_contributions()`.
-

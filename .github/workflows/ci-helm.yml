@@ -1,0 +1,41 @@
+name: Helm chart
+on:
+  pull_request:
+    branches: [main]
+    paths: ["charts/gitshelves/**", ".github/workflows/ci-helm.yml"]
+  push:
+    branches: [main]
+    paths: ["charts/gitshelves/**", ".github/workflows/ci-helm.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chart:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: azure/setup-helm@v4
+        with: {version: v3.18.4}
+      - name: Lint and package
+        id: package
+        run: |
+          helm lint charts/gitshelves --set image.tag=main-0123456789ab
+          helm template test charts/gitshelves --set image.tag=main-0123456789ab >/dev/null
+          mkdir -p .artifacts
+          helm package charts/gitshelves --destination .artifacts
+          version="$(helm show chart charts/gitshelves | awk '$1 == "version:" {print $2}')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Login and refuse overwrite
+        if: github.event_name != 'pull_request'
+        env: {GH_TOKEN: "${{ github.token }}"}
+        run: |
+          echo "$GH_TOKEN" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+          ref="oci://ghcr.io/futuroptimist/charts/gitshelves"
+          if helm show chart "$ref" --version "${{ steps.package.outputs.version }}" >/dev/null 2>&1; then echo "Refusing to overwrite existing chart version" >&2; exit 1; fi
+          helm push ".artifacts/gitshelves-${{ steps.package.outputs.version }}.tgz" oci://ghcr.io/futuroptimist/charts
+          echo "Published: $ref:${{ steps.package.outputs.version }}"
+          echo "### Published chart\n\`$ref:${{ steps.package.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"

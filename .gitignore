@@ -214,4 +214,7 @@ __marimo__/
 
 # Generated STL models
 *.stl
-
+web/node_modules/
+web/dist/
+web/public/models/
+web/test-results/
