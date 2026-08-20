@@ -1,6 +1,6 @@
 // openscad/contrib_cube.scad
 // Dimensions cross-checked with vector76/gridfinity_openscad.
-include <lib/gridfinity-rebuilt/gridfinity-rebuilt-bin.scad>;
+include <lib/gridfinity-rebuilt/gridfinity-rebuilt-bins.scad>;
 
 bin(
     ux = 1, uy = 1, uh = 1,              // 1×1 base, 1 unit high

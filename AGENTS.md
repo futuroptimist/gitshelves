@@ -43,3 +43,10 @@ The STL workflow uses Gridfinity base plates and contribution cubes. Month-to-cu
 
 Mathematically `floor(log10(count)) + 1` cubes are stacked for any count ≥ 1 (else 0). This mirrors `gitshelves.scad.blocks_for_contributions()`.
 
+
+## Web MVP and releases
+- `web/` is an isolated strict-TypeScript Vite/Three.js app. Use `npm ci`, then `npm run format`, `npm run lint`, `npm run typecheck`, `npm test`, and `npm run test:browser`.
+- Generate ignored canonical assets with `scripts/fetch_gridfinity.sh` followed by `python scripts/prepare_web_models.py`; never commit generated web STLs or build output.
+- Proxy geometry is display-only. Python/OpenSCAD remain canonical, and exact downloads must retain source bytes.
+- The container serves `/`, `/healthz`, and `/livez` as non-root on port 8080. Helm releases require an immutable `main-<shortsha>` image tag.
+- Update `docs/product-design.md`, `docs/roadmap.md`, and `docs/releasing.md` when the web, physical, or release contract changes. Sugarkube/Cloudflare configuration remains outside this repository.
