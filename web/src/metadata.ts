@@ -15,6 +15,7 @@ function monthlyFrom(
       ? root.outputs.map((output) => record(output)?.monthly_contributions)
       : []),
   ];
+  const datasets: { year: number; counts: number[] }[] = [];
   for (const candidate of candidates) {
     if (Array.isArray(candidate)) {
       const items = candidate.map(record).filter((item) => item !== undefined);
@@ -36,7 +37,8 @@ function monthlyFrom(
         )
           counts[month - 1] = count;
       }
-      return { year, counts };
+      datasets.push({ year, counts });
+      continue;
     }
     const data = record(candidate);
     if (!data) continue;
@@ -53,8 +55,9 @@ function monthlyFrom(
       if (month >= 1 && month <= 12 && typeof raw === "number")
         counts[month - 1] = raw;
     }
-    if (Number.isInteger(year)) return { year, counts };
+    if (Number.isInteger(year)) datasets.push({ year, counts });
   }
+  return datasets.sort((a, b) => b.year - a.year)[0];
 }
 export function parseMetadata(text: string): Dataset {
   if (!text.trim()) throw new Error("Metadata file is empty.");

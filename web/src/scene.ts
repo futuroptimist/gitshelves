@@ -86,6 +86,12 @@ export class ProductScene {
       try {
         const copy = file.bytes.slice().buffer;
         const geometry = loader.parse(copy);
+        const positions = geometry.getAttribute("position");
+        if (!positions || positions.count === 0)
+          throw new Error("mesh contains no triangles");
+        for (const value of positions.array)
+          if (!Number.isFinite(value))
+            throw new Error("mesh has invalid bounds");
         geometry.computeVertexNormals();
         this.content.add(
           new THREE.Mesh(
@@ -95,8 +101,10 @@ export class ProductScene {
             }),
           ),
         );
-      } catch {
-        /* UI validates and reports parse failures before this point. */
+      } catch (error) {
+        throw new Error(
+          `${file.name} could not be rendered: ${(error as Error).message}`,
+        );
       }
     }
   }

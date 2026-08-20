@@ -81,6 +81,21 @@ describe("imports", () => {
       ).year,
     ).toBe(2024);
   });
+  it("selects the latest year across all run-summary outputs", () => {
+    const records = (year: number) => [
+      { year, month: 1, count: year, blocks: 4 },
+    ];
+    const dataset = parseMetadata(
+      JSON.stringify({
+        outputs: [
+          { monthly_contributions: records(2023) },
+          { monthly_contributions: records(2025) },
+        ],
+      }),
+    );
+    expect(dataset.year).toBe(2025);
+    expect(dataset.months[0]?.contributions).toBe(2025);
+  });
   it.each(["", "nope", "[]", "{}"])(
     "rejects malformed/unsupported input",
     (text) => expect(() => parseMetadata(text)).toThrow(),

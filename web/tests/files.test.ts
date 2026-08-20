@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { readStlFiles } from "../src/files";
-const bytes = new Uint8Array(84);
+const bytes = new Uint8Array(134);
+new DataView(bytes.buffer).setUint32(80, 1, true);
 const file = (name: string, content: Uint8Array = bytes) =>
   Object.assign(new Blob([content.slice().buffer]), { name }) as File;
 it("preserves exact STL bytes", async () => {
@@ -13,5 +14,8 @@ it("rejects duplicate and malformed files", async () => {
   ).rejects.toThrow("Duplicate");
   await expect(
     readStlFiles([file("bad.stl", new Uint8Array(3))]),
+  ).rejects.toThrow("valid STL");
+  await expect(
+    readStlFiles([file("empty.stl", new Uint8Array(84))]),
   ).rejects.toThrow("valid STL");
 });

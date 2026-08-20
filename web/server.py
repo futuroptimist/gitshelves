@@ -24,8 +24,11 @@ class Handler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def end_headers(self):
-        if self.path.startswith("/assets/") or self.path.startswith("/models/"):
+        path = self.path.split("?", 1)[0]
+        if path.startswith("/assets/"):
             self.send_header("Cache-Control", "public, max-age=31536000, immutable")
+        elif path.startswith("/models/"):
+            self.send_header("Cache-Control", "no-cache")
         else:
             self.send_header("Cache-Control", "no-cache")
         self.send_header("X-Content-Type-Options", "nosniff")

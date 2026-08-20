@@ -5,18 +5,22 @@ export type LocalStl = {
   colorGroup: number;
   bytes: Uint8Array;
 };
+const textDecoder = new TextDecoder();
 export function validateStlBytes(bytes: Uint8Array): void {
   if (bytes.byteLength < 84) throw new Error("STL is empty or too small.");
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const triangles = view.getUint32(80, true);
   const binaryLength = 84 + triangles * 50;
-  const prefix = new TextDecoder()
-    .decode(bytes.subarray(0, Math.min(80, bytes.length)))
+  const prefix = textDecoder
+    .decode(bytes.subarray(0, Math.min(4096, bytes.length)))
     .trimStart();
   const plausibleAscii =
     prefix.startsWith("solid") &&
-    new TextDecoder().decode(bytes).includes("facet normal");
-  if (binaryLength !== bytes.byteLength && !plausibleAscii)
+    prefix.includes("facet normal") &&
+    prefix.includes("vertex") &&
+    prefix.includes("endfacet");
+  const validBinary = triangles > 0 && binaryLength === bytes.byteLength;
+  if (!validBinary && !plausibleAscii)
     throw new Error("STL triangle data is malformed.");
 }
 export function classifyFilename(name: string): Omit<LocalStl, "bytes"> {

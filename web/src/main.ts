@@ -5,7 +5,7 @@ import { readStlFiles, validateStlBytes, type LocalStl } from "./files";
 import { createManifest } from "./manifest";
 import { ProductScene } from "./scene";
 const app = document.querySelector<HTMLDivElement>("#app")!;
-app.innerHTML = `<main><div id="scene" aria-label="Interactive orthographic model; drag to orbit, right-drag to pan, and scroll to zoom"></div><header><p class="eyebrow">GitShelves / monthly 2×6</p><h1>Activity,<br>made tangible.</h1><p class="lede">A local-first design preview for a reusable base and modular contribution cubes.</p></header><aside class="hud" aria-label="Design controls"><div class="status"><span id="state">Design preview</span><span id="sample">Synthetic sample</span></div><div class="controls"><button id="assembled" aria-pressed="true">Assembled</button><button id="exploded" aria-pressed="false">Exploded</button><button id="reset">Reset camera</button><button id="fit">Fit model</button></div><label>Load metadata or run summary<input id="metadata" type="file" accept="application/json,.json"></label><label>Load local STL files<input id="stls" type="file" accept=".stl" multiple></label><p class="privacy">Files stay in this browser. No GitHub or third-party API is contacted.</p><div id="downloads"><button id="base" disabled>Download base STL</button><button id="module" disabled>Download module STL</button><button id="manifest">Download print manifest</button></div><output id="message" aria-live="polite"></output></aside><section class="text"><h2>Print plan</h2><p id="geometry-note">Procedural geometry is a design preview, not printable STL. Run <code>npm run models:prepare</code> from <code>web/</code> to enable canonical exact models.</p><div class="table"><table><thead><tr><th>Month</th><th>Contributions</th><th>Cubes</th><th>Base cell</th></tr></thead><tbody id="months"></tbody></table></div><h3>Loaded STL files</h3><ul id="file-list"><li>None</li></ul><p id="total"></p></section></main>`;
+app.innerHTML = `<main><div id="scene" role="region" aria-label="Interactive orthographic model; drag to orbit, right-drag to pan, and scroll to zoom"></div><header><p class="eyebrow">GitShelves / monthly 2×6</p><h1>Activity,<br>made tangible.</h1><p class="lede">A local-first design preview for a reusable base and modular contribution cubes.</p></header><aside class="hud" aria-label="Design controls"><div class="status"><span id="state">Design preview</span><span id="sample">Synthetic sample</span></div><div class="controls"><button id="assembled" aria-pressed="true">Assembled</button><button id="exploded" aria-pressed="false">Exploded</button><button id="reset">Reset camera</button><button id="fit">Fit model</button></div><label>Load metadata or run summary<input id="metadata" type="file" accept="application/json,.json"></label><label>Load local STL files<input id="stls" type="file" accept=".stl" multiple></label><p class="privacy">Files stay in this browser. No GitHub or third-party API is contacted.</p><div id="downloads"><button id="base" disabled>Download base STL</button><button id="module" disabled>Download module STL</button><button id="manifest">Download print manifest</button></div><output id="message" aria-live="polite"></output></aside><section class="text"><h2>Print plan</h2><p id="geometry-note">Procedural geometry is a design preview, not printable STL. Run <code>npm run models:prepare</code> from <code>web/</code> to enable canonical exact models.</p><div class="table"><table><thead><tr><th>Month</th><th>Contributions</th><th>Cubes</th><th>Base cell</th></tr></thead><tbody id="months"></tbody></table></div><h3>Loaded STL files</h3><ul id="file-list"><li>None</li></ul><p id="total"></p></section></main>`;
 let dataset: Dataset = SAMPLE,
   files: LocalStl[] = [],
   exploded = false;
@@ -20,14 +20,18 @@ function draw() {
     .join("");
   document.querySelector("#total")!.textContent =
     `${dataset.months.reduce((s, m) => s + m.blocks, 0)} reusable cubes total.`;
-  document.querySelector("#file-list")!.innerHTML = files.length
-    ? files
-        .map(
-          (f) =>
-            `<li>${f.name} — ${f.type}, color ${f.colorGroup || "base"}, ${f.bytes.byteLength.toLocaleString()} bytes</li>`,
-        )
-        .join("")
-    : "<li>None</li>";
+  const fileList = document.querySelector("#file-list")!;
+  fileList.replaceChildren();
+  for (const file of files.length ? files : [undefined]) {
+    const item = document.createElement("li");
+    item.textContent = file
+      ? `${file.name} — ${file.type}, color ${file.colorGroup || "base"}, ${file.bytes.byteLength.toLocaleString()} bytes`
+      : "None";
+    fileList.append(item);
+  }
+  const exact = files.length > 0;
+  for (const id of ["assembled", "exploded"])
+    document.querySelector<HTMLButtonElement>(`#${id}`)!.disabled = exact;
 }
 function message(text: string, error = false) {
   const el = document.querySelector<HTMLOutputElement>("#message")!;
