@@ -4,6 +4,53 @@ import type { Dataset } from "./domain";
 import { parseStlGeometry, type LocalStl } from "./files";
 import { moduleTransform } from "./transforms";
 const COLORS = [0x263238, 0x39d98a, 0x36c5d0, 0x158f78, 0x8fffd0];
+export type BundleAnalysis = {
+  exactBase: boolean;
+  proxyBase: boolean;
+  exactModule: boolean;
+  proxyModule: boolean;
+  requiredContributionGroups: number[];
+  exactContributionGroups: number[];
+  proxyContributionGroups: number[];
+  exact: boolean;
+};
+export function analyzeBundle(
+  dataset: Dataset,
+  files: LocalStl[],
+): BundleAnalysis {
+  const requiredContributionGroups = [
+    ...new Set(
+      dataset.months.flatMap((month) =>
+        Array.from({ length: month.blocks }, (_, level) =>
+          Math.min(level + 1, 4),
+        ),
+      ),
+    ),
+  ].sort();
+  const exactBase = files.some((file) => file.type === "base");
+  const exactModule = files.some((file) => file.type === "module");
+  const importedGroups = new Set(
+    files
+      .filter((file) => file.type === "contribution")
+      .map((file) => Math.min(file.colorGroup, 4)),
+  );
+  const exactContributionGroups = exactModule
+    ? requiredContributionGroups
+    : requiredContributionGroups.filter((group) => importedGroups.has(group));
+  const proxyContributionGroups = requiredContributionGroups.filter(
+    (group) => !exactContributionGroups.includes(group),
+  );
+  return {
+    exactBase,
+    proxyBase: !exactBase,
+    exactModule,
+    proxyModule: !exactModule && proxyContributionGroups.length > 0,
+    requiredContributionGroups,
+    exactContributionGroups,
+    proxyContributionGroups,
+    exact: exactBase && proxyContributionGroups.length === 0,
+  };
+}
 export function exactInstancePlan(
   dataset: Dataset,
   exploded: boolean,
@@ -63,54 +110,63 @@ export class ProductScene {
     visible = new Set([1, 2, 3, 4]),
   ) {
     this.clear();
-    const exact = files.length > 0;
-    if (exact) this.addExact(dataset, exploded, files, visible);
-    else this.addProxy(dataset, exploded, visible);
+    const analysis = analyzeBundle(dataset, files);
+    this.addProxy(dataset, exploded, visible, analysis);
+    this.addExact(dataset, exploded, files, visible, analysis);
     this.fit();
   }
-  private addProxy(dataset: Dataset, exploded: boolean, visible: Set<number>) {
-    const base = new THREE.Mesh(
-      new THREE.BoxGeometry(256, 88, 6),
-      new THREE.MeshStandardMaterial({
-        color: COLORS[0],
-        roughness: 0.65,
-        metalness: 0.15,
-      }),
+  private addProxy(
+    dataset: Dataset,
+    exploded: boolean,
+    visible: Set<number>,
+    analysis: BundleAnalysis,
+  ) {
+    if (analysis.proxyBase) {
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(256, 88, 6),
+        new THREE.MeshStandardMaterial({
+          color: COLORS[0],
+          roughness: 0.65,
+          metalness: 0.15,
+        }),
+      );
+      base.position.set(126, 42, 3);
+      this.content.add(base);
+    }
+    const proxyGroups = new Set(analysis.proxyContributionGroups);
+    const plan = exactInstancePlan(dataset, exploded, visible).filter((item) =>
+      proxyGroups.has(item.group),
     );
-    base.position.set(126, 42, 3);
-    this.content.add(base);
-    const total = dataset.months.reduce((s, m) => s + m.blocks, 0);
     const geometry = new THREE.BoxGeometry(38, 38, 7);
     const mesh = new THREE.InstancedMesh(
       geometry,
       new THREE.MeshStandardMaterial({ color: COLORS[1], roughness: 0.45 }),
-      total,
+      plan.length,
     );
-    let i = 0;
     const matrix = new THREE.Matrix4();
-    for (const month of dataset.months)
-      for (let level = 0; level < month.blocks; level++) {
-        const p = moduleTransform(month, level, exploded);
-        matrix.makeTranslation(p.x, p.y, p.z);
-        mesh.setMatrixAt(i++, matrix);
-        mesh.setColorAt(i - 1, new THREE.Color(COLORS[Math.min(level + 1, 4)]));
-        if (!visible.has(Math.min(level + 1, 4))) {
-          matrix.makeScale(0, 0, 0);
-          mesh.setMatrixAt(i - 1, matrix);
-        }
-      }
-    this.content.add(mesh);
+    plan.forEach((item, index) => {
+      matrix.makeTranslation(item.x, item.y, item.z);
+      if (!item.visible) matrix.makeScale(0, 0, 0);
+      mesh.setMatrixAt(index, matrix);
+      mesh.setColorAt(index, new THREE.Color(COLORS[item.group]));
+    });
+    if (plan.length) this.content.add(mesh);
+    else {
+      geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
   }
   private addExact(
     dataset: Dataset,
     exploded: boolean,
     files: LocalStl[],
     visible: Set<number>,
+    analysis: BundleAnalysis,
   ) {
     const base = files.find((file) => file.type === "base");
     const module = files.find((file) => file.type === "module");
     if (base) this.addMesh(base, parseStlGeometry(base.bytes));
-    if (module) {
+    if (module && analysis.exactModule) {
       const geometry = parseStlGeometry(module.bytes);
       const plan = exactInstancePlan(dataset, exploded, visible);
       const total = plan.length;
@@ -134,7 +190,11 @@ export class ProductScene {
       if (
         file === base ||
         file === module ||
-        !visible.has(Math.min(file.colorGroup || 1, 4))
+        (analysis.exactModule && file.type === "contribution") ||
+        !analysis.exactContributionGroups.includes(
+          Math.min(file.colorGroup, 4),
+        ) ||
+        !visible.has(Math.min(file.colorGroup, 4))
       )
         continue;
       this.addMesh(file, parseStlGeometry(file.bytes));

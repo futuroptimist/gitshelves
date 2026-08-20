@@ -43,14 +43,7 @@ function monthlyFrom(
           throw new Error(`Inconsistent blocks for ${year}-${month}.`);
         const key = `${year}-${month}`;
         const prior = records.get(key);
-        if (
-          prior &&
-          (prior.count !== count ||
-            prior.blocks !==
-              (suppliedBlocks === undefined
-                ? undefined
-                : Number(suppliedBlocks)))
-        )
+        if (prior && prior.count !== count)
           throw new Error(`Conflicting monthly records for ${year}-${month}.`);
         records.set(key, {
           count,
@@ -64,21 +57,35 @@ function monthlyFrom(
     if (!data) continue;
     const entries = Object.entries(data);
     if (!entries.length) continue;
-    const years = entries
-      .map(([key]) => Number(key.match(/\d{4}/)?.[0]))
-      .filter(Number.isFinite);
-    const year = years[0] ?? Number(root.year);
-    const counts = Array(12).fill(0) as number[];
+    const collected = new Map<string, number>();
     for (const [key, raw] of entries) {
-      const nums = key.match(/\d+/g)?.map(Number) ?? [];
-      const month = (nums.length > 1 ? nums[1] : Number(key)) ?? 0;
-      if (month >= 1 && month <= 12 && typeof raw === "number")
-        counts[month - 1] = raw;
+      const numericMonth = key.match(/^(?:0?[1-9]|1[0-2])$/);
+      const yearMonth = key.match(/^(\d{4})[-_/](0?[1-9]|1[0-2])$/);
+      if (!numericMonth && !yearMonth)
+        throw new Error(`Invalid monthly contribution key: ${key}.`);
+      const year = yearMonth ? Number(yearMonth[1]) : Number(root.year);
+      const month = Number(yearMonth?.[2] ?? key);
+      if (!Number.isInteger(year))
+        throw new Error(`Monthly contribution key ${key} requires a year.`);
+      if (typeof raw !== "number" || !Number.isSafeInteger(raw) || raw < 0)
+        throw new Error(`Invalid contribution count for ${key}.`);
+      const itemKey = `${year}-${month}`;
+      const prior = collected.get(itemKey);
+      if (prior !== undefined && prior !== raw)
+        throw new Error(`Conflicting monthly records for ${itemKey}.`);
+      collected.set(itemKey, raw);
     }
-    if (Number.isInteger(year))
-      counts.forEach((count, index) =>
-        records.set(`${year}-${index + 1}`, { count }),
-      );
+    const objectYears = new Set(
+      [...collected.keys()].map((key) => key.split("-")[0]),
+    );
+    if (objectYears.size !== 1)
+      throw new Error("Object-form monthly metadata mixes multiple years.");
+    for (const [key, count] of collected) {
+      const prior = records.get(key);
+      if (prior && prior.count !== count)
+        throw new Error(`Conflicting monthly records for ${key}.`);
+      records.set(key, { count });
+    }
   }
   const years = [
     ...new Set([...records.keys()].map((key) => Number(key.split("-")[0]))),

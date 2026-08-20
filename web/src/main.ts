@@ -8,7 +8,7 @@ import {
   type LocalStl,
 } from "./files";
 import { createManifest } from "./manifest";
-import { ProductScene } from "./scene";
+import { analyzeBundle, ProductScene } from "./scene";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML = `<main><div id="scene" role="region" aria-label="Interactive orthographic model; drag to orbit, right-drag to pan, and scroll to zoom"></div><header><p class="eyebrow">GitShelves / monthly 2×6</p><h1>Activity,<br>made tangible.</h1><p class="lede">A local-first design preview for a reusable base and modular contribution cubes.</p></header><aside class="hud" aria-label="Design controls"><div class="status"><span id="state">Design preview</span><span id="sample">Synthetic sample</span></div><div class="controls"><button id="assembled" aria-pressed="true">Assembled</button><button id="exploded" aria-pressed="false">Exploded</button><button id="reset">Reset camera</button><button id="fit">Fit model</button><button class="color" data-group="1" aria-pressed="true">Color 1</button><button class="color" data-group="2" aria-pressed="true">Color 2</button><button class="color" data-group="3" aria-pressed="true">Color 3</button><button class="color" data-group="4" aria-pressed="true">Color 4</button></div><label>Load metadata or run summary<input id="metadata" type="file" accept="application/json,.json"></label><label>Load local STL files<input id="stls" type="file" accept=".stl" multiple></label><p class="privacy">Files stay in this browser. No GitHub or third-party API is contacted.</p><div id="downloads"><button id="base" disabled>Download base STL</button><button id="module" disabled>Download module STL</button><button id="manifest">Download print manifest</button></div><output id="message" aria-live="polite"></output></aside><section class="text"><h2>Print plan</h2><p id="geometry-note">Procedural geometry is a design preview, not printable STL. Run <code>npm run models:prepare</code> from <code>web/</code> to enable canonical exact models.</p><div class="table"><table><thead><tr><th>Month</th><th>Contributions</th><th>Cubes</th><th>Base cell</th></tr></thead><tbody id="months"></tbody></table></div><h3>Loaded STL files</h3><ul id="file-list"><li>None</li></ul><p id="total"></p></section></main>`;
 let dataset: Dataset = SAMPLE,
@@ -17,7 +17,23 @@ let dataset: Dataset = SAMPLE,
 const visible = new Set([1, 2, 3, 4]);
 const scene = new ProductScene(document.querySelector("#scene")!);
 function draw() {
+  const bundle = analyzeBundle(dataset, files);
   scene.show(dataset, exploded, files, visible);
+  document.querySelector("#state")!.textContent = bundle.exact
+    ? "Exact STL geometry"
+    : "Design preview";
+  document.querySelector("#geometry-note")!.textContent = bundle.exact
+    ? "All required geometry is represented by exact STL meshes."
+    : `Exact STL components are shown where available; proxy geometry supplies ${
+        [
+          bundle.proxyBase ? "the base" : "",
+          bundle.proxyContributionGroups.length
+            ? `contribution color group(s) ${bundle.proxyContributionGroups.join(", ")}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" and ") || "no required components"
+      }.`;
   document.querySelector("#months")!.innerHTML = dataset.months
     .map(
       (m) =>
@@ -111,23 +127,13 @@ document
   .querySelector<HTMLInputElement>("#stls")!
   .addEventListener("change", async (e) => {
     try {
-      files = await readStlFiles(
+      const replacement = await readStlFiles(
         Array.from((e.target as HTMLInputElement).files ?? []),
       );
+      files = replacement;
       draw();
-      const reusable = files.some((file) => file.type === "module");
-      const complete = !reusable || files.some((file) => file.type === "base");
-      document.querySelector("#state")!.textContent = complete
-        ? "Exact STL geometry"
-        : "Design preview";
-      message(
-        complete
-          ? `Loaded ${files.length} STL file(s) locally.`
-          : "Loaded the canonical module; the base remains proxy geometry.",
-      );
+      message(`Loaded ${files.length} STL file(s) locally.`);
     } catch (err) {
-      files = [];
-      draw();
       message((err as Error).message, true);
     }
   });
@@ -172,17 +178,9 @@ async function loadCanonical() {
   }
   if (loaded.length === 2) {
     files = loaded;
-    document.querySelector("#state")!.textContent = "Exact STL geometry";
-    document.querySelector("#geometry-note")!.textContent =
-      "Build-generated canonical OpenSCAD meshes are shown and available unchanged.";
     draw();
   } else if (loaded.length) {
     files = loaded;
-    document.querySelector("#state")!.textContent = "Design preview";
-    document.querySelector("#geometry-note")!.textContent =
-      loaded[0]!.type === "base"
-        ? "The exact base is shown; contribution modules remain proxy geometry."
-        : "Exact modules are shown; the base remains proxy geometry.";
     draw();
   }
 }

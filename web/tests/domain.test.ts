@@ -13,7 +13,7 @@ import {
 import { createManifest } from "../src/manifest";
 import { moduleTransform, paletteVisible } from "../src/transforms";
 import { parseMetadata } from "../src/metadata";
-import { exactInstancePlan } from "../src/scene";
+import { analyzeBundle, exactInstancePlan } from "../src/scene";
 describe("product domain", () => {
   it.each([
     [0, 0],
@@ -140,6 +140,48 @@ describe("imports", () => {
       ),
     ).toThrow("Inconsistent");
   });
+  it("accepts complete object metadata without inventing omitted months", () => {
+    const complete = Object.fromEntries(
+      Array.from({ length: 12 }, (_, index) => [String(index + 1), index]),
+    );
+    expect(
+      parseMetadata(
+        JSON.stringify({ year: 2025, monthly_contributions: complete }),
+      ).year,
+    ).toBe(2025);
+    const yearMonth = Object.fromEntries(
+      Array.from({ length: 12 }, (_, index) => [`2026-${index + 1}`, index]),
+    );
+    expect(
+      parseMetadata(JSON.stringify({ monthly_contributions: yearMonth })).year,
+    ).toBe(2026);
+    expect(() =>
+      parseMetadata(
+        JSON.stringify({
+          year: 2025,
+          monthly_contributions: { ...complete, "12": undefined },
+        }),
+      ),
+    ).toThrow("complete");
+  });
+  it.each([
+    [{ year: 2025, monthly_contributions: { nope: 1 } }, "Invalid"],
+    [
+      {
+        year: 2025,
+        monthly_contributions: {
+          ...Object.fromEntries(
+            Array.from({ length: 12 }, (_, i) => [i + 1, i]),
+          ),
+          "12": -1,
+        },
+      },
+      "Invalid",
+    ],
+    [{ monthly_contributions: { "2025-1": 1, "2026-2": 2 } }, "multiple years"],
+  ])("rejects invalid or ambiguous object metadata", (value, error) =>
+    expect(() => parseMetadata(JSON.stringify(value))).toThrow(error),
+  );
   it.each(["", "nope", "[]", "{}"])(
     "rejects malformed/unsupported input",
     (text) => expect(() => parseMetadata(text)).toThrow(),
@@ -202,6 +244,47 @@ it("plans canonical 2x6 instances with mode transforms and color visibility", ()
   expect(assembled).toHaveLength(24);
   expect(exploded[1]?.z).not.toBe(assembled[1]?.z);
   expect(exploded.filter((item) => !item.visible)).toHaveLength(12);
+});
+const local = (
+  type: "base" | "module" | "contribution" | "unknown",
+  colorGroup = 0,
+) => ({ name: `${type}.stl`, type, colorGroup, bytes: new Uint8Array() });
+it("analyzes exact and proxy bundle coverage without duplication", () => {
+  const dataset = datasetFromCounts(Array(12).fill(100));
+  for (const bundle of [
+    [],
+    [local("base")],
+    [local("module")],
+    [local("unknown")],
+  ])
+    expect(analyzeBundle(dataset, bundle).exact).toBe(false);
+  expect(
+    analyzeBundle(dataset, [local("base"), local("module")]),
+  ).toMatchObject({
+    exact: true,
+    exactContributionGroups: [1, 2, 3],
+    proxyContributionGroups: [],
+  });
+  const complete = analyzeBundle(dataset, [
+    local("base"),
+    local("contribution", 1),
+    local("contribution", 2),
+    local("contribution", 3),
+  ]);
+  expect(complete.exact).toBe(true);
+  expect(complete.proxyContributionGroups).toEqual([]);
+  const partial = analyzeBundle(dataset, [
+    local("base"),
+    local("contribution", 2),
+  ]);
+  expect(partial.exactContributionGroups).toEqual([2]);
+  expect(partial.proxyContributionGroups).toEqual([1, 3]);
+  expect(
+    new Set([
+      ...partial.exactContributionGroups,
+      ...partial.proxyContributionGroups,
+    ]).size,
+  ).toBe(partial.requiredContributionGroups.length);
 });
 it("creates quantities and placements", () => {
   const dataset = datasetFromCounts([1, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
