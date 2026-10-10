@@ -218,3 +218,5 @@ web/node_modules/
 web/dist/
 web/public/models/
 web/test-results/
+# Owner handoff build output
+/site-artifact/

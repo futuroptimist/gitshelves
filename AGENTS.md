@@ -20,6 +20,10 @@
   Sugarkube release contract. Keep Helm defaults environment-neutral and coordinates immutable.
 
 ## Coding Conventions
+- `site-export` exports the complete Docker browser build, canonical STL pair and MIT
+  notices. Run `node scripts/validate-site.mjs site-artifact` before owner handoff;
+  see `docs/sites.md`. Never commit Site project IDs, credentials or generated assets.
+
 - Python code is formatted with `black`
 - Keep functions small with descriptive names
 - Document non-obvious logic

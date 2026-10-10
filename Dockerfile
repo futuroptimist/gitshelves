@@ -15,7 +15,13 @@ COPY web/package.json web/package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY web/ ./
 COPY --from=models /models/ ./public/models/
+COPY LICENSE ./public/licenses/gitshelves-MIT.txt
+COPY --from=models /src/openscad/lib/gridfinity-rebuilt/LICENSE ./public/licenses/gridfinity-MIT.txt
+RUN cp node_modules/three/LICENSE public/licenses/three-MIT.txt
 RUN npm run build
+
+FROM scratch AS site-export
+COPY --from=web-build /app/dist /dist
 
 FROM python:3.12.10-alpine3.21
 WORKDIR /app
