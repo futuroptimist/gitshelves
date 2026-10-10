@@ -1,0 +1,47 @@
+name: Site artifact
+on:
+  pull_request:
+    branches: [main]
+    paths: [Dockerfile, LICENSE, '.dockerignore', 'web/**', 'openscad/**', 'scripts/validate-site.mjs', '.github/workflows/site-artifact.yml']
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false, ref: '${{ github.event.pull_request.head.sha }}'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.19.0'}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: site-export
+          outputs: type=local,dest=site-artifact
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - run: node scripts/validate-site.mjs site-artifact
+      - run: npm ci --ignore-scripts
+        working-directory: web
+      - name: Check browser source
+        working-directory: web
+        run: npm run format && npm run lint && npm run typecheck && npm test
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      - name: Check complete browser artifact
+        working-directory: web
+        run: |
+          npx vite preview --host 127.0.0.1 --outDir ../site-artifact/dist &
+          preview=$!
+          trap 'kill "$preview"' EXIT
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+            sleep 1
+          done
+          node scripts/smoke-site.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gitshelves-site-${{ github.event.pull_request.head.sha }}
+          path: site-artifact/
+          if-no-files-found: error
