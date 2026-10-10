@@ -1,6 +1,7 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { URL } from "node:url";
 
 const browser = await chromium.launch();
 try {
