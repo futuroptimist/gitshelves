@@ -2,7 +2,7 @@ name: Site artifact
 on:
   pull_request:
     branches: [main]
-    paths: [Dockerfile, 'web/**', 'openscad/**', 'scripts/validate-site.mjs', '.github/workflows/site-artifact.yml']
+    paths: [Dockerfile, LICENSE, '.dockerignore', 'web/**', 'openscad/**', 'scripts/validate-site.mjs', '.github/workflows/site-artifact.yml']
 permissions:
   contents: read
 jobs:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: {persist-credentials: false}
+        with: {persist-credentials: false, ref: '${{ github.event.pull_request.head.sha }}'}
       - uses: actions/setup-node@v4
         with: {node-version: '22.19.0'}
       - uses: docker/setup-buildx-action@v3

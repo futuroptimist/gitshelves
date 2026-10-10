@@ -1,5 +1,6 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 const browser = await chromium.launch();
 try {
@@ -17,10 +18,18 @@ try {
     await page.locator("#exploded").getAttribute("aria-pressed"),
     "true",
   );
-  for (const label of ["Download base STL", "Download module STL"]) {
+  for (const [label, name] of [
+    ["Download base STL", "baseplate_2x6.stl"],
+    ["Download module STL", "contrib_cube.stl"],
+  ]) {
     const pending = page.waitForEvent("download");
     await page.getByRole("button", { name: label, exact: true }).click();
-    assert.equal(await (await pending).failure(), null);
+    const download = await pending;
+    assert.equal(await download.failure(), null);
+    const expected = await readFile(
+      new URL(`../../site-artifact/dist/models/${name}`, import.meta.url),
+    );
+    assert.deepEqual(await readFile(await download.path()), expected);
   }
   assert.deepEqual(errors, []);
 } finally {
