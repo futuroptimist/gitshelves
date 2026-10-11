@@ -28,16 +28,16 @@ jobs:
 
   gridfinity:
     runs-on: ubuntu-latest
+    container:
+      # Official development image, pinned to its linux/amd64 manifest.
+      image: openscad/openscad:dev@sha256:3cb3f6347bdb64736d1bba690cffc2a33c8e3fd28780304fe5637569cade9853
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
       - name: Install rendering test dependencies
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y openscad xvfb
-          python -m pip install -e . pytest
+          apt-get update -qq
+          apt-get install -y --no-install-recommends git xvfb xauth python3-pytest python3-requests
+          openscad --version
+      - uses: actions/checkout@v4
       - name: Fetch pinned Gridfinity library
         run: |
           rm -rf openscad/lib/gridfinity-rebuilt
@@ -46,4 +46,4 @@ jobs:
       - name: Render generated and static regression models
         env:
           GRIDFINITY_RENDER_TESTS: '1'
-        run: python -m pytest -q tests/test_gridfinity_integration.py
+        run: python3 -m pytest -q tests/test_gridfinity_integration.py

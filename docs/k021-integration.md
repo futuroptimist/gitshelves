@@ -73,5 +73,9 @@ GRIDFINITY_RENDER_TESTS=1 python -m pytest -q tests/test_gridfinity_integration.
 
 `OPENSCAD` selects an executable; on Windows select `openscad.com` rather than
 the GUI executable. Headless Linux uses `xvfb-run`. The dedicated CI job runs
-these real exports in addition to the normal unit suite. No STL artifacts are
+these real exports in addition to the normal unit suite, using the official
+`openscad/openscad:dev` linux/amd64 image pinned at
+`sha256:3cb3f6347bdb64736d1bba690cffc2a33c8e3fd28780304fe5637569cade9853`.
+The installed Windows 2021.01 renderer crashed on the canonical bin and timed
+out on the twelve-bin union; it is not supported for these bin regressions. No STL artifacts are
 committed. Physical calibration remains outstanding in [the roadmap](roadmap.md#2-physical-calibration).

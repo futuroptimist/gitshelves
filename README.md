@@ -261,9 +261,13 @@ See [AGENTS.md](AGENTS.md) for agent workflow guidelines and
 ## How to Build Locally
 
 ```bash
-# Clone the Gridfinity library locally (the CI workflow does this automatically)
+# From a fresh checkout, preserve the bundled placeholder before cloning.
+mv openscad/lib/gridfinity-rebuilt openscad/lib/gridfinity-rebuilt.placeholder
+# Clone and select the supported revision (CI does this automatically).
 git clone https://github.com/kennetek/gridfinity-rebuilt-openscad \
     openscad/lib/gridfinity-rebuilt
+git -C openscad/lib/gridfinity-rebuilt checkout --detach \
+    910e22d8607fd7f5f51ad5e5cbc5287a76810bfd
 # `scad_to_stl` automatically wraps `openscad` in `xvfb-run` when `$DISPLAY`
 # is unset or empty and exports binary STLs (`--export-format binstl`) to match
 # the CI configuration. Import it via `from gitshelves import scad_to_stl` and
@@ -342,7 +346,9 @@ machine.
 The supported Gridfinity-Rebuilt revision is
 `910e22d8607fd7f5f51ad5e5cbc5287a76810bfd`, checked out in
 `openscad/lib/gridfinity-rebuilt`. Generated cubes use `src/core/bin.scad`.
-With that dependency and OpenSCAD installed, run
+Use a development OpenSCAD build (validated locally with 2026.10.05); the
+2021.01 release can crash or time out on the pinned bin API. With the dependency
+and compatible OpenSCAD installed, run
 `GRIDFINITY_RENDER_TESTS=1 python -m pytest -q tests/test_gridfinity_integration.py`.
 Set `OPENSCAD` to select another executable. See the
 [K-021 measurement report](docs/k021-integration.md) for exported assembly bounds

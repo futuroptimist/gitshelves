@@ -59,7 +59,8 @@ Mathematically `floor(log10(count)) + 1` cubes are stacked for any count ≥ 1 (
 - Use Gridfinity-Rebuilt commit `910e22d8607fd7f5f51ad5e5cbc5287a76810bfd`
   in `openscad/lib/gridfinity-rebuilt`, matching Docker and the STL workflows.
 - Run `GRIDFINITY_RENDER_TESTS=1 python -m pytest -q tests/test_gridfinity_integration.py`
-  with OpenSCAD installed. `OPENSCAD` can select a specific executable; Linux
+  with a development OpenSCAD build installed. The CI job pins the official
+  development image by digest; 2021.01 is not a reliable bin renderer. `OPENSCAD` can select a specific executable; Linux
   headless runs also require `xvfb-run`.
 - The real-render tests reject OpenSCAD warnings and errors and verify exported
   mesh geometry. String snapshots alone cannot establish library compatibility.
