@@ -32,7 +32,12 @@ All corrected exports completed without OpenSCAD warnings or errors.
 The static and generated single cubes were byte-identical in this run (SHA256
 `a1da011e2576a9d9e6e961c0e31c28358d47f00601a9f2e5936de0199bf17f68`).
 OpenSCAD 2021.01 independently exported the corrected static assembly at
-380 × 128 × 6 mm (7076 triangles); tessellation counts are renderer-dependent.
+380 × 128 × 6 mm (7076 triangles). Its generated cube measured
+41.5 × 41.5 × 10.547409 mm; tessellation changes the lip extremum. The regression
+suite compares cube/stack heights against the canonical cube exported by the
+same renderer and checks the exact 7 mm stacking increment. The CI assembly
+fixture uses one occupied month to bound legacy CGAL render cost; the full
+twelve-month measurements above use the 2026 renderer.
 
 Current main, rendered with the same pinned library and 2026 renderer, emitted
 `Ignoring unknown function 'bundle_hole_options'` but produced the same oversized

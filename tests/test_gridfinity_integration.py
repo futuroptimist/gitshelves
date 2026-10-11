@@ -41,7 +41,7 @@ def test_packaged_baseplates_have_explicit_hole_api():
 @pytest.mark.parametrize(
     "model", ["cube", "stack", "baseplate", "assembly", "zero", "packaged", "longplate"]
 )
-def test_pinned_gridfinity_exports(tmp_path, model):
+def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_height):
     executable = os.environ.get("OPENSCAD", "openscad")
     executable = shutil.which(executable)
     assert executable, "OpenSCAD is required for integration tests"
@@ -61,9 +61,7 @@ def test_pinned_gridfinity_exports(tmp_path, model):
         )
     elif model == "assembly":
         source.write_text(
-            scad.generate_gridfinity_plate_scad(
-                {(2024, m): 1 for m in range(1, 13)}, 2024
-            ),
+            scad.generate_gridfinity_plate_scad({(2024, 12): 1}, 2024),
             encoding="utf-8",
         )
     else:
@@ -98,7 +96,8 @@ def test_pinned_gridfinity_exports(tmp_path, model):
     spans = [high - low for high, low in zip(upper, lower)]
     if model in ("cube", "stack"):
         assert spans == pytest.approx(
-            [41.5, 41.5, 10.482533 + (14 if model == "stack" else 0)], abs=0.002
+            [41.5, 41.5, canonical_cube_height + (14 if model == "stack" else 0)],
+            abs=0.002,
         )
     elif model == "longplate":
         assert spans[:2] == pytest.approx([504, 42], abs=0.002)
@@ -107,6 +106,39 @@ def test_pinned_gridfinity_exports(tmp_path, model):
         # Check real grid geometry exists without approving its current placement.
         assert lower[:2] == pytest.approx([-126, -42], abs=0.002)
         if model == "assembly":
-            assert upper[2] == pytest.approx(16.482533, abs=0.002)
+            assert upper[2] == pytest.approx(6 + canonical_cube_height, abs=0.002)
         else:
             assert spans[2] == pytest.approx(6, abs=0.002)
+
+
+@pytest.fixture(scope="module")
+def canonical_cube_height(tmp_path_factory):
+    """Compare with the canonical model under the same renderer/tessellation."""
+    executable = shutil.which(os.environ.get("OPENSCAD", "openscad"))
+    assert executable
+    output = tmp_path_factory.mktemp("canonical") / "cube.stl"
+    command = [
+        executable,
+        "-o",
+        str(output),
+        "--export-format",
+        "binstl",
+        str(ROOT / "openscad/contrib_cube.scad"),
+    ]
+    if os.name != "nt" and not os.environ.get("DISPLAY"):
+        command = ["xvfb-run", "-a"] + command
+    result = subprocess.run(command, capture_output=True, text=True, timeout=300)
+    diagnostic = result.stdout + result.stderr
+    assert result.returncode == 0, diagnostic
+    assert "WARNING:" not in diagnostic and "ERROR:" not in diagnostic, diagnostic
+    data = output.read_bytes()
+    triangles = struct.unpack_from("<I", data, 80)[0]
+    assert triangles > 0 and len(data) == 84 + triangles * 50
+    heights = [
+        struct.unpack_from("<f", data, 84 + 50 * i + 20 + 12 * j)[0]
+        for i in range(triangles)
+        for j in range(3)
+    ]
+    height = max(heights) - min(heights)
+    assert 10.4 < height < 10.6
+    return height
