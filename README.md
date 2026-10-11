@@ -336,3 +336,15 @@ OpenSCAD exits with status 1 when it cannot access an X display. The
 `scad_to_stl` helper wraps the command in `xvfb-run` when `$DISPLAY` is
 unset or empty. Install `xvfb-run` if you still encounter this error on a headless
 machine.
+
+### Gridfinity integration validation
+
+The supported Gridfinity-Rebuilt revision is
+`910e22d8607fd7f5f51ad5e5cbc5287a76810bfd`, checked out in
+`openscad/lib/gridfinity-rebuilt`. Generated cubes use `src/core/bin.scad`.
+With that dependency and OpenSCAD installed, run
+`GRIDFINITY_RENDER_TESTS=1 python -m pytest -q tests/test_gridfinity_integration.py`.
+Set `OPENSCAD` to select another executable. See the
+[K-021 measurement report](docs/k021-integration.md) for exported assembly bounds
+and the outstanding placement correction: the current full 2x6 assembly exceeds
+the A1 bed despite its 42 mm standard grid pitch.

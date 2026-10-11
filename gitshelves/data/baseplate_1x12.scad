@@ -1,5 +1,6 @@
 // Gridfinity 1×12 baseplate for tall single-row displays
 use <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
+use <lib/gridfinity-rebuilt/src/core/gridfinity-rebuilt-holes.scad>;
 
 // Grid unit length (mm) from the Gridfinity specification
 l_grid = 42;

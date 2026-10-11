@@ -86,14 +86,10 @@ Stacking one cube per order of magnitude (1s, 10s, 100s,…) produces a vertic
 
 ```scad
 // openscad/contrib_cube.scad
-use <lib/gridfinity-rebuilt/gridfinity-rebuilt-bin.scad>;
+use <lib/gridfinity-rebuilt/src/core/bin.scad>;
 
-bin(
-    ux = 1, uy = 1, uh = 1,              // 1×1 base, 1 unit high
-    walls = 1.2, floor = 1.6, lid = "none",
-    magnet_pockets = false,              // cubes don’t need magnets
-    stackable = true                     // preserves Gridfinity lip
-);
+bin_render(new_bin(grid_size = [1, 1], height_mm = 7,
+                   fill_height = 0, include_lip = true));
 ```
 
 ### 4.3 CLI-generated layouts

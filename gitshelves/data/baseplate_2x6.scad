@@ -1,5 +1,6 @@
 // Gridfinity 2×6 baseplate for Bambu Lab A1 (fits 256 mm² bed)
 use <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
+use <lib/gridfinity-rebuilt/src/core/gridfinity-rebuilt-holes.scad>;
 
 // Grid unit length (mm) from Gridfinity specification
 l_grid = 42;
@@ -19,8 +20,8 @@ module gridfinity_baseplate(grid_x = 1,
         [0, 0],
         0,
         bundle_hole_options(
-            refined_hole = magnet_style == "gridfinity_refine",
-            magnet_hole = include_magnets,
+            refined_hole = include_magnets && magnet_style == "gridfinity_refine",
+            magnet_hole = include_magnets && magnet_style != "gridfinity_refine",
             screw_hole = screw_holes,
             crush_ribs = true,
             chamfer = true,
