@@ -13,12 +13,12 @@ GRIDFINITY_BASEPLATE_HEIGHT = 6  # mm
 GRIDFINITY_UNIT_HEIGHT = 7  # mm per Gridfinity cube unit
 
 GRIDFINITY_LIBRARY_ROOT = (
-    Path(__file__).resolve().parent.parent / "openscad" / "lib" / "gridfinity-rebuilt"
+    Path(__file__).resolve().parents[2] / "openscad" / "lib" / "gridfinity-rebuilt"
 )
 GRIDFINITY_BASEPLATE_SCAD = (
     GRIDFINITY_LIBRARY_ROOT / "gridfinity-rebuilt-baseplate.scad"
 )
-GRIDFINITY_BIN_SCAD = GRIDFINITY_LIBRARY_ROOT / "gridfinity-rebuilt-bin.scad"
+GRIDFINITY_BIN_SCAD = GRIDFINITY_LIBRARY_ROOT / "src" / "core" / "bin.scad"
 
 
 def blocks_for_contributions(count: int) -> int:
@@ -344,6 +344,7 @@ def generate_gridfinity_plate_scad(
     lines = [
         HEADER,
         f"use <{baseplate_include}>;",
+        f"use <{GRIDFINITY_BIN_SCAD.parent.as_posix()}/gridfinity-rebuilt-holes.scad>;",
         f"use <{bin_include}>;",
         "",
         f"grid_pitch = {GRIDFINITY_PITCH};",
@@ -363,8 +364,8 @@ def generate_gridfinity_plate_scad(
         "                        [0, 0],",
         "                        0,",
         "                        bundle_hole_options(",
-        '                            refined_hole = magnet_style == "gridfinity_refine",',
-        "                            magnet_hole = include_magnets,",
+        '                            refined_hole = include_magnets && magnet_style == "gridfinity_refine",',
+        '                            magnet_hole = include_magnets && magnet_style != "gridfinity_refine",',
         "                            screw_hole = screw_holes,",
         "                            crush_ribs = true,",
         "                            chamfer = true,",
@@ -375,11 +376,11 @@ def generate_gridfinity_plate_scad(
         "}",
         "",
         "module contribution_stack(levels) {",
-        "    for (level = [0:levels-1]) {",
+        "    if (levels > 0) for (level = [0:levels-1]) {",
         "        translate([0, 0, baseplate_height + level * cube_unit])",
-        "            bin(ux = 1, uy = 1, uh = 1,",
-        '                walls = 1.2, floor = 1.6, lid = "none",',
-        "                magnet_pockets = false, stackable = true);",
+        "            bin_render(new_bin(grid_size = [1, 1],",
+        "                               height_mm = cube_unit,",
+        "                               fill_height = 0, include_lip = true));",
         "    }",
         "}",
         "",
@@ -435,16 +436,15 @@ def generate_contrib_cube_stack_scad(levels: int) -> str:
         f"use <{bin_include}>;",
         "",
         "module contribution_cube() {",
-        "    bin(",
-        "        ux = 1, uy = 1, uh = 1,",
-        '        walls = 1.2, floor = 1.6, lid = "none",',
-        "        magnet_pockets = false, stackable = true);",
+        "    bin_render(new_bin(grid_size = [1, 1],",
+        f"                       height_mm = {GRIDFINITY_UNIT_HEIGHT},",
+        "                       fill_height = 0, include_lip = true));",
         "}",
         "",
         f"unit_height = {GRIDFINITY_UNIT_HEIGHT};",
         "",
         "module contribution_stack(levels) {",
-        "    for (level = [0:levels-1]) {",
+        "    if (levels > 0) for (level = [0:levels-1]) {",
         "        translate([0, 0, level * unit_height]) contribution_cube();",
         "    }",
         "}",

@@ -25,3 +25,25 @@ jobs:
           files: ./coverage.xml
           flags: python
           fail_ci_if_error: true
+
+  gridfinity:
+    runs-on: ubuntu-latest
+    container:
+      # Official development image, pinned to its linux/amd64 manifest.
+      image: openscad/openscad:dev@sha256:3cb3f6347bdb64736d1bba690cffc2a33c8e3fd28780304fe5637569cade9853
+    steps:
+      - name: Install rendering test dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends git xvfb xauth python3-pytest python3-requests
+          openscad --version
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Gridfinity library
+        run: |
+          rm -rf openscad/lib/gridfinity-rebuilt
+          git clone https://github.com/kennetek/gridfinity-rebuilt-openscad.git openscad/lib/gridfinity-rebuilt
+          git -C openscad/lib/gridfinity-rebuilt checkout --detach 910e22d8607fd7f5f51ad5e5cbc5287a76810bfd
+      - name: Render generated and static regression models
+        env:
+          GRIDFINITY_RENDER_TESTS: '1'
+        run: python3 -m pytest -q tests/test_gridfinity_integration.py

@@ -8,8 +8,9 @@ def gridfinity_library(monkeypatch, tmp_path):
     """Provide temporary Gridfinity library files for tests."""
 
     baseplate = tmp_path / "gridfinity-rebuilt-baseplate.scad"
-    bin_file = tmp_path / "gridfinity-rebuilt-bin.scad"
+    bin_file = tmp_path / "src" / "core" / "bin.scad"
     baseplate.write_text("// gridfinity baseplate")
+    bin_file.parent.mkdir(parents=True)
     bin_file.write_text("// gridfinity bin")
     monkeypatch.setattr(
         scad_module, "GRIDFINITY_BASEPLATE_SCAD", baseplate, raising=False

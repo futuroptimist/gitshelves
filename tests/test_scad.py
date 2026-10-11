@@ -33,6 +33,12 @@ def _assert_snapshot(scad_text: str, name: str) -> None:
 def _normalise_gridfinity_paths(scad_text: str) -> str:
     baseplate = scad_module.GRIDFINITY_BASEPLATE_SCAD.as_posix()
     bin_path = scad_module.GRIDFINITY_BIN_SCAD.as_posix()
+    scad_text = scad_text.replace(
+        (
+            scad_module.GRIDFINITY_BIN_SCAD.parent / "gridfinity-rebuilt-holes.scad"
+        ).as_posix(),
+        "<GRIDFINITY_HOLES>",
+    )
     return scad_text.replace(baseplate, "<GRIDFINITY_BASEPLATE>").replace(
         bin_path, "<GRIDFINITY_BIN>"
     )

@@ -2,16 +2,15 @@
 use <<GRIDFINITY_BIN>>;
 
 module contribution_cube() {
-    bin(
-        ux = 1, uy = 1, uh = 1,
-        walls = 1.2, floor = 1.6, lid = "none",
-        magnet_pockets = false, stackable = true);
+    bin_render(new_bin(grid_size = [1, 1],
+                       height_mm = 7,
+                       fill_height = 0, include_lip = true));
 }
 
 unit_height = 7;
 
 module contribution_stack(levels) {
-    for (level = [0:levels-1]) {
+    if (levels > 0) for (level = [0:levels-1]) {
         translate([0, 0, level * unit_height]) contribution_cube();
     }
 }
