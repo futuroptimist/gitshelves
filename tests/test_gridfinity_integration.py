@@ -41,7 +41,8 @@ def test_packaged_baseplates_have_explicit_hole_api():
 @pytest.mark.parametrize(
     "model", ["cube", "stack", "baseplate", "assembly", "zero", "packaged", "longplate"]
 )
-def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_height):
+def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_mesh):
+    canonical_cube_height, canonical_signature = canonical_cube_mesh
     executable = os.environ.get("OPENSCAD", "openscad")
     executable = shutil.which(executable)
     assert executable, "OpenSCAD is required for integration tests"
@@ -94,6 +95,8 @@ def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_height):
     lower = [min(point[axis] for point in points) for axis in range(3)]
     upper = [max(point[axis] for point in points) for axis in range(3)]
     spans = [high - low for high, low in zip(upper, lower)]
+    if model == "cube":
+        assert _triangle_signature(data) == canonical_signature
     if model in ("cube", "stack"):
         assert spans == pytest.approx(
             [41.5, 41.5, canonical_cube_height + (14 if model == "stack" else 0)],
@@ -112,7 +115,7 @@ def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_height):
 
 
 @pytest.fixture(scope="module")
-def canonical_cube_height(tmp_path_factory):
+def canonical_cube_mesh(tmp_path_factory):
     """Compare with the canonical model under the same renderer/tessellation."""
     executable = shutil.which(os.environ.get("OPENSCAD", "openscad"))
     assert executable
@@ -141,4 +144,19 @@ def canonical_cube_height(tmp_path_factory):
     ]
     height = max(heights) - min(heights)
     assert 10.4 < height < 10.6
-    return height
+    return height, _triangle_signature(data)
+
+
+def _triangle_signature(data):
+    """Ignore STL header/facet ordering while preserving every mesh triangle."""
+    triangles = []
+    for offset in range(84, len(data), 50):
+        vertices = [
+            tuple(
+                round(value, 5)
+                for value in struct.unpack_from("<3f", data, offset + 12 + 12 * vertex)
+            )
+            for vertex in range(3)
+        ]
+        triangles.append(tuple(sorted(vertices)))
+    return sorted(triangles)

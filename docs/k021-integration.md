@@ -35,7 +35,8 @@ OpenSCAD 2021.01 independently exported the corrected static assembly at
 380 × 128 × 6 mm (7076 triangles). Its generated cube measured
 41.5 × 41.5 × 10.547409 mm; tessellation changes the lip extremum. The regression
 suite compares cube/stack heights against the canonical cube exported by the
-same renderer and checks the exact 7 mm stacking increment. The CI assembly
+same renderer, compares the complete normalized triangle signature for a single
+cube (including internal geometry), and checks the exact 7 mm stacking increment. The CI assembly
 fixture uses one occupied month to bound legacy CGAL render cost; the full
 twelve-month measurements above use the 2026 renderer.
 
