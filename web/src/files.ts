@@ -4,6 +4,8 @@ export type LocalStl = {
   type: ComponentType;
   colorGroup: number;
   bytes: Uint8Array;
+  // Only the bundled centered 2x6 base needs the browser's display offset.
+  canonicalBase?: boolean;
 };
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import * as THREE from "three";

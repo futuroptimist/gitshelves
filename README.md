@@ -352,5 +352,7 @@ and compatible OpenSCAD installed, run
 `GRIDFINITY_RENDER_TESTS=1 python -m pytest -q tests/test_gridfinity_integration.py`.
 Set `OPENSCAD` to select another executable. See the
 [K-021 measurement report](docs/k021-integration.md) for exported assembly bounds
-and the outstanding placement correction: the current full 2x6 assembly exceeds
-the A1 bed despite its 42 mm standard grid pitch.
+after the XY placement correction: the static baseplate plus border measures
+256 × 88 × 6 mm, while the generated bare plate spans 252 × 84 mm. These are
+distinct from the historical 380 × 128 × 6 mm static assembly. The static width
+leaves no spare width on a 256 mm bed; physical fit and seating remain unverified.

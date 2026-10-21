@@ -61,8 +61,10 @@ Mathematically `floor(log10(count)) + 1` cubes are stacked for any count ≥ 1 (
 - Run `GRIDFINITY_RENDER_TESTS=1 python -m pytest -q tests/test_gridfinity_integration.py`
   with a development OpenSCAD build installed. The CI job pins the official
   development image by digest; 2021.01 is not a reliable bin renderer. `OPENSCAD` can select a specific executable; Linux
-  headless runs also require `xvfb-run`.
+  headless integration tests use `xvfb-run` by default, or
+  `QT_QPA_PLATFORM=offscreen` with a compatible development renderer.
 - The real-render tests reject OpenSCAD warnings and errors and verify exported
   mesh geometry. String snapshots alone cannot establish library compatibility.
-- See `docs/k021-integration.md` for measured bounds and the separate placement
-  proposal. Integration success does not establish A1 fit or physical calibration.
+- See `docs/k021-integration.md` for measured before/after bounds and the
+  implemented XY placement correction. Integration success does not establish
+  A1 fit or physical calibration.

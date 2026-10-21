@@ -4,6 +4,14 @@ import type { Dataset } from "./domain";
 import { parseStlGeometry, type LocalStl } from "./files";
 import { moduleTransform } from "./transforms";
 const COLORS = [0x263238, 0x39d98a, 0x36c5d0, 0x158f78, 0x8fffd0];
+export function baseDisplayGeometry(file: LocalStl): THREE.BufferGeometry {
+  const geometry = parseStlGeometry(file.bytes);
+  // Canonical CAD is centered; the existing proxy/module display frame is not.
+  // Local imports retain their authored coordinates and downloads retain bytes.
+  if (file.type === "base" && file.canonicalBase)
+    geometry.translate(126, 42, 0);
+  return geometry;
+}
 export type BundleAnalysis = {
   exactBase: boolean;
   proxyBase: boolean;
@@ -165,7 +173,7 @@ export class ProductScene {
   ) {
     const base = files.find((file) => file.type === "base");
     const module = files.find((file) => file.type === "module");
-    if (base) this.addMesh(base, parseStlGeometry(base.bytes));
+    if (base) this.addMesh(base, baseDisplayGeometry(base));
     if (module && analysis.exactModule) {
       const geometry = parseStlGeometry(module.bytes);
       const plan = exactInstancePlan(dataset, exploded, visible);

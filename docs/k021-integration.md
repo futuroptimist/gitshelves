@@ -59,6 +59,11 @@ pitch, 7 mm stacking increment, 2 mm border padding, bin geometry and all
 vertical dimensions are unchanged. The standalone cube and 1×12 template
 are unchanged; generated layouts do not acquire the static border ring.
 
+The browser translates only its bundled canonical base by `[126, 42, 0]`
+for display, matching the unchanged proxy base and cube-instance frame.
+Imported meshes retain their authored coordinates. The display translation
+does not change STL/download bytes, camera behavior or any vertical placement.
+
 These are fresh binary-STL measurements, not calculated target bounds:
 
 | Model | Minimum XYZ (mm) | Maximum XYZ (mm) | Span XYZ (mm) | Triangles |
