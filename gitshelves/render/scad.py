@@ -400,8 +400,9 @@ def generate_gridfinity_plate_scad(
     for idx, (month, count) in enumerate(months):
         col = idx % columns
         row = idx // columns
-        x = col * GRIDFINITY_PITCH
-        y = row * GRIDFINITY_PITCH
+        # Upstream centers both the plate and each cell around the origin.
+        x = col * GRIDFINITY_PITCH - (columns - 1) * GRIDFINITY_PITCH // 2
+        y = row * GRIDFINITY_PITCH - (rows - 1) * GRIDFINITY_PITCH // 2
         levels = blocks_for_contributions(count)
         if levels == 0:
             lines.append(
