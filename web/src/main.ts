@@ -161,7 +161,13 @@ async function loadCanonical() {
       const bytes = new Uint8Array(await response.arrayBuffer());
       parseStlGeometry(bytes).dispose();
       const type = id === "base" ? "base" : "module";
-      loaded.push({ name: url.split("/").pop()!, type, colorGroup: 0, bytes });
+      loaded.push({
+        name: url.split("/").pop()!,
+        type,
+        colorGroup: 0,
+        bytes,
+        canonicalBase: type === "base",
+      });
       const button = document.querySelector<HTMLButtonElement>(`#${id}`)!;
       button.disabled = false;
       button.addEventListener("click", () =>

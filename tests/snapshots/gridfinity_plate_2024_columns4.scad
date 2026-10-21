@@ -51,16 +51,16 @@ union() {
                          magnet_style = "gridfinity_refine",
                          magnets_corners_only = false,
                          screw_holes = false);
-    translate([0, 0, 0]) contribution_stack(2); // 2024-01 (12 contributions)
-    // 2024-02 (0 contributions) reserved at [42, 0]
-    translate([84, 0, 0]) contribution_stack(2); // 2024-03 (98 contributions)
-    translate([126, 0, 0]) contribution_stack(3); // 2024-04 (125 contributions)
-    translate([0, 42, 0]) contribution_stack(1); // 2024-05 (7 contributions)
-    // 2024-06 (0 contributions) reserved at [42, 42]
-    translate([84, 42, 0]) contribution_stack(3); // 2024-07 (234 contributions)
-    // 2024-08 (0 contributions) reserved at [126, 42]
-    translate([0, 84, 0]) contribution_stack(1); // 2024-09 (5 contributions)
-    // 2024-10 (0 contributions) reserved at [42, 84]
-    // 2024-11 (0 contributions) reserved at [84, 84]
-    translate([126, 84, 0]) contribution_stack(2); // 2024-12 (67 contributions)
+    translate([-63, -42, 0]) contribution_stack(2); // 2024-01 (12 contributions)
+    // 2024-02 (0 contributions) reserved at [-21, -42]
+    translate([21, -42, 0]) contribution_stack(2); // 2024-03 (98 contributions)
+    translate([63, -42, 0]) contribution_stack(3); // 2024-04 (125 contributions)
+    translate([-63, 0, 0]) contribution_stack(1); // 2024-05 (7 contributions)
+    // 2024-06 (0 contributions) reserved at [-21, 0]
+    translate([21, 0, 0]) contribution_stack(3); // 2024-07 (234 contributions)
+    // 2024-08 (0 contributions) reserved at [63, 0]
+    translate([-63, 42, 0]) contribution_stack(1); // 2024-09 (5 contributions)
+    // 2024-10 (0 contributions) reserved at [-21, 42]
+    // 2024-11 (0 contributions) reserved at [21, 42]
+    translate([63, 42, 0]) contribution_stack(2); // 2024-12 (67 contributions)
 }

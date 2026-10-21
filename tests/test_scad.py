@@ -571,15 +571,15 @@ def test_generate_gridfinity_plate_scad_positions(gridfinity_library):
     assert "gridfinity_baseplate" in scad
     assert "module contribution_stack" in scad
     assert (
-        "translate([0, 0, 0]) contribution_stack(1); // 2024-01 (1 contributions)"
+        "translate([-105, -21, 0]) contribution_stack(1); // 2024-01 (1 contributions)"
         in scad
     )
     assert (
-        "translate([42, 0, 0]) contribution_stack(2); // 2024-02 (10 contributions)"
+        "translate([-63, -21, 0]) contribution_stack(2); // 2024-02 (10 contributions)"
         in scad
     )
     assert (
-        "translate([0, 42, 0]) contribution_stack(3); // 2024-07 (100 contributions)"
+        "translate([-105, 21, 0]) contribution_stack(3); // 2024-07 (100 contributions)"
         in scad
     )
 
@@ -589,8 +589,8 @@ def test_generate_gridfinity_plate_scad_marks_zero_contribution_months(
 ):
     counts = {(2024, month): 0 for month in range(1, 13)}
     scad = generate_gridfinity_plate_scad(counts, 2024)
-    assert "// 2024-01 (0 contributions) reserved at [0, 0]" in scad
-    assert "// 2024-07 (0 contributions) reserved at [0, 42]" in scad
+    assert "// 2024-01 (0 contributions) reserved at [-105, -21]" in scad
+    assert "// 2024-07 (0 contributions) reserved at [-105, 21]" in scad
 
 
 def test_generate_gridfinity_plate_scad_respects_custom_columns(gridfinity_library):
@@ -598,6 +598,26 @@ def test_generate_gridfinity_plate_scad_respects_custom_columns(gridfinity_libra
     scad = generate_gridfinity_plate_scad(counts, 2025, columns=3)
     assert "grid_x = 3;" in scad
     assert "grid_y = 4;" in scad
+
+
+@pytest.mark.parametrize("columns", [1, 3, 4, 5, 6, 12, 13])
+def test_gridfinity_centers_every_month_without_changing_pitch_or_height(
+    gridfinity_library, columns
+):
+    rows = (12 + columns - 1) // columns
+    counts = {(2024, month): 1 for month in range(1, 13)}
+    rendered = generate_gridfinity_plate_scad(counts, 2024, columns=columns)
+    for index in range(12):
+        x = (2 * (index % columns) - columns + 1) * 21
+        y = (2 * (index // columns) - rows + 1) * 21
+        assert (
+            f"translate([{x}, {y}, 0]) contribution_stack(1); "
+            f"// 2024-{index + 1:02} (1 contributions)"
+        ) in rendered
+    assert "grid_pitch = 42;" in rendered
+    assert "baseplate_height = 6;" in rendered
+    assert "cube_unit = 7;" in rendered
+    assert "translate([0, 0, baseplate_height + level * cube_unit])" in rendered
 
 
 def test_generate_gridfinity_plate_scad_requires_positive_columns():

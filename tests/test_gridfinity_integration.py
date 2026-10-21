@@ -34,12 +34,70 @@ def test_packaged_baseplates_have_explicit_hole_api():
             )
 
 
+def test_packaged_2x6_matches_canonical_source():
+    assert (ROOT / "openscad/baseplate_2x6.scad").read_bytes() == (
+        ROOT / "gitshelves/data/baseplate_2x6.scad"
+    ).read_bytes()
+
+
+def _assert_real_grid(points, columns=6, rows=2):
+    """Require interior plate vertices in every cell, not just an outer ring.
+
+    Bins start at Z=6 and cannot satisfy this plate-only check. Ring vertices
+    lie on the outer plate boundary, outside the strict cell interiors.
+    """
+    for row in range(rows):
+        for col in range(columns):
+            x = (2 * col - columns + 1) * 21
+            y = (2 * row - rows + 1) * 21
+            assert any(
+                abs(px - x) < 20.9 and abs(py - y) < 20.9 and 0 <= pz <= 5.002
+                for px, py, pz in points
+            ), f"Missing interior baseplate geometry in cell ({col}, {row})"
+
+
+def test_grid_guard_rejects_correctly_sized_border_only():
+    points = [
+        (x, y, z)
+        for width, depth in [(128, 44), (126, 42)]
+        for x in [-width, width]
+        for y in [-depth, depth]
+        for z in [0, 6]
+    ]
+    with pytest.raises(AssertionError, match="Missing interior baseplate geometry"):
+        _assert_real_grid(points)
+
+
+def _render_command(executable, output, source):
+    command = [executable, "-o", str(output), "--export-format", "binstl", str(source)]
+    if (
+        os.name != "nt"
+        and not os.environ.get("DISPLAY")
+        and os.environ.get("QT_QPA_PLATFORM") != "offscreen"
+    ):
+        command = ["xvfb-run", "-a"] + command
+    return command
+
+
 @pytest.mark.skipif(
     os.environ.get("GRIDFINITY_RENDER_TESTS") != "1",
     reason="Set GRIDFINITY_RENDER_TESTS=1 with the pinned library and OpenSCAD installed",
 )
 @pytest.mark.parametrize(
-    "model", ["cube", "stack", "baseplate", "assembly", "zero", "packaged", "longplate"]
+    "model",
+    [
+        "cube",
+        "stack",
+        "baseplate",
+        "assembly",
+        "assembly_first",
+        "assembly_full",
+        "assembly_empty",
+        "assembly_custom",
+        "zero",
+        "packaged",
+        "longplate",
+    ],
 )
 def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_mesh):
     canonical_cube_height, canonical_signature = canonical_cube_mesh
@@ -49,6 +107,14 @@ def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_mesh):
     assert scad.GRIDFINITY_BIN_SCAD.is_file(), "Fetch the pinned library first"
     output = tmp_path / f"{model}.stl"
     source = tmp_path / f"{model}.scad"
+    columns, rows = (5, 3) if model == "assembly_custom" else (6, 2)
+    occupied_months = {
+        "assembly": [12],
+        "assembly_first": [1],
+        "assembly_full": list(range(1, 13)),
+        "assembly_empty": [],
+        "assembly_custom": [1, 12],
+    }.get(model, [])
     if model == "baseplate":
         source = ROOT / "openscad/baseplate_2x6.scad"
     elif model in ("packaged", "longplate"):
@@ -60,9 +126,11 @@ def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_mesh):
             ),
             encoding="utf-8",
         )
-    elif model == "assembly":
+    elif model.startswith("assembly"):
         source.write_text(
-            scad.generate_gridfinity_plate_scad({(2024, 12): 1}, 2024),
+            scad.generate_gridfinity_plate_scad(
+                {(2024, month): 1 for month in occupied_months}, 2024, columns=columns
+            ),
             encoding="utf-8",
         )
     else:
@@ -72,9 +140,7 @@ def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_mesh):
             ),
             encoding="utf-8",
         )
-    command = [executable, "-o", str(output), "--export-format", "binstl", str(source)]
-    if os.name != "nt" and not os.environ.get("DISPLAY"):
-        command = ["xvfb-run", "-a"] + command
+    command = _render_command(executable, output, source)
     result = subprocess.run(command, capture_output=True, text=True, timeout=300)
     diagnostic = result.stdout + result.stderr
     assert "WARNING:" not in diagnostic, diagnostic
@@ -105,13 +171,36 @@ def test_pinned_gridfinity_exports(tmp_path, model, canonical_cube_mesh):
     elif model == "longplate":
         assert spans[:2] == pytest.approx([504, 42], abs=0.002)
     else:
-        # A border-only result starts at x >= -2 and must not pass.
-        # Check real grid geometry exists without approving its current placement.
-        assert lower[:2] == pytest.approx([-126, -42], abs=0.002)
-        if model == "assembly":
-            assert upper[2] == pytest.approx(6 + canonical_cube_height, abs=0.002)
+        _assert_real_grid(points, columns, rows)
+        assert lower[2] == pytest.approx(0, abs=0.002)
+        if model.startswith("assembly"):
+            # Generated layouts have a bare plate, not the static border ring.
+            assert lower[:2] == pytest.approx([-columns * 21, -rows * 21], abs=0.002)
+            assert upper[:2] == pytest.approx([columns * 21, rows * 21], abs=0.002)
+            expected_height = 6 + canonical_cube_height if occupied_months else 5
+            assert upper[2] == pytest.approx(expected_height, abs=0.002)
+            for month in occupied_months:
+                x = (2 * ((month - 1) % columns) - columns + 1) * 21
+                y = (2 * ((month - 1) // columns) - rows + 1) * 21
+                bin_points = [
+                    point
+                    for point in points
+                    if point[2] >= 6
+                    and abs(point[0] - x) < 21
+                    and abs(point[1] - y) < 21
+                ]
+                assert bin_points, f"Missing bin for month {month}"
+                for axis, center in enumerate([x, y]):
+                    assert min(p[axis] for p in bin_points) == pytest.approx(
+                        center - 20.75, abs=0.002
+                    )
+                    assert max(p[axis] for p in bin_points) == pytest.approx(
+                        center + 20.75, abs=0.002
+                    )
         else:
-            assert spans[2] == pytest.approx(6, abs=0.002)
+            assert lower == pytest.approx([-128, -44, 0], abs=0.002)
+            assert upper == pytest.approx([128, 44, 6], abs=0.002)
+            assert spans == pytest.approx([256, 88, 6], abs=0.002)
 
 
 @pytest.fixture(scope="module")
@@ -120,16 +209,7 @@ def canonical_cube_mesh(tmp_path_factory):
     executable = shutil.which(os.environ.get("OPENSCAD", "openscad"))
     assert executable
     output = tmp_path_factory.mktemp("canonical") / "cube.stl"
-    command = [
-        executable,
-        "-o",
-        str(output),
-        "--export-format",
-        "binstl",
-        str(ROOT / "openscad/contrib_cube.scad"),
-    ]
-    if os.name != "nt" and not os.environ.get("DISPLAY"):
-        command = ["xvfb-run", "-a"] + command
+    command = _render_command(executable, output, ROOT / "openscad/contrib_cube.scad")
     result = subprocess.run(command, capture_output=True, text=True, timeout=300)
     diagnostic = result.stdout + result.stderr
     assert result.returncode == 0, diagnostic

@@ -48,21 +48,60 @@ is adequate integration validation. The regression suite rejects warnings/errors
 checks generated cube sizes, stacking and empty stacks, and verifies that the
 baseplate contains actual grid geometry rather than only a border.
 
-## Separate placement proposal — not implemented
+## Horizontal placement correction — 2026-10-21
 
-The library centers the baseplate at the origin. The border currently starts
-at `[-2, -2]`, so the complete assembly exceeds the Bambu A1's 256 mm bed width.
-A separate correction would start the border at
-`[-grid_x * 42 / 2 - padding, -grid_y * 42 / 2 - padding]` (here `[-128, -44]`).
-The intended resulting outer envelope is 256 × 88 mm; it must be re-exported
-and measured after that separately approved change.
+The separately approved XY-only correction starts the static and packaged
+border at `[-grid_x * 42 / 2 - padding, -grid_y * 42 / 2 - padding]`
+(here `[-128, -44]`), matching the centered upstream plate. Generated bin
+centers now include `[-(columns - 1) * 21, -(rows - 1) * 21]`.
+Zero-contribution annotations use the same centered coordinates. The 42 mm
+pitch, 7 mm stacking increment, 2 mm border padding, bin geometry and all
+vertical dimensions are unchanged. The standalone cube and 1×12 template
+are unchanged; generated layouts do not acquire the static border ring.
 
-Generated bins currently start at `[0, 0]` and extend beyond the centered plate.
-A separate placement correction would offset cell centers by
-`[-(columns - 1) * 21, -(rows - 1) * 21]`, preserving the standard 42 mm pitch.
-Vertical seating and the existing 6 mm assembly offset also need a fit audit;
-the upstream baseplate reports 5 mm height. This PR does not change that offset,
-scale parts, claim physical calibration, or authorize printing.
+The browser translates only its bundled canonical base by `[126, 42, 0]`
+for display, matching the unchanged proxy base and cube-instance frame.
+Imported meshes retain their authored coordinates. The display translation
+does not change STL/download bytes, camera behavior or any vertical placement.
+
+These are fresh binary-STL measurements, not calculated target bounds:
+
+| Model | Minimum XYZ (mm) | Maximum XYZ (mm) | Span XYZ (mm) | Triangles |
+| --- | --- | --- | --- | --- |
+| Corrected static 2×6 baseplate plus border | -128, -44, 0 | 128, 44, 6 | 256 × 88 × 6 | 2652 |
+| Corrected packaged 2×6 baseplate plus border | -128, -44, 0 | 128, 44, 6 | 256 × 88 × 6 | 2652 |
+| Generated 6-column assembly, all 12 months at one level | -126, -42, 0 | 126, 42, 16.482533 | 252 × 84 × 16.482533 | 7404 |
+| Generated 6-column empty plate | -126, -42, 0 | 126, 42, 5 | 252 × 84 × 5 | 2604 |
+| Generated 5-column assembly, months 1 and 12 at one level | -105, -63, 0 | 105, 63, 16.482533 | 210 × 126 × 16.482533 | 4016 |
+
+The before/after comparison used main
+`c6eb8552b508500e865d8a402735cf6d7180b618` and the same pinned library and
+renderer. Before correction, the full static baseplate-plus-border still
+measured 380 × 128 × 6 mm, and the generated full assembly measured
+356.75 × 104.75 × 16.482533 mm. The historical measurements above remain
+valid for that old placement, not the corrected models.
+
+Renderer: official Linux x86-64 OpenSCAD 2026.10.05 AppImage, default Manifold
+backend, SHA256
+`388c33da0848e54ec0b46b8e1e4ed05d83bd79865188db9ceba5ea5efdf619f3`.
+Its checksum matched the official download. This run used Qt's offscreen
+platform without Xvfb or a display server. The static and packaged corrected
+plates were byte-identical, SHA256
+`7e4445a2b175fd51f51f0eaac33ef435c9c65ca073ca12f53e000e9afb293f11`.
+The canonical/generated single-cube hash remained
+`a1da011e2576a9d9e6e961c0e31c28358d47f00601a9f2e5936de0199bf17f68`.
+
+The real-render suite rejects warnings/errors, checks exact centered extrema,
+and requires interior plate geometry in every cell so a correctly sized hollow
+border cannot pass. First/last-month, full, empty and non-divisor-column layouts
+are rendered; unit tests also cover odd/even and single-row/column layouts.
+Canonical triangle matching and same-renderer cube/stack height checks remain.
+
+**This is not print-ready or physical-fit acceptance.** The 256 mm static width
+still has zero spare width on a 256 mm bed. The unchanged 6 mm bin offset sits
+above a 5 mm plate and still needs a separate seating/fit audit. Neither the
+new measurements nor a green regression suite authorizes printing or proves
+that physical parts mate correctly.
 
 ## Reproduce
 
@@ -73,7 +112,9 @@ GRIDFINITY_RENDER_TESTS=1 python -m pytest -q tests/test_gridfinity_integration.
 ```
 
 `OPENSCAD` selects an executable; on Windows select `openscad.com` rather than
-the GUI executable. Headless Linux uses `xvfb-run`. The dedicated CI job runs
+the GUI executable. Headless Linux uses `xvfb-run` by default. With a compatible
+development renderer, setting `QT_QPA_PLATFORM=offscreen` instead selects the
+verified non-GUI export route without Xvfb. The dedicated CI job runs
 these real exports in addition to the normal unit suite, using the official
 `openscad/openscad:dev` linux/amd64 image pinned at
 `sha256:3cb3f6347bdb64736d1bba690cffc2a33c8e3fd28780304fe5637569cade9853`.

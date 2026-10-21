@@ -1,4 +1,4 @@
-// Gridfinity 2×6 baseplate for Bambu Lab A1 (fits 256 mm² bed)
+// Gridfinity 2×6 baseplate: 256 × 88 mm outline, not physical-fit approval
 use <lib/gridfinity-rebuilt/gridfinity-rebuilt-baseplate.scad>;
 use <lib/gridfinity-rebuilt/src/core/gridfinity-rebuilt-holes.scad>;
 
@@ -34,9 +34,9 @@ module gridfinity_baseplate(grid_x = 1,
 
 grid_x = 6;
 grid_y = 2;
-u_height = 6; // keep stock 6-U thickness
+u_height = 6; // preserve the existing 6 mm border height
 
-// Extra padding fits the 252 mm×84 mm grid into the A1's 256 mm square bed
+// Preserve 2 mm padding; the resulting 256 mm width has no spare bed margin.
 padding = (256 - grid_x * l_grid) / 2;
 
 union() {
@@ -49,7 +49,8 @@ union() {
                          screw_holes = false);
 
     // border ring providing extra bed adhesion
-    translate([-padding, -padding, 0])
+    translate([-grid_x * l_grid / 2 - padding,
+               -grid_y * l_grid / 2 - padding, 0])
         linear_extrude(height = u_height)
             difference() {
                 square([grid_x * l_grid + 2 * padding,
