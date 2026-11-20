@@ -9,6 +9,8 @@ For setup and usage details, see the [README](../README.md).
   ownership boundaries.
 - [Roadmap](roadmap.md) separates this static browser/release MVP from physical
   calibration, authenticated retrieval, isolated generation, staging, and production.
+- [GitHub sign-in design proposal](github-sign-in-design.md) covers optional identity,
+  token handling, threat review, and activation gates. It is not implemented.
 - [Release guide](releasing.md) covers immutable GHCR images and OCI Helm charts.
 
 Run the local browser app with `cd web && npm ci && npm run dev`. It starts with synthetic
