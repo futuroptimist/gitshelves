@@ -32,7 +32,10 @@ are separate owner actions; the artifact alone is not a published Site.
 
 Static hosting does not execute `web/server.py`: the container's `/healthz`,
 `/livez`, `/api/github-activity` and Python cache-header behavior remain container
-features. Verify the
-chosen static host's response headers during owner deployment. No Worker is
-needed for the browser MVP. Smoke-test `/`, both model URLs, orbit/explode
+features. The public commit lookup uses a separate, time-bounded worker with
+no inherited environment. The runtime needs direct HTTPS egress to
+`api.github.com` with the image's system trust store; it does not use ambient
+proxy or credential configuration. Verify the chosen static host's response
+headers during owner deployment. No Worker is needed for the browser MVP.
+Smoke-test `/`, both model URLs, orbit/explode
 controls, local imports and both STL downloads before sharing the Site URL.

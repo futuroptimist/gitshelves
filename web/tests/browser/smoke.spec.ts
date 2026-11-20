@@ -125,7 +125,25 @@ test("uses the centered username form and puts returned counts into the shelf", 
   expect(
     Math.abs(bounds!.x + bounds!.width / 2 - page.viewportSize()!.width / 2),
   ).toBeLessThan(3);
+  const canvasFitsScene = () =>
+    page.locator("#scene > canvas").evaluate((element) => {
+      const canvas = element as HTMLCanvasElement;
+      const host = canvas.parentElement!.getBoundingClientRect();
+      const bounds = canvas.getBoundingClientRect();
+      const withinPixel = (a: number, b: number) => Math.abs(a - b) <= 1;
+      const ratio = Math.min(devicePixelRatio, 2);
+      return (
+        withinPixel(bounds.x, host.x) &&
+        withinPixel(bounds.y, host.y) &&
+        withinPixel(bounds.width, host.width) &&
+        withinPixel(bounds.height, host.height) &&
+        withinPixel(canvas.width, canvas.clientWidth * ratio) &&
+        withinPixel(canvas.height, canvas.clientHeight * ratio)
+      );
+    });
+  await expect.poll(canvasFitsScene).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(canvasFitsScene).toBe(true);
   const mobileForm = await form.boundingBox();
   const model = await page.locator("#scene").boundingBox();
   const controls = await page.getByRole("complementary").boundingBox();
@@ -136,6 +154,8 @@ test("uses the centered username form and puts returned counts into the shelf", 
   expect(mobileForm!.y + mobileForm!.height).toBeLessThanOrEqual(model!.y);
   expect(model!.y + model!.height).toBeLessThanOrEqual(controls!.y);
   await expect(form.getByRole("status")).toContainText("24 public commits");
+  await page.setViewportSize({ width: 1536, height: 920 });
+  await expect.poll(canvasFitsScene).toBe(true);
   await page.getByRole("button", { name: "Clear activity" }).click();
   await expect(input).toHaveValue("");
   await expect(page.getByText("Synthetic sample")).toBeVisible();

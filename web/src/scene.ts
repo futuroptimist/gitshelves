@@ -106,7 +106,7 @@ export class ProductScene {
       powerPreference: "high-performance",
     });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    this.renderer.setSize(host.clientWidth, host.clientHeight);
+    this.renderer.setSize(host.clientWidth, host.clientHeight, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     host.append(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);

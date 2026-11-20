@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 from http.client import HTTPException
 import json
 import re
+import subprocess
+import sys
 from threading import Lock
 from time import monotonic
 from urllib.error import HTTPError, URLError
@@ -69,11 +71,19 @@ def normalize_login(value):
     return login.lower()
 
 
-def search_request(login, start):
+def utc_seconds(instant):
+    return instant.isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def search_request(login, now):
+    start = (now - timedelta(days=DAYS - 1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    interval = f"{utc_seconds(start)}..{utc_seconds(now)}"
     # Only a validated username can enter the fixed search qualifier.
     query = urlencode(
         {
-            "q": f"author:{login} author-date:>={start.isoformat()}",
+            "q": f"author:{login} author-date:{interval}",
             "sort": "author-date",
             "order": "desc",
             "per_page": SAMPLE_LIMIT,
@@ -171,9 +181,75 @@ def summarize(data, login, now):
     }
 
 
+def fetch_activity(login, now, open_url):
+    return summarize(read_search(search_request(login, now), open_url), login, now)
+
+
+def run_lookup_worker(request):
+    """Bound the complete lookup, not just socket inactivity.
+
+    The handler holds an upstream slot until the child has been reaped, so
+    DNS, TLS, headers, and body reads cannot leave a live worker behind.
+    The fixed helper emits only a bounded summarized result, not upstream data.
+    """
+    deadline = monotonic() + REQUEST_TIMEOUT
+    try:
+        with subprocess.Popen(
+            [sys.executable, "-I", __file__],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            env={},
+        ) as worker:
+            try:
+                remaining = deadline - monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(worker.args, REQUEST_TIMEOUT)
+                output, _ = worker.communicate(input=request, timeout=remaining)
+            except subprocess.TimeoutExpired:
+                worker.kill()
+                worker.communicate()
+                raise ActivityError(502, "github_unavailable") from None
+            if worker.returncode != 0 or monotonic() >= deadline:
+                raise ActivityError(502, "github_unavailable")
+        if len(output) > 4096:
+            raise ActivityError(502, "github_unavailable")
+        result = json.loads(output)
+        if not isinstance(result, dict):
+            raise ValueError
+    except (OSError, UnicodeError, ValueError, RecursionError):
+        raise ActivityError(502, "github_unavailable") from None
+    if "error" in result:
+        code = result["error"]
+        if code == "rate_limited":
+            raise ActivityError(429, code)
+        if code == "search_rejected":
+            raise ActivityError(422, code)
+        raise ActivityError(502, "github_unavailable")
+    return result
+
+
 def public_activity(login, *, now=None, open_url=None):
     login = normalize_login(login)
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    start = now.date() - timedelta(days=DAYS - 1)
-    open_url = open_url or build_opener(NoRedirect()).open
-    return summarize(read_search(search_request(login, start), open_url), login, now)
+    if open_url is not None:
+        return fetch_activity(login, now, open_url)
+    # Same instant for query and filtering; no username in child arguments.
+    return run_lookup_worker(f"{login}\n{now.isoformat()}".encode("ascii"))
+
+
+def worker_result(request):
+    try:
+        login, instant = request.decode("ascii").splitlines()
+        now = datetime.fromisoformat(instant).astimezone(timezone.utc)
+        return fetch_activity(
+            normalize_login(login), now, build_opener(NoRedirect()).open
+        )
+    except (UnicodeError, ValueError, OverflowError):
+        return {"error": "github_unavailable"}
+    except ActivityError as error:
+        return {"error": error.code}
+
+
+if __name__ == "__main__":
+    print(json.dumps(worker_result(sys.stdin.buffer.read(128)), separators=(",", ":")))

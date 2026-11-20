@@ -4,6 +4,7 @@ from io import BytesIO
 import json
 from pathlib import Path
 from threading import Thread
+from time import monotonic
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import urlopen
@@ -46,7 +47,10 @@ def test_real_data_shape_maps_thirty_utc_days_without_duplicates(api):
             "/search/commits",
         )
         assert parse_qs(target.query) == {
-            "q": ["author:futuroptimist author-date:>=2026-10-22"],
+            "q": [
+                "author:futuroptimist "
+                "author-date:2026-10-22T00:00:00Z..2026-11-20T00:00:00Z"
+            ],
             "sort": ["author-date"],
             "order": ["desc"],
             "per_page": ["100"],
@@ -162,3 +166,100 @@ def test_deadline_and_truncated_body_are_generic_errors(api, monkeypatch):
             "futuroptimist", open_url=lambda *_a, **_k: BytesIO(b"truncated stream")
         )
     assert error.value.status == 502
+
+
+def test_second_resolution_bounds_future_items_before_sample_limit(api):
+    now = datetime.fromisoformat("2026-11-20T03:08:09.730-08:00")
+    midnight = item("a", "2026-10-21T17:00:00-07:00")
+    latest = item("b", "2026-11-20T03:08:09-08:00")
+    too_old = item("c", "2026-10-21T23:59:59Z")
+    one_second_future = item("d", "2026-11-20T11:08:10Z")
+
+    def upstream(request, *, timeout):
+        query = parse_qs(urlsplit(request.full_url).query)["q"][0]
+        assert query == (
+            "author:futuroptimist "
+            "author-date:2026-10-22T00:00:00Z..2026-11-20T11:08:09Z"
+        )
+        # The provider enforces the range before its descending 100-item cap.
+        # Keep a defensive check against boundary violations in the response.
+        return BytesIO(
+            json.dumps(
+                {
+                    "total_count": 2,
+                    "incomplete_results": False,
+                    "items": [one_second_future, latest, midnight, too_old],
+                }
+            ).encode()
+        )
+
+    result = api.public_activity("futuroptimist", now=now, open_url=upstream)
+    assert result["sampled"] == 2
+    assert result["counts"] == [1, *([0] * 28), 1]
+
+
+@pytest.mark.parametrize(
+    "wire_error, status",
+    [("rate_limited", 429), ("search_rejected", 422), ("sensitive", 502)],
+)
+def test_worker_protocol_sanitizes_errors(
+    api, monkeypatch, tmp_path, wire_error, status
+):
+    script = tmp_path / "worker.py"
+    script.write_text(f'print({json.dumps(json.dumps({"error": wire_error}))})')
+    monkeypatch.setattr(api, "__file__", str(script))
+    with pytest.raises(api.ActivityError) as error:
+        api.public_activity("futuroptimist")
+    assert error.value.status == status
+    assert "sensitive" not in str(error.value)
+
+
+def test_worker_protocol_keeps_identity_and_clock_in_pipe(api, monkeypatch, tmp_path):
+    script = tmp_path / "worker.py"
+    script.write_text(
+        "import json, os, sys\n"
+        "assert len(sys.argv) == 1 and 'PRIVATE_CANARY' not in os.environ\n"
+        "login, clock = sys.stdin.read().splitlines()\n"
+        "assert clock == '2026-11-20T11:08:09.730000+00:00'\n"
+        "print(json.dumps({'username': login, 'start': '2026-10-22',"
+        "'counts': [0]*30, 'sampled': 0, 'limited': False}))\n"
+    )
+    monkeypatch.setattr(api, "__file__", str(script))
+    monkeypatch.setenv("PRIVATE_CANARY", "server-only-test-value")
+    result = api.public_activity(
+        "Futuroptimist", now=datetime.fromisoformat("2026-11-20T03:08:09.730-08:00")
+    )
+    assert result == {
+        "username": "futuroptimist",
+        "start": "2026-10-22",
+        "counts": [0] * 30,
+        "sampled": 0,
+        "limited": False,
+    }
+
+
+def test_parent_deadline_kills_and_reaps_blocked_lookup(api, monkeypatch, tmp_path):
+    import os
+
+    script = tmp_path / "worker.py"
+    ready = tmp_path / "started"
+    script.write_text(
+        "import os, sys, time\n"
+        "from pathlib import Path\n"
+        "assert len(sys.argv) == 1\n"
+        "assert 'PRIVATE_CANARY' not in os.environ\n"
+        "assert sys.stdin.buffer.read().startswith(b'futuroptimist\\n')\n"
+        f"Path({str(ready)!r}).write_text(str(os.getpid()))\n"
+        "time.sleep(10)\n"
+    )
+    monkeypatch.setattr(api, "__file__", str(script))
+    monkeypatch.setattr(api, "REQUEST_TIMEOUT", 0.75)
+    monkeypatch.setenv("PRIVATE_CANARY", "server-only-test-value")
+    started = monotonic()
+    with pytest.raises(api.ActivityError) as error:
+        api.public_activity("futuroptimist")
+    assert str(error.value) == "github_unavailable"
+    assert 0.65 <= monotonic() - started < 3
+    pid = int(ready.read_text())
+    with pytest.raises(ProcessLookupError):
+        os.kill(pid, 0)
