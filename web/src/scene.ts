@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Dataset } from "./domain";
+import type { ActivityDay } from "./githubActivity";
 import { parseStlGeometry, type LocalStl } from "./files";
 import { moduleTransform } from "./transforms";
 const COLORS = [0x263238, 0x39d98a, 0x36c5d0, 0x158f78, 0x8fffd0];
@@ -72,6 +73,19 @@ export function exactInstancePlan(
     })),
   );
 }
+export function dailyInstancePlan(
+  days: ActivityDay[],
+  exploded: boolean,
+  visible: Set<number>,
+) {
+  return days.flatMap((day) =>
+    Array.from({ length: day.blocks }, (_, level) => ({
+      ...moduleTransform(day, level, exploded),
+      group: Math.min(level + 1, 4),
+      visible: visible.has(Math.min(level + 1, 4)),
+    })),
+  );
+}
 export class ProductScene {
   private scene = new THREE.Scene();
   private camera: THREE.OrthographicCamera;
@@ -123,6 +137,24 @@ export class ProductScene {
     this.addExact(dataset, exploded, files, visible, analysis);
     this.fit();
   }
+  showActivity(days: ActivityDay[], exploded: boolean, visible: Set<number>) {
+    this.clear();
+    const tiles = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(38, 38, 6),
+      new THREE.MeshStandardMaterial({ color: COLORS[0], roughness: 0.75 }),
+      days.length,
+    );
+    const matrix = new THREE.Matrix4();
+    days.forEach((day, index) => {
+      tiles.setMatrixAt(
+        index,
+        matrix.makeTranslation(day.x + 21, day.y + 21, 3),
+      );
+    });
+    this.content.add(tiles);
+    this.addProxyCubes(dailyInstancePlan(days, exploded, visible));
+    this.fit();
+  }
   private addProxy(
     dataset: Dataset,
     exploded: boolean,
@@ -145,6 +177,10 @@ export class ProductScene {
     const plan = exactInstancePlan(dataset, exploded, visible).filter((item) =>
       proxyGroups.has(item.group),
     );
+    this.addProxyCubes(plan);
+  }
+  private addProxyCubes(plan: ReturnType<typeof exactInstancePlan>) {
+    if (!plan.length) return;
     const geometry = new THREE.BoxGeometry(38, 38, 7);
     const mesh = new THREE.InstancedMesh(
       geometry,
@@ -158,11 +194,7 @@ export class ProductScene {
       mesh.setMatrixAt(index, matrix);
       mesh.setColorAt(index, new THREE.Color(COLORS[item.group]));
     });
-    if (plan.length) this.content.add(mesh);
-    else {
-      geometry.dispose();
-      (mesh.material as THREE.Material).dispose();
-    }
+    this.content.add(mesh);
   }
   private addExact(
     dataset: Dataset,

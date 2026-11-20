@@ -16,13 +16,20 @@ Gitshelves fetches GitHub contribution data and turns it into 3D printable model
 The isolated [`web/`](web/) app immediately opens a clearly synthetic twelve-month
 2×6 product preview. Orbit, pan, zoom, fit/reset, assembled/exploded modes, a complete
 text print plan, local metadata/run-summary and STL imports, and print-manifest downloads
-work without uploading files. There is **no live GitHub retrieval, authentication, PAT
-entry, remote URL loading, or runtime CAD generation** in this opening PR.
+work without uploading files. The centered GitHub username form uses the container's
+same-origin public search endpoint only on submission. It draws up to 100 recent indexed
+public default-branch commits as 30 daily UTC stacks, distinct from the monthly print
+plan. This is a bounded preview, not a complete contribution graph; empty cells show
+no sampled commit, not proof of inactivity. Clear the preview to return to your monthly
+data and imports. No GitHub login, storage, PAT, arbitrary URL loading, or runtime CAD
+generation.
 
 ```bash
 cd web
 npm ci
 npm run dev                 # procedural Design preview works immediately
+# Optional: in a separate terminal, run python3 web/server.py from the repo root
+# to enable username search in Vite via the local same-origin proxy.
 npm run models:prepare      # requires OpenSCAD + Xvfb; creates ignored canonical STLs
 npm run build               # production Vite build
 npm run format && npm run lint && npm run typecheck && npm test
@@ -44,7 +51,10 @@ retained because it matches today's canonical Python/OpenSCAD metadata and 2×6 
 system; daily 53×7 carriers and alternate connectors are future, physically validated
 work.
 
-The static production service exposes `/`, `/healthz`, and `/livez` on port 8080. A
+The container serves `/`, `/healthz`, `/livez`, and `/api/github-activity` on port
+8080. The API sends only a validated username and fixed search qualifiers to GitHub
+without credentials. Its unauthenticated GitHub quota is shared; the sample and local
+imports work even when search is limited. Static Site exports have no search backend. A
 future Sugarkube overlay may route `staging.gitshelves.com`; DNS and Cloudflare Tunnel
 configuration are external to this repository.
 

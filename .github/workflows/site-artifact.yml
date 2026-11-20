@@ -27,19 +27,29 @@ jobs:
       - name: Check browser source
         working-directory: web
         run: npm run format && npm run lint && npm run typecheck && npm test
-      - run: npx playwright install --with-deps chromium
-        working-directory: web
-      - name: Check complete browser artifact
-        working-directory: web
+      - name: Check the browser and complete Site artifact
+        shell: bash
         run: |
-          npx vite preview --host 127.0.0.1 --outDir ../site-artifact/dist &
-          preview=$!
-          trap 'kill "$preview"' EXIT
-          for attempt in {1..30}; do
-            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
-            sleep 1
-          done
-          node scripts/smoke-site.mjs
+          docker run --rm --init --user pwuser --shm-size=1g \
+            --mount "type=bind,src=$PWD,dst=/source,readonly" \
+            mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e \
+            bash -euc '
+              set -o pipefail
+              mkdir /tmp/gitshelves
+              tar -C /source --exclude=web/node_modules --exclude=web/dist -cf - web site-artifact |
+                tar -C /tmp/gitshelves -xf -
+              cd /tmp/gitshelves/web
+              npm ci --ignore-scripts --cache /tmp/npm-cache
+              npm run test:browser
+              npx --no-install vite preview --host 127.0.0.1 --outDir ../site-artifact/dist &
+              preview=$!
+              trap "kill $preview" EXIT
+              for attempt in {1..30}; do
+                curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+                sleep 1
+              done
+              node scripts/smoke-site.mjs
+            '
       - uses: actions/upload-artifact@v4
         with:
           name: gitshelves-site-${{ github.event.pull_request.head.sha }}

@@ -14,8 +14,10 @@
 - `web/` is the Vite/strict-TypeScript/Three.js browser MVP. Use `npm ci`,
   `npm run format`, `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
   `npm run models:prepare` creates ignored canonical STL assets; never commit them.
-- The browser is local-only: do not add GitHub/browser-token or arbitrary remote URL
-  retrieval. Keep proxy geometry explicitly non-printable and Python/OpenSCAD canonical.
+- Keep local imports in-browser. Public username search may use the fixed same-origin
+  endpoint, which queries GitHub without credentials. Do not add direct browser-to-GitHub
+  calls, token entry, or arbitrary remote URL retrieval. Keep proxy geometry explicitly
+  non-printable and Python/OpenSCAD canonical.
 - `Dockerfile`, `charts/gitshelves/`, and the image/chart workflows are the app-owned
   Sugarkube release contract. Keep Helm defaults environment-neutral and coordinates immutable.
 

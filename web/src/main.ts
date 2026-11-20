@@ -8,17 +8,85 @@ import {
   type LocalStl,
 } from "./files";
 import { createManifest } from "./manifest";
+import {
+  activityDays,
+  bindGithubSearch,
+  type GithubActivity,
+} from "./githubActivity";
 import { analyzeBundle, ProductScene } from "./scene";
 const app = document.querySelector<HTMLDivElement>("#app")!;
-app.innerHTML = `<main><div id="scene" role="region" aria-label="Interactive orthographic model; drag to orbit, right-drag to pan, and scroll to zoom"></div><header><p class="eyebrow">GitShelves / monthly 2×6</p><h1>Activity,<br>made tangible.</h1><p class="lede">A local-first design preview for a reusable base and modular contribution cubes.</p></header><aside class="hud" aria-label="Design controls"><div class="status"><span id="state">Design preview</span><span id="sample">Synthetic sample</span></div><div class="controls"><button id="assembled" aria-pressed="true">Assembled</button><button id="exploded" aria-pressed="false">Exploded</button><button id="reset">Reset camera</button><button id="fit">Fit model</button><button class="color" data-group="1" aria-pressed="true">Color 1</button><button class="color" data-group="2" aria-pressed="true">Color 2</button><button class="color" data-group="3" aria-pressed="true">Color 3</button><button class="color" data-group="4" aria-pressed="true">Color 4</button></div><label>Load metadata or run summary<input id="metadata" type="file" accept="application/json,.json"></label><label>Load local STL files<input id="stls" type="file" accept=".stl" multiple></label><p class="privacy">Files stay in this browser. No GitHub or third-party API is contacted.</p><div id="downloads"><button id="base" disabled>Download base STL</button><button id="module" disabled>Download module STL</button><button id="manifest">Download print manifest</button></div><output id="message" aria-live="polite"></output></aside><section class="text"><h2>Print plan</h2><p id="geometry-note">Procedural geometry is a design preview, not printable STL. Run <code>npm run models:prepare</code> from <code>web/</code> to enable canonical exact models.</p><div class="table"><table><thead><tr><th>Month</th><th>Contributions</th><th>Cubes</th><th>Base cell</th></tr></thead><tbody id="months"></tbody></table></div><h3>Loaded STL files</h3><ul id="file-list"><li>None</li></ul><p id="total"></p></section></main>`;
+app.innerHTML = `<main><header><p class="eyebrow" id="view-mode">GitShelves / monthly 2×6</p><h1>Activity,<br>made tangible.</h1><p class="lede">A local-first design preview for a reusable base and modular contribution cubes.</p></header><form id="github-search" class="github-search" role="search" aria-label="Search GitHub public commits" novalidate><label for="github-username">Search GitHub activity</label><div class="search-row"><input id="github-username" name="username" type="text" placeholder="GitHub username" maxlength="39" required autocapitalize="none" autocomplete="off" spellcheck="false" aria-describedby="github-search-help github-search-status"><button type="submit">Show commits</button></div><p id="github-search-help">Preview up to 100 public default-branch commits over the last 30 UTC days. Each day gets its own stack.</p><output id="github-search-status" role="status" aria-live="polite" aria-atomic="true" for="github-username"></output></form><div id="scene" role="region" aria-label="Interactive orthographic model; drag to orbit, right-drag to pan, and scroll to zoom"></div><aside class="hud" aria-label="Design controls"><div class="status"><span id="state">Design preview</span><span id="sample">Synthetic sample</span><button id="clear-activity" hidden type="button">Clear activity</button></div><div class="controls"><button id="assembled" aria-pressed="true">Assembled</button><button id="exploded" aria-pressed="false">Exploded</button><button id="reset">Reset camera</button><button id="fit">Fit model</button><button class="color" data-group="1" aria-pressed="true">Color 1</button><button class="color" data-group="2" aria-pressed="true">Color 2</button><button class="color" data-group="3" aria-pressed="true">Color 3</button><button class="color" data-group="4" aria-pressed="true">Color 4</button></div><label>Load metadata or run summary<input id="metadata" type="file" accept="application/json,.json"></label><label>Load local STL files<input id="stls" type="file" accept=".stl" multiple></label><p class="privacy">Imported files stay in this browser. GitHub is contacted only when you submit a username.</p><div id="downloads"><button id="base" disabled>Download base STL</button><button id="module" disabled>Download module STL</button><button id="manifest">Download print manifest</button></div><output id="message" aria-live="polite"></output></aside><section class="text" id="activity-plan" hidden><h2>Daily GitHub activity</h2><p id="activity-caption"></p><p>Stacks are logarithmic. Empty cells contain no sampled commits, not proof of inactivity. This preview is not a print plan.</p><div class="table"><table><thead><tr><th>Date (UTC)</th><th>Public commits shown</th><th>Tiles stacked</th></tr></thead><tbody id="days"></tbody></table></div></section><section class="text" id="print-plan"><h2>Print plan</h2><p id="geometry-note">Procedural geometry is a design preview, not printable STL. Run <code>npm run models:prepare</code> from <code>web/</code> to enable canonical exact models.</p><div class="table"><table><thead><tr><th>Month</th><th>Contributions</th><th>Cubes</th><th>Base cell</th></tr></thead><tbody id="months"></tbody></table></div><h3>Loaded STL files</h3><ul id="file-list"><li>None</li></ul><p id="total"></p></section></main>`;
 let dataset: Dataset = SAMPLE,
+  githubActivity: GithubActivity | undefined,
+  metadataRequest = 0,
+  printSource = "Synthetic sample",
   files: LocalStl[] = [],
   exploded = false;
 const visible = new Set([1, 2, 3, 4]);
+const canonicalReady = new Set<string>();
 const scene = new ProductScene(document.querySelector("#scene")!);
+const githubSearch = bindGithubSearch(
+  document.querySelector("#github-search")!,
+  document.querySelector("#github-username")!,
+  document.querySelector("#github-search-status")!,
+  (activity) => {
+    githubActivity = activity;
+    draw();
+  },
+  undefined,
+  () => {
+    metadataRequest++;
+  },
+);
+const clearActivity =
+  document.querySelector<HTMLButtonElement>("#clear-activity")!;
+clearActivity.addEventListener("click", () => {
+  githubSearch.cancel();
+  githubActivity = undefined;
+  const input = document.querySelector<HTMLInputElement>("#github-username")!;
+  input.value = "";
+  draw();
+  input.focus();
+});
+function toggleView(showActivity: boolean) {
+  document.querySelector<HTMLElement>("#activity-plan")!.hidden = !showActivity;
+  document.querySelector<HTMLElement>("#print-plan")!.hidden = showActivity;
+  clearActivity.hidden = !showActivity;
+  document.querySelector("#view-mode")!.textContent = showActivity
+    ? "GitShelves / public activity"
+    : "GitShelves / monthly 2×6";
+  if (!showActivity) {
+    document.querySelector("#activity-caption")!.replaceChildren();
+    document.querySelector("#days")!.replaceChildren();
+  }
+  document.querySelector<HTMLButtonElement>("#manifest")!.disabled =
+    showActivity;
+  for (const id of ["base", "module"])
+    document.querySelector<HTMLButtonElement>(`#${id}`)!.disabled =
+      showActivity || !canonicalReady.has(id);
+}
 function draw() {
+  const activity = githubActivity;
+  toggleView(Boolean(activity));
+  if (activity) {
+    const days = activityDays(activity);
+    scene.showActivity(days, exploded, visible);
+    document.querySelector("#state")!.textContent = "Daily design preview";
+    document.querySelector("#sample")!.textContent =
+      `@${activity.username} · 30 days`;
+    document.querySelector("#activity-caption")!.textContent =
+      `@${activity.username} · ${days[0]!.date} through ${days.at(-1)!.date} (UTC) · ${activity.sampled} ${activity.limited ? "sampled " : ""}public commits.`;
+    document.querySelector("#days")!.innerHTML = days
+      .map(
+        ({ date, commits, blocks }) =>
+          `<tr><td>${date}</td><td>${commits}</td><td>${blocks}</td></tr>`,
+      )
+      .join("");
+    return;
+  }
   const bundle = analyzeBundle(dataset, files);
   scene.show(dataset, exploded, files, visible);
+  document.querySelector("#sample")!.textContent = printSource;
   document.querySelector("#state")!.textContent = bundle.exact
     ? "Exact STL geometry"
     : "Design preview";
@@ -107,21 +175,28 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(
     button.setAttribute("aria-pressed", String(visible.has(group)));
     draw();
   });
-document
-  .querySelector("#reset")!
-  .addEventListener("click", () => scene.reset());
+document.querySelector("#reset")!.addEventListener("click", () => {
+  scene.reset();
+  if (githubActivity) scene.fit();
+});
 document.querySelector("#fit")!.addEventListener("click", () => scene.fit());
 document
   .querySelector<HTMLInputElement>("#metadata")!
   .addEventListener("change", async (e) => {
+    const file = ((e.target as HTMLInputElement).files ?? [])[0];
+    if (!file) return;
+    const request = ++metadataRequest;
+    githubSearch.cancel();
     try {
-      const file = ((e.target as HTMLInputElement).files ?? [])[0];
-      if (!file) return;
-      dataset = parseMetadata(await file.text());
-      document.querySelector("#sample")!.textContent = "Local metadata";
+      const contents = await file.text();
+      if (request !== metadataRequest) return;
+      dataset = parseMetadata(contents);
+      githubActivity = undefined;
+      printSource = "Local metadata";
       draw();
       message(`Loaded ${file.name}.`);
     } catch (err) {
+      if (request !== metadataRequest) return;
       message((err as Error).message, true);
     }
   });
@@ -169,7 +244,7 @@ async function loadCanonical() {
         canonicalBase: type === "base",
       });
       const button = document.querySelector<HTMLButtonElement>(`#${id}`)!;
-      button.disabled = false;
+      canonicalReady.add(id);
       button.addEventListener("click", () =>
         download(
           loaded.find((f) => f.type === type)!.name,
@@ -184,11 +259,10 @@ async function loadCanonical() {
       );
     }
   }
-  if (loaded.length === 2) {
-    files = loaded;
-    draw();
-  } else if (loaded.length) {
-    files = loaded;
+  if (loaded.length) {
+    // Canonical models are defaults, so a late response must not overwrite a
+    // local import made while the page was loading.
+    if (!files.length) files = loaded;
     draw();
   }
 }

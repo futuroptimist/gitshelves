@@ -26,7 +26,7 @@ COPY --from=web-build /app/dist /dist
 FROM python:3.12.10-alpine3.21
 WORKDIR /app
 COPY --from=web-build --chown=10001:10001 /app/dist ./dist
-COPY --chown=10001:10001 web/server.py ./server.py
+COPY --chown=10001:10001 web/server.py web/github_activity.py ./
 USER 10001:10001
 EXPOSE 8080
 ENTRYPOINT ["python3", "/app/server.py"]
