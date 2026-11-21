@@ -53,3 +53,113 @@ test("keeps partial and failed STL replacements in a consistent state", async ({
   await expect(page.locator("#state")).toHaveText("Exact STL geometry");
   await expect(page.locator("#file-list")).toContainText("baseplate.stl");
 });
+
+test("uses the centered username form and puts returned counts into the shelf", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const webgl = WebGL2RenderingContext.prototype;
+    const canvas = window as unknown as Window & {
+      shelfInstanceCounts: Set<number>;
+    };
+    canvas.shelfInstanceCounts = new Set();
+    const elements = webgl.drawElementsInstanced;
+    webgl.drawElementsInstanced = function (...args) {
+      canvas.shelfInstanceCounts.add(args[4]);
+      return elements.apply(this, args);
+    };
+    const arrays = webgl.drawArraysInstanced;
+    webgl.drawArraysInstanced = function (...args) {
+      canvas.shelfInstanceCounts.add(args[3]);
+      return arrays.apply(this, args);
+    };
+  });
+  const renderedInstances = () =>
+    page.evaluate(() => [
+      ...(window as unknown as Window & { shelfInstanceCounts: Set<number> })
+        .shelfInstanceCounts,
+    ]);
+  await page.setViewportSize({ width: 1536, height: 920 });
+  let requests = 0;
+  await page.route("**/api/github-activity?*", async (route) => {
+    requests++;
+    expect(new URL(route.request().url()).searchParams.get("username")).toBe(
+      "futuroptimist",
+    );
+    await route.fulfill({
+      json: {
+        username: "futuroptimist",
+        start: "2026-10-22",
+        counts: [...Array(29).fill(0), 24],
+        sampled: 24,
+        limited: false,
+      },
+    });
+  });
+  await page.goto("/");
+  const form = page.getByRole("search");
+  await expect(form).toBeVisible();
+  expect(requests).toBe(0);
+  await expect
+    .poll(async () => (await renderedInstances()).some((count) => count > 2))
+    .toBe(true);
+  expect(await renderedInstances()).not.toContain(2);
+  const input = page.getByLabel("Search GitHub activity");
+  await input.fill("futuroptimist");
+  await input.press("Enter");
+  await expect(form.getByRole("status")).toContainText("24 public commits");
+  await expect(
+    page.getByRole("row", { name: "2026-11-20 24 2" }),
+  ).toBeVisible();
+  await expect(page.locator("#scene canvas")).toBeVisible();
+  // The returned 24 public commits are two actual instances in the 3D scene.
+  await expect.poll(renderedInstances).toContain(2);
+  await expect.poll(renderedInstances).toContain(30);
+  await expect(page.locator("#days tr")).toHaveCount(30);
+  await expect(
+    page.getByRole("button", { name: "Download print manifest" }),
+  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Exploded" })).toBeVisible();
+  const bounds = await form.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(
+    Math.abs(bounds!.x + bounds!.width / 2 - page.viewportSize()!.width / 2),
+  ).toBeLessThan(3);
+  const canvasFitsScene = () =>
+    page.locator("#scene > canvas").evaluate((element) => {
+      const canvas = element as HTMLCanvasElement;
+      const host = canvas.parentElement!.getBoundingClientRect();
+      const bounds = canvas.getBoundingClientRect();
+      const withinPixel = (a: number, b: number) => Math.abs(a - b) <= 1;
+      const ratio = Math.min(devicePixelRatio, 2);
+      return (
+        withinPixel(bounds.x, host.x) &&
+        withinPixel(bounds.y, host.y) &&
+        withinPixel(bounds.width, host.width) &&
+        withinPixel(bounds.height, host.height) &&
+        withinPixel(canvas.width, canvas.clientWidth * ratio) &&
+        withinPixel(canvas.height, canvas.clientHeight * ratio)
+      );
+    });
+  await expect.poll(canvasFitsScene).toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(canvasFitsScene).toBe(true);
+  const mobileForm = await form.boundingBox();
+  const model = await page.locator("#scene").boundingBox();
+  const controls = await page.getByRole("complementary").boundingBox();
+  expect(mobileForm).not.toBeNull();
+  expect(model).not.toBeNull();
+  expect(controls).not.toBeNull();
+  expect(Math.abs(mobileForm!.x + mobileForm!.width / 2 - 195)).toBeLessThan(3);
+  expect(mobileForm!.y + mobileForm!.height).toBeLessThanOrEqual(model!.y);
+  expect(model!.y + model!.height).toBeLessThanOrEqual(controls!.y);
+  await expect(form.getByRole("status")).toContainText("24 public commits");
+  await page.setViewportSize({ width: 1536, height: 920 });
+  await expect.poll(canvasFitsScene).toBe(true);
+  await page.getByRole("button", { name: "Clear activity" }).click();
+  await expect(input).toHaveValue("");
+  await expect(page.getByText("Synthetic sample")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Download print manifest" }),
+  ).toBeEnabled();
+});

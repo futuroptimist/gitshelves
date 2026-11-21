@@ -17,8 +17,9 @@ The PR-only Site artifact workflow uploads the same validated directory, named
 with the PR head SHA. Check out that SHA when reproducing it.
 
 The browser starts with synthetic contribution data. Metadata/STL imports and
-downloads remain local to the browser; there is no live GitHub access, token flow,
-server CAD generation or backend. Proxy geometry is explicitly non-printable.
+downloads remain local to the browser. This static export has no GitHub search backend;
+the username form reports that live search is unavailable. There is no browser token
+flow or server CAD generation. Proxy geometry is explicitly non-printable.
 
 ## Owner-only deployment
 
@@ -30,7 +31,11 @@ this public repository. Registration, source synchronization and publication
 are separate owner actions; the artifact alone is not a published Site.
 
 Static hosting does not execute `web/server.py`: the container's `/healthz`,
-`/livez` and Python cache-header behavior remain container features. Verify the
-chosen static host's response headers during owner deployment. No Worker is
-needed for the browser MVP. Smoke-test `/`, both model URLs, orbit/explode
+`/livez`, `/api/github-activity` and Python cache-header behavior remain container
+features. The public commit lookup uses a separate, time-bounded worker with
+no inherited environment. The runtime needs direct HTTPS egress to
+`api.github.com` with the image's system trust store; it does not use ambient
+proxy or credential configuration. Verify the chosen static host's response
+headers during owner deployment. No Worker is needed for the browser MVP.
+Smoke-test `/`, both model URLs, orbit/explode
 controls, local imports and both STL downloads before sharing the Site URL.

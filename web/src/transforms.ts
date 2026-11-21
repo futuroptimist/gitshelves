@@ -1,6 +1,6 @@
 import type { Month } from "./domain";
 export function moduleTransform(
-  month: Month,
+  month: Pick<Month, "x" | "y">,
   level: number,
   exploded: boolean,
 ) {

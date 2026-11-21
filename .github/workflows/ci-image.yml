@@ -68,6 +68,9 @@ jobs:
             test "$(curl --fail --silent --output "/tmp/$endpoint" --write-out '%{http_code}' "http://127.0.0.1:18080/$endpoint")" = 200
             test "$(cat "/tmp/$endpoint")" = ok
           done
+          test "$(curl --silent --dump-header /tmp/activity.headers --output /tmp/activity.json --write-out '%{http_code}' 'http://127.0.0.1:18080/api/github-activity?username=bad%2Flogin')" = 400
+          grep --ignore-case --quiet '^Cache-Control: no-store' /tmp/activity.headers
+          grep --fixed-strings --quiet '"error":"invalid_username"' /tmp/activity.json
 
   publish:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')

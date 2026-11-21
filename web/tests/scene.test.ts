@@ -3,7 +3,12 @@ import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { datasetFromCounts } from "../src/domain";
 import { readStlFiles, type LocalStl } from "../src/files";
-import { baseDisplayGeometry, exactInstancePlan } from "../src/scene";
+import { activityDays } from "../src/githubActivity";
+import {
+  baseDisplayGeometry,
+  dailyInstancePlan,
+  exactInstancePlan,
+} from "../src/scene";
 
 function baseBytes(x = 0, y = 0, width = 256, depth = 88): Uint8Array {
   const geometry = new THREE.BoxGeometry(width, depth, 6);
@@ -84,4 +89,32 @@ describe("canonical base display placement", () => {
       geometry.dispose();
     },
   );
+});
+
+it("lays out the last 30 UTC dates and logarithmic stacks independently of the print grid", () => {
+  const counts = [1, 9, 10, 0, 0, 0, 11, ...Array(23).fill(0)];
+  const days = activityDays({
+    username: "test-user",
+    start: "2025-12-25",
+    counts,
+    sampled: 31,
+    limited: false,
+  });
+  expect(days).toHaveLength(30);
+  expect(days[0]).toMatchObject({ date: "2025-12-25", blocks: 1, x: 0, y: 0 });
+  expect(days[7]).toMatchObject({
+    date: "2026-01-01",
+    blocks: 0,
+    x: 42,
+    y: 42,
+  });
+  expect(days.at(-1)).toMatchObject({ date: "2026-01-23", x: 210, y: 168 });
+  const plan = dailyInstancePlan(days, false, new Set([1]));
+  expect(plan).toHaveLength(6);
+  expect(
+    plan.filter((instance) => instance.x === 21 && instance.y === 63),
+  ).toMatchObject([
+    { z: 6, visible: true },
+    { z: 13, visible: false },
+  ]);
 });

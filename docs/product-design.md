@@ -8,7 +8,7 @@ Primary stories are: **as a visitor**, inspect a representative design without c
 
 ## Journey and information architecture
 
-The target journey is GitHub identity and range selection → contribution retrieval → preview → dimensions/color/quantity review → bounded STL job → manifest and signed bundle download → slicing/printing → base-first assembly. This MVP begins at preview with an unmistakably synthetic dataset; it has no username field, authentication, or network retrieval. Existing users can generate data using the [usage guide](usage.md), then load JSON and related STL files. Nothing leaves the browser.
+The target journey is GitHub identity and range selection → contribution retrieval → preview → dimensions/color/quantity review → bounded STL job → manifest and signed bundle download → slicing/printing → base-first assembly. The browser starts with a synthetic dataset. The container also offers a username search for a bounded last-30-UTC-days public-commit preview, separate from a future signed-in contribution workflow. Existing users can generate data using the [usage guide](usage.md), then load JSON and related STL files. Those files stay in the browser.
 
 The full-viewport product scene is paired with a compact control HUD and a semantic print-plan table. Desktop keeps the HUD at the upper right; narrow/touch layouts make it full width and move editorial copy below it. Core actions remain ordinary labeled controls in document order rather than canvas-only interactions.
 
@@ -116,6 +116,6 @@ GitShelves owns its Dockerfile, image workflow, Helm chart/workflow, defaults an
 
 ## Decisions, alternatives, risks, and questions
 
-Decisions: preserve monthly 2×6 and canonical CAD; local-only inputs; static immutable runtime; orthographic proxy fallback; unchanged STL bytes; separate image tag and chart version. Rejected for this PR: CDN scripts, a second Gridfinity implementation, runtime/per-request OpenSCAD, arbitrary URLs, browser tokens, a fake identity UI, daily layout, and unvalidated connectors.
+Decisions: preserve monthly 2×6 and canonical CAD; local-only file handling with a separate same-origin public username lookup; orthographic proxy fallback; unchanged STL bytes; separate image tag and chart version. Rejected for this PR: CDN scripts, a second Gridfinity implementation, runtime/per-request OpenSCAD, arbitrary URLs, browser tokens, a fake identity UI, daily layout, and unvalidated connectors.
 
 Explicit non-goals are OAuth/GitHub App work, API calls, PAT entry, accounts, billing, persistence, queue/storage, production DNS/Tunnel, and physical-fit claims. Risks are WebGL/driver variance, large/malicious local meshes, upstream CAD reproducibility, untested physical fit, and accessibility gaps in spatial inspection. Open questions include validated clearance by printer/material, safe job/artifact ceilings, palette semantics, daily carrier topology, retention, authentication model, and whether future selection should synchronize raycasting and table focus.
