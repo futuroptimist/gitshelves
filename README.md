@@ -321,8 +321,8 @@ automation and local projects stay in sync with the refactor.
 ## STL Build Outputs
 
 The `build-stl` workflow runs on every push and pull request targeting `main`
-inside the `openscad/openscad:latest` container and attaches the rendered STL
-files as downloadable artifacts. It installs `xvfb` with `apt` before invoking
+inside the `openscad/openscad` container pinned by digest and attaches the
+rendered STL files as downloadable artifacts. It installs `xvfb` with `apt` before invoking
 `xvfb-run openscad` so container builds mirror local conversions. Navigate to
 the workflow run and download `stl-<year>` to obtain the converted models.
 To avoid bloating the repository, pre-generated baseplate models are no longer stored in the repo. Download the `stl-<year>` artifact or generate them locally.

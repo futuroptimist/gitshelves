@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -7,4 +8,6 @@ def test_build_stl_upload_step():
     assert "path: stl/${{ matrix.year }}/baseplate_2x6.stl" in wf
     assert "xvfb-run" in wf
     assert "container:" in wf
-    assert "image: openscad/openscad:latest" in wf
+    assert re.search(
+        r"^      image: openscad/openscad@sha256:[0-9a-f]{64}$", wf, re.MULTILINE
+    )
